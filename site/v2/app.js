@@ -58,7 +58,7 @@ renderer.toneMappingExposure = 1.05;
 $('scene').appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
-const FOG_DUSK = new THREE.Color('#274B5C'), FOG_NIGHT = new THREE.Color('#0A1420');
+const FOG_DUSK = new THREE.Color('#274B5C'), FOG_NIGHT = new THREE.Color('#0E1A2A');
 scene.fog = new THREE.FogExp2(FOG_DUSK.getHex(), 0.00105);
 const camera = new THREE.PerspectiveCamera(58, innerWidth / innerHeight, 0.5, 6000);
 
@@ -88,7 +88,7 @@ void main(){
   vec3 mdv=normalize(vec3(0.45,0.52,-0.62));
   float dm=dot(d,mdv);
   float disc=smoothstep(0.99955,0.99985,dm);
-  float glow=pow(max(dm,0.0),240.0)*0.5;
+  float glow=pow(max(dm,0.0),200.0)*0.9;
   vec3 mc=vec3(1.0,0.93,0.76);
   col+=(disc*1.6+glow)*mc*(0.35+0.65*uPhase);
   // faint teal aurora late
@@ -141,7 +141,7 @@ function windowTextures() {
   for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
     const x = c * cw, y = r * ch;
     a.fillStyle = 'rgba(60,52,60,0.55)'; a.fillRect(x + 5, y + 7, cw - 10, ch - 12);
-    if (rnd() < 0.42) {
+    if (rnd() < 0.3) {
       const warm = rnd() < 0.82;
       const g = e.createLinearGradient(0, y, 0, y + ch);
       const col = warm ? '255,196,110' : '140,225,255';
@@ -251,7 +251,7 @@ void main(){
   vec3 L=normalize(vec3(-0.4,0.8,0.35));
   float d=max(dot(normalize(vN),L),0.0);
   vec3 col=vC*(0.44+0.45*d);
-  col+=vC*vec3(1.0,0.8,0.5)*uNight*0.22;
+  col+=vC*vec3(1.0,0.8,0.5)*uNight*0.5;
   float f=1.0-exp(-fogDensity*fogDensity*vFogZ*vFogZ);
   col=mix(col,fogColor,clamp(f,0.0,1.0));
   gl_FragColor=vec4(col,1.0);
@@ -647,7 +647,7 @@ function frame() {
   camera.position.set(pos[0], pos[1], pos[2]);
   camera.lookAt(look[0], look[1], look[2]);
 
-  const phase = THREE.MathUtils.smoothstep(u, 0.04, 0.8);
+  const phase = THREE.MathUtils.smoothstep(u, 0.10, 0.95);
   skyMat.uniforms.uPhase.value = phase;
   skyMat.uniforms.uTime.value = t;
   starMat.opacity = THREE.MathUtils.smoothstep(phase, 0.12, 0.7);
@@ -660,7 +660,7 @@ function frame() {
   waterUniforms.fogColor.value.copy(scene.fog.color);
   farMat.uniforms.uNight.value = phase;
   farMat.uniforms.fogColor.value.copy(scene.fog.color);
-  wallMat.emissiveIntensity = phase * 1.25;
+  wallMat.emissiveIntensity = phase * 1.0;
   glowMat.color.setScalar(phase);
   lampMat.opacity = phase * 0.9;
   hemi.intensity = 1.18 - phase * 0.5;
