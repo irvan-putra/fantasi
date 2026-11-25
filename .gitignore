@@ -1,4 +1,4 @@
 __pycache__/
 *.pyc
-data/buildings_jkt.geojsonl
-data/roads_jkt.json
+data/*.geojsonl
+data/roads*.json
