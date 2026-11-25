@@ -41,3 +41,45 @@
 {"ts": "2026-11-25T16:36:47.190514", "kind": "sweep-simak", "model": "qwen3.8-27b", "prompt_tokens": 40873, "completion_tokens": 1279, "cost": 0.0024162100000000002}
 {"ts": "2026-11-25T16:36:47.190584", "kind": "sweep-minima", "model": "qwen3.8-27b", "prompt_tokens": 12189, "completion_tokens": 777, "cost": 0.0012150300000000002}
 {"ts": "2026-11-25T16:36:47.190643", "kind": "sweep-irvan", "model": "qwen3.8-27b", "prompt_tokens": 35664, "completion_tokens": 522, "cost": 0.00136578}
+{"ts": "2026-11-25T17:02:11.553688", "kind": "sweep-vault-cli", "model": "qwen3.8-27b", "prompt_tokens": 39176, "completion_tokens": 500, "cost": 0.00140852}
+{"ts": "2026-11-25T17:02:11.553889", "kind": "sweep-daya", "model": "qwen3.8-27b", "prompt_tokens": 128097, "completion_tokens": 857, "cost": 0.00363319}
+{"ts": "2026-11-25T17:02:11.553977", "kind": "sweep-kapan", "model": "qwen3.8-27b", "prompt_tokens": 74836, "completion_tokens": 1046, "cost": 0.00280422}
+{"ts": "2026-11-25T17:02:11.554064", "kind": "sweep-adaptechid", "model": "qwen3.8-27b", "prompt_tokens": 889, "completion_tokens": 640, "cost": 0.00081778}
+{"ts": "2026-11-25T17:02:11.554132", "kind": "sweep-vnproject.id", "model": "qwen3.8-27b", "prompt_tokens": 3216, "completion_tokens": 558, "cost": 0.0007618200000000001}
+{"ts": "2026-11-25T17:02:11.554210", "kind": "sweep-patuh", "model": "qwen3.8-27b", "prompt_tokens": 37543, "completion_tokens": 727, "cost": 0.0016596100000000002}
+{"ts": "2026-11-25T17:04:04.007242", "kind": "sweep-DUPLICATE-stale-slot", "model": "qwen3.8-27b", "prompt_tokens": 887, "completion_tokens": 563, "cost": 0.0007214900000000001, "note": "stale __sw slot data after silent chunk-load failure; result discarded"}
+{"ts": "2026-11-25T17:04:04.008105", "kind": "sweep-DUPLICATE-stale-slot", "model": "qwen3.8-27b", "prompt_tokens": 3215, "completion_tokens": 669, "cost": 0.0009005500000000001, "note": "stale __sw slot data after silent chunk-load failure; result discarded"}
+{"ts": "2026-11-25T17:04:04.008165", "kind": "sweep-DUPLICATE-stale-slot", "model": "qwen3.8-27b", "prompt_tokens": 37543, "completion_tokens": 595, "cost": 0.00149461, "note": "stale __sw slot data after silent chunk-load failure; result discarded"}
+{"ts": "2026-11-25T17:05:44.794478", "kind": "sweep-denting", "model": "qwen3.8-27b", "prompt_tokens": 39176, "completion_tokens": 736, "cost": 0.00170352}
+{"ts": "2026-11-25T17:05:44.796045", "kind": "sweep-jumpa", "model": "qwen3.8-27b", "prompt_tokens": 74836, "completion_tokens": 651, "cost": 0.0023104700000000002}
+{"ts": "2026-11-25T17:05:44.796418", "kind": "sweep-pythonid-10-2026", "model": "qwen3.8-27b", "prompt_tokens": 15523, "completion_tokens": 921, "cost": 0.0014617100000000002}
+{"ts": "2026-11-25T17:05:44.796711", "kind": "sweep-nada", "model": "qwen3.8-27b", "prompt_tokens": 29541, "completion_tokens": 548, "cost": 0.00127582}
+{"ts": "2026-11-25T17:05:44.796952", "kind": "sweep-menit", "model": "qwen3.8-27b", "prompt_tokens": 75664, "completion_tokens": 709, "cost": 0.0023995300000000004}
+{"ts": "2026-11-25T17:05:44.797184", "kind": "sweep-cabang", "model": "qwen3.8-27b", "prompt_tokens": 84404, "completion_tokens": 477, "cost": 0.00228433}
+{"ts": "2026-11-25T17:06:28.053960", "kind": "sweep-CORRECTION", "model": "qwen3.8-27b", "prompt_tokens": 39176, "completion_tokens": 736, "cost": 0, "note": "jsjob-7 was saved as denting but ran on stale slot data (vault-cli); result discarded, denting requeued. Its cost was already ledgered under sweep-denting."}
+{"ts": "2026-11-25T17:06:28.054030", "kind": "sweep-CORRECTION", "model": "qwen3.8-27b", "prompt_tokens": 74836, "completion_tokens": 651, "cost": 0, "note": "jsjob-9 was saved as jumpa but ran on stale slot data (kapan); result discarded, jumpa requeued. Its cost was already ledgered under sweep-jumpa."}
+{"ts": "2026-11-25T17:13:36.146189", "kind": "sweep-sambung", "model": "qwen3.8-27b", "prompt_tokens": 17855, "completion_tokens": 1290, "cost": 0.0019696}
+{"ts": "2026-11-25T17:13:36.148591", "kind": "sweep-old-visi-web", "model": "qwen3.8-27b", "prompt_tokens": 22936, "completion_tokens": 429, "cost": 0.00099497}
+{"ts": "2026-11-25T17:13:36.148694", "kind": "sweep-tagih", "model": "qwen3.8-27b", "prompt_tokens": 21426, "completion_tokens": 800, "cost": 0.00142852}
+{"ts": "2026-11-25T17:13:36.148762", "kind": "sweep-tumbuh", "model": "qwen3.8-27b", "prompt_tokens": 37675, "completion_tokens": 499, "cost": 0.00137725}
+{"ts": "2026-11-25T17:13:36.148828", "kind": "sweep-skills", "model": "qwen3.8-27b", "prompt_tokens": 15060, "completion_tokens": 394, "cost": 0.0007937}
+{"ts": "2026-11-25T17:13:36.148887", "kind": "sweep-typing", "model": "qwen3.8-27b", "prompt_tokens": 4555, "completion_tokens": 660, "cost": 0.0009161000000000001}
+{"ts": "17:28:50", "kind": "sweep", "repo": "jumpa", "handle": "jsjob-1", "model": "qwen3.8-27b", "pt": 29995, "ct": 950, "cost": 0.00179}
+{"ts": "17:28:50", "kind": "sweep", "repo": "PL101ProjectTemplate", "handle": "jsjob-2", "model": "qwen3.8-27b", "pt": 30227, "ct": 807, "cost": 0.00161}
+{"ts": "17:28:50", "kind": "sweep", "repo": "kaidah", "handle": "jsjob-4", "model": "qwen3.8-27b", "pt": 38393, "ct": 634, "cost": 0.00156}
+{"ts": "17:28:50", "kind": "sweep", "repo": "anyam", "handle": "jsjob-5", "model": "qwen3.8-27b", "pt": 13121, "ct": 654, "cost": 0.00108}
+{"ts": "17:28:50", "kind": "sweep", "repo": "denting", "handle": "jsjob-6", "model": "qwen3.8-27b", "pt": 65741, "ct": 595, "cost": 0.00206}
+{"ts": "17:28:50", "kind": "sweep-CORRECTION", "repo": "bitstarter", "handle": "jsjob-3", "cost": 0, "note": "stale slot content (Express web.js) discarded, requeued"}
+{"ts": "17:36:42", "kind": "sweep", "repo": "bitstarter", "handle": "jsjob-7", "model": "qwen3.8-27b", "pt": 4825, "ct": 585, "cost": 0.00083}
+{"ts": "17:36:42", "kind": "sweep", "repo": "naung", "handle": "jsjob-8", "model": "qwen3.8-27b", "pt": 41632, "ct": 707, "cost": 0.00172}
+{"ts": "17:36:42", "kind": "sweep", "repo": "tapak", "handle": "jsjob-9", "model": "qwen3.8-27b", "pt": 3628, "ct": 558, "cost": 0.00077}
+{"ts": "17:36:42", "kind": "sweep", "repo": "mimpi", "handle": "jsjob-10", "model": "qwen3.8-27b", "pt": 10543, "ct": 1155, "cost": 0.00165}
+{"ts": "17:36:42", "kind": "sweep", "repo": "jejak", "handle": "jsjob-11", "model": "qwen3.8-27b", "pt": 7534, "ct": 843, "cost": 0.0012}
+{"ts": "17:36:42", "kind": "sweep", "repo": "tampung", "handle": "jsjob-12", "model": "qwen3.8-27b", "pt": 23426, "ct": 1024, "cost": 0.00175}
+{"ts": "17:36:42", "kind": "sweep-DUPLICATE", "repo": "bitstarter", "handle": "jsjob-3", "pt": 4825, "ct": 440, "cost": 0.00065, "note": "was genuine; grep-based mismatch check false-positive (model did not name repo); result superseded by jsjob-7"}
+{"ts": "17:44:34", "kind": "sweep", "repo": "setup", "handle": "jsjob-13", "model": "qwen3.8-27b", "pt": 687, "ct": 576, "cost": 0.00073}
+{"ts": "17:44:34", "kind": "sweep", "repo": "haskell-intro", "handle": "jsjob-14", "model": "qwen3.8-27b", "pt": 11432, "ct": 712, "cost": 0.00112}
+{"ts": "17:44:34", "kind": "sweep", "repo": "sapi", "handle": "jsjob-15", "model": "qwen3.8-27b", "pt": 10623, "ct": 598, "cost": 0.00096}
+{"ts": "17:44:34", "kind": "sweep", "repo": "utak", "handle": "jsjob-16", "model": "qwen3.8-27b", "pt": 20217, "ct": 550, "cost": 0.00109}
+{"ts": "17:44:34", "kind": "sweep", "repo": "kunjung", "handle": "jsjob-17", "model": "qwen3.8-27b", "pt": 19885, "ct": 743, "cost": 0.00133}
+{"ts": "17:44:34", "kind": "sweep", "repo": "irvan-putra.github.io", "handle": "jsjob-18", "model": "qwen3.8-27b", "pt": 21340, "ct": 562, "cost": 0.00113}
