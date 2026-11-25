@@ -373,7 +373,7 @@ let lanternInst, lanternPts;
   const p = new Float32Array(LANT.length * 3);
   const pg = new THREE.BufferGeometry();
   pg.setAttribute('position', new THREE.BufferAttribute(p, 3));
-  const pm = new THREE.PointsMaterial({ size: 36, map: haloTex, color: 0xff9e3c, transparent: true, opacity: 0.55, depthWrite: false, blending: THREE.AdditiveBlending });
+  const pm = new THREE.PointsMaterial({ size: 20, map: haloTex, color: 0xff9e3c, transparent: true, opacity: 0.45, depthWrite: false, blending: THREE.AdditiveBlending });
   pm.toneMapped = false;
   lanternPts = new THREE.Points(pg, pm);
   scene.add(lanternPts);
@@ -392,7 +392,7 @@ function tickLanterns(t, night) {
   }
   lanternInst.instanceMatrix.needsUpdate = true;
   pa.needsUpdate = true;
-  lanternPts.material.opacity = 0.25 + night * 0.45;
+  lanternPts.material.opacity = 0.16 + night * 0.3;
 }
 
 // ---------------- boats ----------------
