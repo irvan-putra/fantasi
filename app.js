@@ -235,6 +235,11 @@ void main(){
   float b2=sin(vW.x*0.11-uTime*1.7+vW.z*0.07);
   float band=0.5+0.25*b1+0.25*b2;
   vec3 col=mix(deep,teal,band);
+  float sh1=smoothstep(0.72,0.98,sin(vW.x*0.22+uTime*1.4+vW.z*0.09)*0.5+0.5);
+  float sh2=smoothstep(0.80,1.00,sin(vW.z*0.18-uTime*1.9-vW.x*0.05)*0.5+0.5);
+  float shimmer=(sh1+sh2)*0.5*band;
+  col+=vec3(0.35,0.75,0.85)*shimmer*uGlow*0.55;
+  col+=vec3(1.0,0.6,0.25)*shimmer*uGlow*0.35;
   col+=cy*band*uGlow*0.5;
   vec2 cell=floor(vW.xz*0.9);
   float sp=hash(cell);
@@ -652,6 +657,387 @@ lmPagoda(-320, -260, 5, 22, 8.5);
   lmTickers.push((t, phase) => { lmat.opacity = 0.5 + 0.35 * phase + Math.sin(t * 1.7 + 1) * 0.07; });
 }
 
+
+// ============================================================
+// ---------------- FANTASY SKY LAYER (v4) ----------------
+// Floating islands with buildings, glowing trees, twisting towers,
+// crystal spires, rope bridges, waterfalls. All motion is a pure
+// function of loop phase u, so the loop stays seamless.
+// ============================================================
+const FY = {
+  rock: [0.22, 0.19, 0.28], rockD: [0.14, 0.12, 0.20], moss: [0.16, 0.34, 0.26],
+  wood: [0.30, 0.20, 0.13], stone: [0.36, 0.40, 0.50],
+  glowT: [0.20, 0.95, 0.72], glowM: [1.00, 0.62, 0.25], glowC: [0.45, 0.85, 1.00],
+  water: [0.30, 0.85, 0.95], bridge: [0.42, 0.30, 0.16],
+};
+const _fh = (i) => { const x = Math.sin(i * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+
+// [x, z, topY, radius, rockHeight, kind]  kind: 0 pagoda, 1 mushroom grove, 2 crystal, 3 twist tower
+// anchored near landmarks but clear of the dragon orbits
+const F_ISLES = [
+  [330, 40, 70, 26, 18, 1],      // east of the market
+  [390, 110, 105, 22, 16, 0],
+  [285, 105, 150, 18, 14, 2],
+  [128, -214, 190, 24, 20, 2],   // crystal crown above the paifang
+  [-60, 200, 95, 30, 22, 1],     // beside the temple plaza
+  [-120, 120, 160, 20, 18, 3],   // twisting tower over the plaza edge
+  [-250, 60, 200, 34, 26, 1],    // great grove above the hall
+  [720, 300, 140, 28, 20, 0],    // harbor watch isle
+  [700, 430, 175, 24, 18, 3],    // twisting beacon isle
+];
+
+function _isleRock(cx, cz, topY, rad, h, i) {
+  const parts = [];
+  const top = new THREE.CylinderGeometry(rad, rad * 1.08, 4.5, 9, 1);
+  top.translate(cx, topY - 2.2, cz);
+  parts.push({ g: top, c: FY.rock });
+  const skirt = new THREE.TorusGeometry(rad * 1.02, 1.1, 4, 10);
+  skirt.rotateX(Math.PI / 2); skirt.translate(cx, topY - 4.6, cz);
+  parts.push({ g: skirt, c: FY.moss });
+  const under = new THREE.ConeGeometry(rad * 0.92, h, 8, 1);
+  under.rotateX(Math.PI);
+  under.translate(cx, topY - 4.5 - h / 2, cz);
+  parts.push({ g: under, c: FY.rockD });
+  for (const [ax, az] of [[-0.5, 0.5], [0.6, -0.4]]) {
+    const l = new THREE.IcosahedronGeometry(rad * 0.34, 0);
+    l.scale(1, 0.7, 1);
+    l.translate(cx + ax * rad, topY - 4.5 - h * 0.55, cz + az * rad);
+    parts.push({ g: l, c: FY.rockD });
+  }
+  return parts;
+}
+
+function _isleBuilding(cx, cz, topY, kind, i) {
+  const parts = [];
+  const bw = 9 + _fh(i) * 6, bh = 10 + _fh(i * 3) * 8;
+  const bx = cx + (_fh(i * 7) - 0.5) * 8, bz = cz + (_fh(i * 11) - 0.5) * 8;
+  const body = new THREE.BoxGeometry(bw, bh, bw);
+  body.translate(bx, topY + bh / 2 - 0.5, bz);
+  parts.push({ g: body, c: kind === 1 ? FY.wood : FY.stone });
+  if (kind === 0) {
+    const r1 = new THREE.ConeGeometry(bw * 0.95, 4, 4); r1.rotateY(Math.PI / 4); r1.translate(bx, topY + bh + 1.5, bz);
+    const r2 = new THREE.ConeGeometry(bw * 0.6, 3, 4); r2.rotateY(Math.PI / 4); r2.translate(bx, topY + bh + 4.2, bz);
+    parts.push({ g: r1, c: FY.rock }, { g: r2, c: FY.rockD });
+  } else {
+    const roof = new THREE.ConeGeometry(bw * 1.05, 5, 4); roof.rotateY(Math.PI / 4); roof.translate(bx, topY + bh + 2, bz);
+    parts.push({ g: roof, c: FY.rock });
+  }
+  return { parts, x: bx, y: topY + bh, z: bz };
+}
+
+function _glowTree(cx, cz, topY, i) {
+  const parts = [];
+  const sc = 0.8 + _fh(i * 13) * 0.7;
+  const stemH = 16 * sc, capR = (6 + _fh(i * 5) * 4) * sc;
+  const sx = cx + (_fh(i * 17) - 0.5) * 14, sz = cz + (_fh(i * 19) - 0.5) * 14;
+  const stem = new THREE.CylinderGeometry(0.9 * sc, 1.4 * sc, stemH, 5);
+  stem.translate(sx, topY + stemH / 2 - 0.5, sz);
+  parts.push({ g: stem, c: FY.wood });
+  if (i % 3 === 0) {
+    const cap = new THREE.SphereGeometry(capR, 7, 5, 0, Math.PI * 2, 0, Math.PI * 0.5);
+    cap.translate(sx, topY + stemH - 0.5, sz);
+    parts.push({ g: cap, c: FY.moss });
+  } else {
+    const c1 = new THREE.ConeGeometry(capR, 7 * sc, 6); c1.translate(sx, topY + stemH + 2 * sc, sz);
+    const c2 = new THREE.ConeGeometry(capR * 0.6, 5 * sc, 6); c2.translate(sx, topY + stemH + 6 * sc, sz);
+    parts.push({ g: c1, c: FY.moss }, { g: c2, c: FY.moss });
+  }
+  return { parts, x: sx, y: topY + stemH + 3 * sc, z: sz, glow: FY.glowT };
+}
+
+function _twistTower(cx, cz, topY, i) {
+  const parts = [];
+  const segs = 7;
+  let w = 11 + _fh(i * 23) * 4, y = topY - 0.5;
+  const rot0 = _fh(i * 31) * 6.28;
+  for (let k = 0; k < segs; k++) {
+    const segH = 9 - k * 0.5;
+    const off = (k % 2 === 0 ? 1 : -1) * (1.2 + _fh(i * 100 + k) * 1.5);
+    const b = new THREE.BoxGeometry(w, segH, w);
+    b.translate(cx + off * (k / segs), y + segH / 2, cz + off * (k / segs) * 0.6);
+    b.rotateY(rot0 + k * 0.45);
+    parts.push({ g: b, c: FY.stone });
+    y += segH * 0.94; w *= 0.9;
+  }
+  const tip = new THREE.OctahedronGeometry(2.4, 0); tip.scale(1, 1.6, 1); tip.translate(cx, y + 4, cz);
+  parts.push({ g: tip, c: FY.glowC });
+  return { parts, x: cx, y: y + 4, z: cz, glow: FY.glowC };
+}
+
+function _crystalSpires(cx, cz, topY, i) {
+  const parts = [];
+  const n = 4 + Math.floor(_fh(i * 37) * 3);
+  for (let k = 0; k < n; k++) {
+    const h = 10 + _fh(i * 40 + k) * 16, r = 2 + _fh(i * 43 + k) * 2.5;
+    const o = new THREE.OctahedronGeometry(r, 0);
+    o.scale(1, h / (r * 2), 1);
+    const ang = _fh(i * 47 + k) * 6.28, rad = _fh(i * 53 + k) * 9;
+    o.translate(cx + Math.cos(ang) * rad, topY + h * 0.5 - 0.5, cz + Math.sin(ang) * rad);
+    o.rotateY(_fh(i * 59 + k) * 6.28);
+    parts.push({ g: o, c: FY.glowC });
+  }
+  const base = new THREE.IcosahedronGeometry(6, 0); base.scale(1.4, 0.5, 1.2); base.translate(cx, topY - 0.5, cz);
+  parts.push({ g: base, c: FY.rockD });
+  return parts;
+}
+
+function _ropeBridge(x0, y0, z0, x1, y1, z1) {
+  const parts = [];
+  const dx = x1 - x0, dy = y1 - y0, dz = z1 - z0;
+  const len = Math.hypot(dx, dy, dz), sag = len * 0.06, N = 10;
+  for (let k = 0; k <= N; k += 2) {
+    const f = k / N;
+    const plank = new THREE.BoxGeometry(2.2, 0.4, 2.2);
+    plank.translate(x0 + dx * f, y0 + dy * f - Math.sin(f * Math.PI) * sag, z0 + dz * f);
+    parts.push({ g: plank, c: FY.bridge });
+  }
+  for (const side of [-1.1, 1.1]) {
+    const cable = new THREE.CylinderGeometry(0.18, 0.18, len * 1.05, 4);
+    const dir = new THREE.Vector3(dx, dy, dz).normalize();
+    const quat = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
+    cable.applyMatrix4(new THREE.Matrix4().compose(
+      new THREE.Vector3((x0 + x1) / 2, (y0 + y1) / 2 - sag * 0.7, (z0 + z1) / 2), quat, new THREE.Vector3(1, 1, 1)));
+    const perp = new THREE.Vector3(-dir.z, 0, dir.x).multiplyScalar(side);
+    cable.translate(perp.x, 0, perp.z);
+    parts.push({ g: cable, c: FY.bridge });
+  }
+  return parts;
+}
+
+// ---- assemble ----
+const _fRockParts = [], _fBldParts = [], _fCrysParts = [];
+const _fLanterns = [], _fFalls = [], _fTreeGlows = [];
+for (let i = 0; i < F_ISLES.length; i++) {
+  const [cx, cz, topY, rad, h, kind] = F_ISLES[i];
+  _fRockParts.push(..._isleRock(cx, cz, topY, rad, h, i));
+  if (kind === 2) {
+    _fCrysParts.push(..._crystalSpires(cx, cz, topY, i));
+  } else {
+    const b = _isleBuilding(cx, cz, topY, kind === 1 ? 1 : 0, i);
+    _fBldParts.push(...b.parts);
+    _fLanterns.push({ x: b.x, y: b.y + 0.5, z: b.z, col: FY.glowM });
+    const tr = _glowTree(cx, cz, topY, i);
+    _fBldParts.push(...tr.parts);
+    _fTreeGlows.push({ x: tr.x, y: tr.y, z: tr.z, col: tr.glow });
+  }
+  if (kind === 3) {
+    const tw = _twistTower(cx, cz, topY, i);
+    _fBldParts.push(...tw.parts);
+    _fTreeGlows.push({ x: tw.x, y: tw.y, z: tw.z, col: tw.glow });
+  }
+  for (let k = 0; k < 2 + (i % 3); k++) {
+    const a = _fh(i * 71 + k) * 6.28, rr = _fh(i * 73 + k) * rad * 0.7;
+    _fLanterns.push({ x: cx + Math.cos(a) * rr, y: topY + 1.2, z: cz + Math.sin(a) * rr, col: FY.glowM });
+  }
+  for (let k = 0; k < 1 + (i % 2); k++) {
+    const a = _fh(i * 83 + k) * 6.28;
+    _fFalls.push({ x: cx + Math.cos(a) * rad * 0.9, z: cz + Math.sin(a) * rad * 0.9, topY: topY - 5, len: Math.max(30, topY - 8) });
+  }
+}
+// rope bridges to the nearest neighbour island
+{
+  const done = new Set();
+  for (let i = 0; i < F_ISLES.length; i++) {
+    let best = -1, bd = 1e9;
+    for (let j = 0; j < F_ISLES.length; j++) {
+      if (i === j) continue;
+      const d = Math.hypot(F_ISLES[j][0] - F_ISLES[i][0], F_ISLES[j][1] - F_ISLES[i][1]);
+      if (d > 40 && d < 160 && d < bd) { bd = d; best = j; }
+    }
+    if (best > 0 && !done.has(i + '-' + best) && !done.has(best + '-' + i)) {
+      done.add(i + '-' + best);
+      const A = F_ISLES[i], B = F_ISLES[best];
+      _fRockParts.push(..._ropeBridge(A[0], A[2] - 2, A[1], B[0], B[2] - 2, B[1]));
+      _fLanterns.push({ x: (A[0] + B[0]) / 2, y: (A[2] + B[2]) / 2 - 3, z: (A[1] + B[1]) / 2, col: FY.glowM });
+    }
+  }
+}
+
+const _fRockMesh = new THREE.Mesh(mergeGeos(_fRockParts), lmLambert());
+scene.add(_fRockMesh);
+const _fBldMesh = new THREE.Mesh(mergeGeos(_fBldParts), lmLambert());
+scene.add(_fBldMesh);
+let _fCrysMat = null;
+if (_fCrysParts.length) {
+  _fCrysMat = new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false });
+  _fCrysMat.toneMapped = false;
+  scene.add(new THREE.Mesh(mergeGeos(_fCrysParts), _fCrysMat));
+}
+
+// island lanterns + tree glows: one Points system
+const _fGlows = [..._fLanterns, ..._fTreeGlows];
+const _fGlowMat = (() => {
+  const n = _fGlows.length;
+  const p = new Float32Array(n * 3), c = new Float32Array(n * 3);
+  for (let i = 0; i < n; i++) {
+    const g = _fGlows[i];
+    p[i * 3] = g.x; p[i * 3 + 1] = g.y; p[i * 3 + 2] = g.z;
+    c[i * 3] = g.col[0]; c[i * 3 + 1] = g.col[1]; c[i * 3 + 2] = g.col[2];
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(p, 3));
+  g.setAttribute('color', new THREE.BufferAttribute(c, 3));
+  const m = new THREE.PointsMaterial({ size: 12, map: haloTex, vertexColors: true, sizeAttenuation: true, transparent: true, opacity: 0.9, depthWrite: false, blending: THREE.AdditiveBlending });
+  m.toneMapped = false;
+  const pts = new THREE.Points(g, m);
+  pts.frustumCulled = false;
+  scene.add(pts);
+  return m;
+})();
+
+// waterfalls: one Points system, scroll is a pure function of u
+const WF_PER = 14;
+const _fWfPts = (() => {
+  const total = _fFalls.length * WF_PER;
+  const p = new Float32Array(total * 3), c = new Float32Array(total * 3);
+  for (let k = 0; k < total; k++) {
+    const w = _fFalls[(k / WF_PER) | 0], f = (k % WF_PER) / WF_PER;
+    p[k * 3] = w.x; p[k * 3 + 1] = w.topY - f * w.len; p[k * 3 + 2] = w.z;
+    c[k * 3] = FY.water[0]; c[k * 3 + 1] = FY.water[1]; c[k * 3 + 2] = FY.water[2];
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(p, 3));
+  g.setAttribute('color', new THREE.BufferAttribute(c, 3));
+  const m = new THREE.PointsMaterial({ size: 5, map: haloTex, vertexColors: true, sizeAttenuation: true, transparent: true, opacity: 0.7, depthWrite: false, blending: THREE.AdditiveBlending });
+  m.toneMapped = false;
+  const pts = new THREE.Points(g, m);
+  pts.frustumCulled = false;
+  scene.add(pts);
+  return pts;
+})();
+
+function tickFantasy(u, phase) {
+  _fGlowMat.opacity = 0.30 + phase * 0.6;
+  _fGlowMat.size = 10 + Math.sin(u * 6.283) * 1.5 + phase * 6;
+  if (_fCrysMat) _fCrysMat.opacity = 0.30 + phase * 0.55 + Math.sin(u * 12.566) * 0.08 * phase;
+  const bob = Math.sin(u * 6.283) * 0.8;
+  _fRockMesh.position.y = bob;
+  _fBldMesh.position.y = bob;
+  const pa = _fWfPts.geometry.attributes.position;
+  for (let wi = 0; wi < _fFalls.length; wi++) {
+    const w = _fFalls[wi];
+    for (let j = 0; j < WF_PER; j++) {
+      const f = (j / WF_PER + u * 3) % 1;
+      pa.array[(wi * WF_PER + j) * 3 + 1] = w.topY - f * w.len;
+    }
+  }
+  pa.needsUpdate = true;
+}
+
+// ---------- lantern launches (phase-windowed, seamless at wrap) ----------
+const _launch = (() => {
+  const PADS = [
+    { x: 128, z: -214, n: 12, col: [1.0, 0.62, 0.24] },   // gate
+    { x: 177, z: -132, n: 20, col: [1.0, 0.55, 0.18] },   // market
+    { x: -166, z: 143, n: 10, col: [0.9, 0.55, 0.7] },    // temple
+  ];
+  const TOTAL = PADS.reduce((a, b) => a + b.n, 0);
+  const inst = new THREE.InstancedMesh(
+    new THREE.BoxGeometry(1.05, 1.35, 1.05),
+    (() => { const m = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false }); m.toneMapped = false; return m; })(),
+    TOTAL);
+  inst.frustumCulled = false;
+  const hp = new Float32Array(TOTAL * 3);
+  const hg = new THREE.BufferGeometry();
+  hg.setAttribute('position', new THREE.BufferAttribute(hp, 3));
+  const hm = new THREE.PointsMaterial({ size: 20, map: haloTex, color: 0xffb060, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending });
+  hm.toneMapped = false;
+  const halo = new THREE.Points(hg, hm);
+  halo.frustumCulled = false;
+  const data = [];
+  let idx = 0;
+  const cc = new THREE.Color();
+  for (const p of PADS) {
+    for (let j = 0; j < p.n; j++) {
+      const r1 = _fh(idx * 3 + 1), r2 = _fh(idx * 3 + 2), r3 = _fh(idx * 3 + 3);
+      data.push({ pad: p, offX: (r1 - 0.5) * 14, offZ: (r2 - 0.5) * 14, lag: r3 * 0.25, wob: r1 * 6.28 });
+      cc.setRGB(p.col[0], p.col[1], p.col[2]);
+      inst.setColorAt(idx, cc);
+      idx++;
+    }
+  }
+  inst.instanceColor.needsUpdate = true;
+  scene.add(inst, halo);
+  return { inst, hm, hp, hg, data, TOTAL };
+})();
+const _lm4 = new THREE.Matrix4();
+function tickLaunch(u, t) {
+  // launch window u in [0.50, 0.95]: lanterns rise, then fade before the wrap
+  const w = Math.min(Math.max((u - 0.50) / 0.45, 0), 1);
+  const rise = w * 110;
+  const fadeIn = Math.min(w / 0.06, 1);
+  const fadeOut = 1 - THREE.MathUtils.smoothstep(w, 0.78, 1.0);
+  const alpha = fadeIn * fadeOut;
+  for (let i = 0; i < _launch.TOTAL; i++) {
+    const d = _launch.data[i];
+    const lagged = Math.min(Math.max((u - 0.50 - d.lag * 0.45) / 0.45, 0), 1);
+    const y = 1.5 + lagged * 110;
+    const x = d.pad.x + d.offX + Math.sin(t * 0.9 + d.wob) * (1 + lagged * 3);
+    const z = d.pad.z + d.offZ + Math.cos(t * 0.7 + d.wob * 1.3) * (1 + lagged * 2);
+    const sc = 0.55 + lagged * 0.5;
+    _lm4.makeScale(sc, sc, sc);
+    _lm4.setPosition(x, y, z);
+    _launch.inst.setMatrixAt(i, _lm4);
+    _launch.hp[i * 3] = x; _launch.hp[i * 3 + 1] = y; _launch.hp[i * 3 + 2] = z;
+  }
+  _launch.inst.instanceMatrix.needsUpdate = true;
+  _launch.hg.attributes.position.needsUpdate = true;
+  _launch.inst.material.opacity = alpha * 0.95;
+  _launch.hm.opacity = alpha * 0.5;
+}
+
+// ---------- fireworks over the harbor (pure function of u) ----------
+const _fw = (() => {
+  const BURSTS = 9, PER = 55;
+  const N = BURSTS * PER;
+  const p = new Float32Array(N * 3), c = new Float32Array(N * 3);
+  const meta = []; // per particle: burst origin, velocity, hue
+  for (let b = 0; b < BURSTS; b++) {
+    const ang = (b * 137.5) * Math.PI / 180;
+    const r = 30 + (b % 4) * 22;
+    const bx = 700 + Math.cos(ang) * r, by = 90 + (b % 3) * 28, bz = 430 + Math.sin(ang) * r * 0.7;
+    const bu = 0.72 + (b / BURSTS) * 0.16; // window u in [0.72, 0.88]
+    const hue = [[1, 0.45, 0.2], [0.5, 0.8, 1], [1, 0.75, 0.3]][b % 3];
+    for (let k = 0; k < PER; k++) {
+      const r1 = _fh(b * 100 + k), r2 = _fh(b * 100 + k + 50), r3 = _fh(b * 100 + k + 900);
+      const th = r1 * 6.283, ph2 = r2 * 3.14;
+      const spd = 14 + r3 * 16;
+      meta.push({ bx, by, bz, bu, vx: Math.sin(ph2) * Math.cos(th) * spd, vy: Math.cos(ph2) * spd, vz: Math.sin(ph2) * Math.sin(th) * spd, hue });
+      const i = b * PER + k;
+      c[i * 3] = hue[0]; c[i * 3 + 1] = hue[1]; c[i * 3 + 2] = hue[2];
+    }
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(p, 3));
+  g.setAttribute('color', new THREE.BufferAttribute(c, 3));
+  const m = new THREE.PointsMaterial({ size: 4.5, map: haloTex, vertexColors: true, transparent: true, opacity: 0.9, depthWrite: false, blending: THREE.AdditiveBlending });
+  m.toneMapped = false;
+  const pts = new THREE.Points(g, m);
+  pts.frustumCulled = false;
+  scene.add(pts);
+  return { pts, meta, N, LIFE: 2.4 };
+})();
+function tickFireworks(u) {
+  const pa = _fw.pts.geometry.attributes.position.array;
+  const secPerU = LOOP_MS / 1000;
+  let anyVisible = false;
+  for (let i = 0; i < _fw.N; i++) {
+    const m = _fw.meta[i];
+    const dt = (u - m.bu) * secPerU;
+    if (dt > 0 && dt < _fw.LIFE) {
+      anyVisible = true;
+      pa[i * 3] = m.bx + m.vx * dt;
+      pa[i * 3 + 1] = m.by + m.vy * dt - 6 * dt * dt;
+      pa[i * 3 + 2] = m.bz + m.vz * dt;
+    } else {
+      pa[i * 3 + 1] = -500; // park below the world
+    }
+  }
+  _fw.pts.geometry.attributes.position.needsUpdate = true;
+  _fw.pts.material.opacity = (u > 0.70 && u < 0.92) ? 0.9 : 0;
+  _fw.pts.visible = anyVisible;
+}
+
 // ---------------- dragons (hero scale, close passes) ----------------
 function makeDragon(colorHex) {
   const base = new THREE.Color(colorHex);
@@ -730,18 +1116,30 @@ const dragons = manifest.dragons.map((d, i) => {
   const p = DRAG_PATHS[i % DRAG_PATHS.length];
   return { grp, L, R, ...p };
 });
-function tickDragons(t) {
+function tickDragons(t, u) {
+  // chase window: mid-loop the pack closes on the lead dragon's orbit,
+  // speed and flapping pick up, bellies glow brighter. Pure function of u.
+  const cw = Math.min(Math.max((u - 0.55) / 0.13, 0), 1);
+  const chase = cw > 0 && cw < 1 ? Math.sin(cw * Math.PI) ** 2 : 0;
   for (const d of dragons) {
-    const a = t * d.speed + d.ph;
-    const x = d.cx + Math.cos(a) * d.r;
-    const z = d.cz + Math.sin(a) * d.r * 0.8;
-    const y = d.h + Math.sin(t * 0.5 + d.ph) * d.amp;
+    const isLead = d.ph === 0.0;
+    const spd = d.speed * (1 + chase * (isLead ? 0.8 : 0.45));
+    const a = t * spd + d.ph;
+    // non-leaders pull toward the lead orbit center during the chase
+    const pull = chase * (isLead ? 0 : 0.55);
+    const cx = d.cx + (177 - d.cx) * pull, cz = d.cz + (-132 - d.cz) * pull;
+    const rr = d.r * (1 - chase * (isLead ? 0 : 0.3));
+    const x = cx + Math.cos(a) * rr;
+    const z = cz + Math.sin(a) * rr * 0.8;
+    const y = d.h + Math.sin(t * 0.5 + d.ph) * d.amp * (1 - chase * 0.3);
     d.grp.position.set(x, y, z);
     const na = a + 0.02 * Math.sign(d.speed);
-    const nx = d.cx + Math.cos(na) * d.r, nz = d.cz + Math.sin(na) * d.r * 0.8;
+    const nx = cx + Math.cos(na) * rr, nz = cz + Math.sin(na) * rr * 0.8;
     d.grp.lookAt(nx, y, nz);
-    const f = Math.sin(t * 4.2 + d.ph) * 0.6;
+    const f = Math.sin(t * (4.2 + chase * 2.6) + d.ph) * (0.6 + chase * 0.3);
     d.L.rotation.z = 0.2 + f; d.R.rotation.z = -0.2 - f;
+    const m = d.grp.children[0].material;
+    m.emissiveIntensity = 0.45 + chase * 0.5;
   }
 }
 
@@ -1117,11 +1515,14 @@ function frame() {
   dir.intensity = 0.72 - phase * 0.5;
 
   tickLanterns(t, phase);
-  tickDragons(t);
+  tickDragons(t, u);
   tickFestival(t, phase);
   tickAtmosphere(t, phase);
   tickLandmarks(t, phase);
   tickCrowd(t);
+  tickFantasy(u, phase);
+  tickLaunch(u, t);
+  tickFireworks(u);
   for (const b of boats) {
     b.g.position.y = 0.5 + Math.sin(t * 0.9 + b.ph) * 0.22;
     b.g.rotation.y = b.ph + Math.sin(t * 0.14 + b.ph) * 0.5;
