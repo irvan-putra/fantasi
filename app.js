@@ -24,7 +24,7 @@ async function fetchWithProgress(url, onp) {
 
 const stallTimer = setTimeout(() => $('stall').classList.add('show'), 12000);
 
-const ASSET_V = 'v19i';
+const ASSET_V = 'v19j';
 const manifest = await (await fetch('./manifest.json?' + ASSET_V)).json();
 bar.style.width = '6%';
 const binBuf = await fetchWithProgress('./scene.bin?' + ASSET_V, (f) => { bar.style.width = (6 + f * 84) + '%'; });
@@ -263,16 +263,16 @@ void main(){
   // house geometry: wall box (y 0..0.75) + gable roof prism (y 0.75..1.0, eave overhang), non-indexed
   const HQ = [];
   const quad = (a, b, c, d, n, col) => { HQ.push([a, b, c, n, col], [a, c, d, n, col]); };
-  const W = [1, 1, 1], RS = [0.60, 0.56, 0.72], GB = [0.84, 0.80, 0.92];
-  quad([-0.5, 0, 0.5], [0.5, 0, 0.5], [0.5, 0.75, 0.5], [-0.5, 0.75, 0.5], [0, 0, 1], W);      // +z wall
-  quad([0.5, 0, -0.5], [-0.5, 0, -0.5], [-0.5, 0.75, -0.5], [0.5, 0.75, -0.5], [0, 0, -1], W);   // -z wall
-  quad([0.5, 0, 0.5], [0.5, 0, -0.5], [0.5, 0.75, -0.5], [0.5, 0.75, 0.5], [1, 0, 0], W);        // +x wall
-  quad([-0.5, 0, -0.5], [-0.5, 0, 0.5], [-0.5, 0.75, 0.5], [-0.5, 0.75, -0.5], [-1, 0, 0], W);   // -x wall
-  const SN1 = [0, 0.914, 0.408], SN2 = [0, 0.914, -0.408];
-  quad([-0.56, 0.75, 0.56], [0.56, 0.75, 0.56], [0.56, 1.0, 0], [-0.56, 1.0, 0], SN1, RS);       // south slope
-  quad([0.56, 0.75, -0.56], [-0.56, 0.75, -0.56], [-0.56, 1.0, 0], [0.56, 1.0, 0], SN2, RS);     // north slope
-  HQ.push([[0.56, 0.75, 0.56], [0.56, 0.75, -0.56], [0.56, 1.0, 0], [1, 0, 0], GB]);             // +x gable
-  HQ.push([[-0.56, 0.75, -0.56], [-0.56, 0.75, 0.56], [-0.56, 1.0, 0], [-1, 0, 0], GB]);         // -x gable
+  const W = [1, 1, 1], RS = [0.50, 0.46, 0.62], GB = [0.80, 0.76, 0.90];
+  quad([-0.5, 0, 0.5], [0.5, 0, 0.5], [0.5, 0.58, 0.5], [-0.5, 0.58, 0.5], [0, 0, 1], W);      // +z wall
+  quad([0.5, 0, -0.5], [-0.5, 0, -0.5], [-0.5, 0.58, -0.5], [0.5, 0.58, -0.5], [0, 0, -1], W);   // -z wall
+  quad([0.5, 0, 0.5], [0.5, 0, -0.5], [0.5, 0.58, -0.5], [0.5, 0.58, 0.5], [1, 0, 0], W);        // +x wall
+  quad([-0.5, 0, -0.5], [-0.5, 0, 0.5], [-0.5, 0.58, 0.5], [-0.5, 0.58, -0.5], [-1, 0, 0], W);   // -x wall
+  const SN1 = [0, 0.8, 0.6], SN2 = [0, 0.8, -0.6];
+  quad([-0.58, 0.58, 0.58], [0.58, 0.58, 0.58], [0.58, 1.0, 0], [-0.58, 1.0, 0], SN1, RS);       // south slope
+  quad([0.58, 0.58, -0.58], [-0.58, 0.58, -0.58], [-0.58, 1.0, 0], [0.58, 1.0, 0], SN2, RS);     // north slope
+  HQ.push([[0.58, 0.58, 0.58], [0.58, 0.58, -0.58], [0.58, 1.0, 0], [1, 0, 0], GB]);             // +x gable
+  HQ.push([[-0.58, 0.58, -0.58], [-0.58, 0.58, 0.58], [-0.58, 1.0, 0], [-1, 0, 0], GB]);         // -x gable
   const hp = [], hn = [], hc = [];
   for (const [a, b, c, n, col] of HQ) for (const v of [a, b, c]) { hp.push(...v); hn.push(...n); hc.push(...col); }
   const g = new THREE.InstancedBufferGeometry();
@@ -306,7 +306,7 @@ void main(){
   vec3 col=vC*(0.44+0.45*d);
   col+=vC*vec3(1.0,0.8,0.5)*uNight*0.5;
   float f=1.0-exp(-fogDensity*fogDensity*vFogZ*vFogZ);
-  col=mix(col,fogColor,clamp(f,0.0,1.0));
+  col=mix(col,fogColor,clamp(f*0.72,0.0,1.0));
   gl_FragColor=vec4(col,1.0);
 }`,
   });
