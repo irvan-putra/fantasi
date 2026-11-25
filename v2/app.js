@@ -1487,6 +1487,7 @@ addEventListener('keydown', unlock, { once: true });
 bar.style.width = '100%';
 clearTimeout(stallTimer);
 
+const PIN_U = (() => { const p = new URLSearchParams(location.search).get('u'); return p === null ? -1 : parseFloat(p); })();
 let start = null;
 let firstFrame = true;
 const clock = new THREE.Clock();
@@ -1495,7 +1496,7 @@ function frame() {
   requestAnimationFrame(frame);
   const t = clock.getElapsedTime();
   if (start === null) start = t;
-  const ms = (t - start) * 1000 + 400;
+  const ms = (PIN_U >= 0 ? PIN_U * LOOP_MS : (t - start) * 1000 + 400);
   const u = (ms % LOOP_MS) / LOOP_MS;
   window.__U = u;
 
