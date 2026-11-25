@@ -192,8 +192,205 @@ const wallMat = new THREE.MeshLambertMaterial({
 });
 scene.add(new THREE.Mesh(geoFromSections('walls', { uv: true }), wallMat));
 
+
+// ---------------- fantasy roofscape (load-time transform) ----------------
+// Turns the baked flat roof quads into varied fantasy rooftops: hipped
+// pyramids, pagoda tiers, domes, glowing ridges. Runs once at load.
+// (Design draft: Fenrir qwen3.8-27b; hash/color/ring/ridge bugs fixed by hand.)
+function transformRoofs(posArray, idxArray, colArray) {
+  const P = [], C = [], IDX = [];
+  const pushV = (x, y, z, r, g, b) => { P.push(x, y, z); C.push(r, g, b); return P.length / 3 - 1; };
+  const tri = (a, b, c) => { IDX.push(a, b, c); };
+
+  function hash3(cx, cz, cy) {
+    let h = 2166136261 >>> 0;
+    h = (h ^ Math.imul((cx * 1000) | 0, 16777619)) >>> 0; h = Math.imul(h, 16777619) >>> 0;
+    h = (h ^ Math.imul((cz * 1000) | 0, 374761393)) >>> 0; h = Math.imul(h, 16777619) >>> 0;
+    h = (h ^ Math.imul((cy * 1000) | 0, 2654435761)) >>> 0;
+    return h >>> 0;
+  }
+  const unit = (h, k) => ((h >>> k) & 0xffff) / 65535;  // 0..1 from hash bits
+  const jit = (col, seed, amount) => {
+    const j = 1 - amount * (0.4 + seed);  // darken slightly, never brighten
+    return [Math.max(0, col[0] * j), Math.max(0, col[1] * j), Math.max(0, col[2] * j)];
+  };
+  const accent = (col) => [
+    Math.min(255, col[0] * 1.2 + 95),
+    Math.min(255, col[1] * 1.2 + 62),
+    Math.min(255, col[2] * 1.2 + 22)];
+
+  function corners(v0, v1, v2, v3) {
+    return {
+      cx: (v0[0] + v1[0] + v2[0] + v3[0]) * 0.25,
+      cz: (v0[2] + v1[2] + v2[2] + v3[2]) * 0.25,
+      y: (v0[1] + v1[1] + v2[1] + v3[1]) * 0.25,
+      w: Math.hypot(v1[0] - v0[0], v1[2] - v0[2]),
+      d: Math.hypot(v3[0] - v0[0], v3[2] - v0[2]),
+    };
+  }
+
+  function buildHipped(v0, v1, v2, v3, cols, h) {
+    const { cx, cz, y, w, d } = corners(v0, v1, v2, v3);
+    const apexH = Math.min(w, d) * (0.18 + unit(h, 3) * 0.17);
+    const apexY = y + apexH;
+    const baseC = cols[0];
+    const a0 = pushV(v0[0], v0[1], v0[2], ...jit(baseC, unit(h, 7), 0.10));
+    const a1 = pushV(v1[0], v1[1], v1[2], ...jit(baseC, unit(h, 9), 0.10));
+    const a2 = pushV(v2[0], v2[1], v2[2], ...jit(baseC, unit(h, 11), 0.10));
+    const a3 = pushV(v3[0], v3[1], v3[2], ...jit(baseC, unit(h, 13), 0.10));
+    const apex = pushV(cx, apexY, cz, ...accent(baseC));
+    tri(a0, a1, apex); tri(a1, a2, apex); tri(a2, a3, apex); tri(a3, a0, apex);
+    if (unit(h, 20) < 0.15) {
+      const sH = 2 + unit(h, 26) * 2, sW = 0.4, sTopY = apexY + sH;
+      const fin = [205, 255, 250];
+      const s0 = pushV(cx - sW, apexY, cz - sW, ...fin);
+      const s1 = pushV(cx + sW, apexY, cz - sW, ...fin);
+      const s2 = pushV(cx + sW, apexY, cz + sW, ...fin);
+      const s3 = pushV(cx - sW, apexY, cz + sW, ...fin);
+      const sTop = pushV(cx, sTopY, cz, ...fin);
+      tri(s0, s1, sTop); tri(s1, s2, sTop); tri(s2, s3, sTop); tri(s3, s0, sTop);
+    }
+  }
+
+  function buildTiered(v0, v1, v2, v3, cols, h) {
+    const { cx, cz, y, w, d } = corners(v0, v1, v2, v3);
+    const totalH = Math.min(w, d) * (0.25 + unit(h, 5) * 0.15);
+    const baseC = cols[0], acc = accent(baseC);
+    const tiers = [[1.0, 0], [0.72, totalH * 0.5], [0.42, totalH * 0.85]];
+    let prev = null;
+    for (const [sc, ty] of tiers) {
+      const ring = [v0, v1, v2, v3].map((vv, k) =>
+        pushV(cx + (vv[0] - cx) * sc, y + ty, cz + (vv[2] - cz) * sc, ...jit(baseC, unit(h, 7 + k * 2), 0.10)));
+      if (prev) {
+        for (let k = 0; k < 4; k++) {
+          const k2 = (k + 1) % 4;
+          tri(prev[k], prev[k2], ring[k]); tri(prev[k2], ring[k2], ring[k]);
+        }
+      }
+      prev = ring;
+    }
+    const apex = pushV(cx, y + totalH * 1.15, cz, ...acc);
+    for (let k = 0; k < 4; k++) {
+      const k2 = (k + 1) % 4;
+      tri(prev[k], prev[k2], apex);
+    }
+  }
+
+  function buildDome(v0, v1, v2, v3, cols, h) {
+    const { cx, cz, y, w, d } = corners(v0, v1, v2, v3);
+    const R = Math.min(w, d) * 0.5;
+    const domeH = R * (0.6 + unit(h, 8) * 0.3);
+    const baseC = cols[0], acc = accent(baseC);
+    const segs = 8;
+    const ring = [], mid = [];
+    for (let i = 0; i < segs; i++) {
+      const a = (i / segs) * Math.PI * 2;
+      ring.push(pushV(cx + Math.cos(a) * R, y, cz + Math.sin(a) * R, ...jit(baseC, unit(h, 7), 0.08)));
+      const am = ((i + 0.5) / segs) * Math.PI * 2;
+      mid.push(pushV(cx + Math.cos(am) * R * 0.68, y + domeH * 0.62, cz + Math.sin(am) * R * 0.68, ...jit(baseC, unit(h, 11), 0.05)));
+    }
+    const apex = pushV(cx, y + domeH, cz, ...acc);
+    for (let i = 0; i < segs; i++) {
+      const i2 = (i + 1) % segs;
+      tri(ring[i], ring[i2], mid[i]);   // lower band, first half
+      tri(ring[i2], mid[i2], mid[i]);   // lower band, second half
+      tri(mid[i], mid[i2], apex);       // upper fan
+    }
+  }
+
+  function buildFlatRidge(v0, v1, v2, v3, cols, h) {
+    const { cx, cz, y, w, d } = corners(v0, v1, v2, v3);
+    const baseC = cols[0];
+    const a0 = pushV(v0[0], v0[1], v0[2], ...jit(baseC, unit(h, 7), 0.06));
+    const a1 = pushV(v1[0], v1[1], v1[2], ...jit(baseC, unit(h, 9), 0.06));
+    const a2 = pushV(v2[0], v2[1], v2[2], ...jit(baseC, unit(h, 11), 0.06));
+    const a3 = pushV(v3[0], v3[1], v3[2], ...jit(baseC, unit(h, 13), 0.06));
+    tri(a0, a1, a2); tri(a0, a2, a3);
+    // ridge ribbon along the longer axis through the centroid
+    const alongX = w >= d;
+    const half = (alongX ? w : d) * 0.42;
+    const rw = Math.min(w, d) * 0.10;
+    const rh = 0.5 + unit(h, 10) * 0.5;
+    const ry = y + rh;
+    const rc = accent(baseC);
+    const p = (sx, sz) => pushV(cx + sx, ry, cz + sz, ...rc);
+    let q0, q1, q2, q3;
+    if (alongX) { q0 = p(-half, -rw); q1 = p(half, -rw); q2 = p(half, rw); q3 = p(-half, rw); }
+    else { q0 = p(-rw, -half); q1 = p(rw, -half); q2 = p(rw, half); q3 = p(-rw, half); }
+    tri(q0, q1, q2); tri(q0, q2, q3);
+  }
+
+  // ---- quad detection: triangles sharing an edge, same flat y ----
+  const v = (i) => [posArray[i * 3], posArray[i * 3 + 1], posArray[i * 3 + 2]];
+  const cc = (i) => [colArray[i * 3], colArray[i * 3 + 1], colArray[i * 3 + 2]];
+  const tris = [];
+  for (let i = 0; i < idxArray.length; i += 3) tris.push([idxArray[i], idxArray[i + 1], idxArray[i + 2]]);
+  // index triangles by their vertices for O(1) partner lookup
+  const byVert = new Map();
+  tris.forEach((t, i) => { for (const vi of t) { if (!byVert.has(vi)) byVert.set(vi, []); byVert.get(vi).push(i); } });
+  const used = new Uint8Array(tris.length);
+  const copyTri = (t) => {
+    const [a, b, cI] = t;
+    const pa = pushV(...v(a), ...cc(a)), pb = pushV(...v(b), ...cc(b)), pc = pushV(...v(cI), ...cc(cI));
+    tri(pa, pb, pc);
+  };
+
+  for (let i = 0; i < tris.length; i++) {
+    if (used[i]) continue;
+    used[i] = 1;
+    const [a, b, cI] = tris[i];
+    const va = v(a), vb = v(b), vc = v(cI);
+    if (Math.abs(va[1] - vb[1]) > 0.5 || Math.abs(va[1] - vc[1]) > 0.5) { copyTri(tris[i]); continue; }
+    // partner shares exactly 2 verts and has one new vert at the same y
+    let done = false;
+    const candidates = new Set([...byVert.get(a), ...byVert.get(b), ...byVert.get(cI)]);
+    for (const j of candidates) {
+      if (j <= i || used[j]) continue;
+      const t2 = tris[j];
+      const shared = t2.filter(x => x === a || x === b || x === cI);
+      if (shared.length !== 2) continue;
+      const g = t2.find(x => x !== a && x !== b && x !== cI);
+      const vg = v(g);
+      if (Math.abs(va[1] - vg[1]) > 0.5) continue;
+      // order the quad: convex check on candidate orderings
+      let order = null;
+      for (const cand of [[a, b, cI, g], [a, g, cI, b], [a, b, g, cI]]) {
+        const q0 = v(cand[0]), q1 = v(cand[1]), q2 = v(cand[2]), q3 = v(cand[3]);
+        const cross1 = (q1[0] - q0[0]) * (q2[2] - q1[2]) - (q1[2] - q0[2]) * (q2[0] - q1[0]);
+        const cross2 = (q2[0] - q1[0]) * (q3[2] - q2[2]) - (q2[2] - q1[2]) * (q3[0] - q2[0]);
+        const cross3 = (q3[0] - q2[0]) * (q0[2] - q3[2]) - (q3[2] - q2[2]) * (q0[0] - q3[0]);
+        if (cross1 * cross2 > 0 && cross2 * cross3 > 0) { order = cand; break; }
+      }
+      if (!order) continue;
+      used[j] = 1;
+      const qv = order.map(x => v(x));
+      const qc = order.map(x => cc(x));
+      const { cx, cz, y, w, d } = corners(qv[0], qv[1], qv[2], qv[3]);
+      const h = hash3(cx, cz, y);
+      const roll = unit(h, 2);
+      const minDim = Math.min(w, d);
+      if (y > 60) buildFlatRidge(qv[0], qv[1], qv[2], qv[3], qc, h);
+      else if (minDim > 25 && roll < 0.25) buildTiered(qv[0], qv[1], qv[2], qv[3], qc, h);
+      else if (roll < 0.12) buildDome(qv[0], qv[1], qv[2], qv[3], qc, h);
+      else buildHipped(qv[0], qv[1], qv[2], qv[3], qc, h);
+      done = true;
+      break;
+    }
+    if (!done) copyTri(tris[i]);
+  }
+  return { pos: new Float32Array(P), idx: new Uint32Array(IDX), col: new Uint8Array(C) };
+}
+
 const roofMat = new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide });
-scene.add(new THREE.Mesh(geoFromSections('roofs'), roofMat));
+{
+  const tr = transformRoofs(sec('roofs_pos'), sec('roofs_idx'), sec('roofs_col'));
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(tr.pos, 3));
+  g.setAttribute('color', new THREE.BufferAttribute(tr.col, 3, true));
+  g.setIndex(new THREE.BufferAttribute(tr.idx, 1));
+  g.computeVertexNormals();
+  scene.add(new THREE.Mesh(g, roofMat));
+}
 
 const glowMat = new THREE.MeshBasicMaterial({ vertexColors: true, toneMapped: false, side: THREE.DoubleSide });
 glowMat.color.setScalar(0.0);
