@@ -361,9 +361,6 @@ if (!window.maplibregl) {
   boot().catch((err) => showError('Something went wrong', String((err && err.message) || err)));
 }
 
-window.__errs = [];
-window.addEventListener('error', (e) => window.__errs.push(String(e.message || e.error).slice(0, 300)));
-window.addEventListener('unhandledrejection', (e) => window.__errs.push('rej: ' + String((e.reason && (e.reason.stack || e.reason.message)) || e.reason).slice(0, 400)));
 
 async function boot() {
   let map;
@@ -578,41 +575,6 @@ async function boot() {
 
   function addBuildingLayers(src, key) {
     const id = 'bldg-' + key.replace(',', '-');
-    // Daylight roof palette: pick a tone by height band, with a per-feature hash
-    // (of the index + height) sprinkling 3-4 roof tones per band. Flat colors, no vertical gradient.
-    const roofColor = ['match', ['get', 'rh'],
-      0, ['#c96f4a', '#d98e5f', '#c4835a', '#e0a06b'],
-      1, ['#cfc8bd', '#bfc4cc', '#d8cfc0'],
-      ['#8fa8c8', '#9fb6d6', '#7e96bc'],
-    ];
-    const rhExpr = [
-      'case',
-      ['<', ['coalesce', ['get', 'h'], 3], 10], 0,
-      ['<=', ['coalesce', ['get', 'h'], 3], 40], 1,
-      2,
-    ];
-    const pickExpr = [
-      'get', ['concat', ['str', ['str', ['get', 'i']], ''], ['str', ['get', 'h']]],
-    ];
-    // Build a stable per-feature index into the band array via (i*7 + h*13) mod len.
-    const idx = [
-      'mod',
-      ['+', ['*', ['coalesce', ['get', 'i'], 0], 7], ['floor', ['coalesce', ['get', 'h'], 3]], 13],
-      ['match', rhExpr, 0, 4, 1, 3, 3],
-    ];
-    const colorExpr = [
-      'get',
-      ['concat',
-        ['str', ['str', ['get', 'rh'], '_']],
-        idx,
-      ],
-    ];
-    // MapLibre match on a numeric 'rh' then concat a token string is awkward; use a direct match on 'rh' to band arrays.
-    const color = ['match', rhExpr,
-      0, ['#c96f4a', '#d98e5f', '#c4835a', '#e0a06b'],
-      1, ['#cfc8bd', '#bfc4cc', '#d8cfc0'],
-      ['#8fa8c8', '#9fb6d6', '#7e96bc'],
-    ];
     map.addLayer({
       id,
       type: 'fill-extrusion',
@@ -620,7 +582,7 @@ async function boot() {
       paint: {
         'fill-extrusion-height': ['min', ['max', ['coalesce', ['get', 'h'], 3], 2.5], 500],
         'fill-extrusion-base': 0,
-        'fill-extrusion-color': color,
+        'fill-extrusion-color': ['coalesce', ['get', 'rc'], BUILDING_COLOR],
         'fill-extrusion-opacity': [
           'interpolate', ['linear'], ['zoom'],
           13, 0, 14, 0.96,
@@ -703,6 +665,21 @@ async function boot() {
     if ((kind === 'b' ? bLoaded : rLoaded).has(key)) { updateProgress(); return; }
     if (!map.getStyle()) return;
 
+    if (kind === 'b') {
+      // pick a stable daylight roof color per building before the source copies the data
+      const PAL = [
+        ['#c96f4a', '#d98e5f', '#c4835a', '#e0a06b'], // low-rise: terracotta tones
+        ['#cfc8bd', '#bfc4cc', '#d8cfc0'],            // mid: concrete tones
+        ['#8fa8c8', '#9fb6d6', '#7e96bc'],            // tall: blue-glass tones
+      ];
+      for (const f of fc.features) {
+        const h = f.properties.h || 0;
+        const i = f.properties.i || 0;
+        const band = h <= 10 ? 0 : (h <= 40 ? 1 : 2);
+        const tones = PAL[band];
+        f.properties.rc = tones[Math.abs(i * 7 + Math.floor(h) * 13) % tones.length];
+      }
+    }
     const src = (kind === 'b' ? 'b-' : 'r-') + key.replace(',', '-');
     try {
       map.addSource(src, { type: 'geojson', data: fc });
@@ -710,12 +687,6 @@ async function boot() {
 
     const rec = { src, layers: [], fc };
     if (kind === 'b') {
-      // attach the roof-band index on each feature so the color can be varied per building
-      for (const f of fc.features) {
-        const h = f.properties.h || 0;
-        const i = f.properties.i || 0;
-        f.properties.rh = h <= 10 ? 0 : (h <= 40 ? 1 : 2);
-      }
       rec.layers.push(addBuildingLayers(src, key));
       bLoaded.set(key, rec);
       hidePoster();
@@ -959,16 +930,14 @@ async function boot() {
   async function runCinematic(opts = {}) {
     releaseCamera();
     const token = tourToken;
-    window.__cine = { leg: -1, err: null, tok: token };
     tourRunning = true;
     cinematicRunning = true;
     $tour.classList.add('active');
     const label = $tour.querySelector('span');
     if (label) label.textContent = 'Stop';
     for (const [li, v] of CINEMATIC.entries()) {
-      window.__cine.leg = li; window.__cine.tokNow = tourToken;
       if (token !== tourToken) return;
-      try { $tourLabel.textContent = v.name; } catch (e) { window.__cine.err = 'label: ' + String(e); }
+      $tourLabel.textContent = v.name;
       $tourLabel.classList.add('show');
       map.flyTo({ center: v.center, zoom: v.zoom, pitch: v.pitch, bearing: v.bearing, duration: v.flyMs, essential: true });
       await sleep(v.flyMs + v.holdMs);
