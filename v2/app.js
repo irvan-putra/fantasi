@@ -24,7 +24,7 @@ async function fetchWithProgress(url, onp) {
 
 const stallTimer = setTimeout(() => $('stall').classList.add('show'), 12000);
 
-const ASSET_V = 'v20b';
+const ASSET_V = 'v20c';
 const manifest = await (await fetch('./manifest.json?' + ASSET_V)).json();
 bar.style.width = '6%';
 const binBuf = await fetchWithProgress('./scene.bin?' + ASSET_V, (f) => { bar.style.width = (6 + f * 84) + '%'; });
@@ -243,7 +243,7 @@ void main(){
   float sh1=smoothstep(0.72,0.98,sin(vW.x*0.22+uTime*1.4+vW.z*0.09)*0.5+0.5);
   float sh2=smoothstep(0.80,1.00,sin(vW.z*0.18-uTime*1.9-vW.x*0.05)*0.5+0.5);
   float shimmer=(sh1+sh2)*0.5*band;
-  col+=vec3(0.35,0.75,0.85)*shimmer*uGlow*0.55;
+  col+=vec3(0.35,0.75,0.85)*shimmer*uGlow*0.4;
   col+=vec3(1.0,0.6,0.25)*shimmer*uGlow*0.35;
   col+=cy*band*uGlow*0.22;
   vec2 cell=floor(vW.xz*0.9);
@@ -1380,7 +1380,7 @@ function tickDragons(t, u) {
   for (const d of dragons) {
     const isLead = d.ph === 0.0;
     const spd = d.speed * (1 + chase * (isLead ? 0.8 : 0.45));
-    const a = t * spd + d.ph;
+    const a = t * spd + d.ph * (1 - gather * 0.88); // gather collapses phases into a trailing lane
     // non-leaders pull toward the lead orbit center during the chase
     const pull = chase * (isLead ? 0 : 0.55);
     const pull2 = gather * 0.8;
