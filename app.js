@@ -678,7 +678,7 @@ function makeDragon(colorHex) {
     const g = new THREE.ConeGeometry(1.1, 7.2, 5); g.rotateX(-Math.PI / 2); g.translate(0, 0.3, -8.1);
     body.push({ g, c: [base.r, base.g, base.b] });
   }
-  const bodyMesh = new THREE.Mesh(mergeGeos(body), new THREE.MeshLambertMaterial({ vertexColors: true, emissive: new THREE.Color(colorHex), emissiveIntensity: 0.32 }));
+  const bodyMesh = new THREE.Mesh(mergeGeos(body), new THREE.MeshLambertMaterial({ vertexColors: true, emissive: new THREE.Color(colorHex), emissiveIntensity: 0.45 }));
   const glows = [];
   for (const sx of [-0.75, 0.75]) {
     const g = new THREE.SphereGeometry(0.3, 5, 4); g.translate(sx, 2.1, 9.3);
@@ -703,7 +703,7 @@ function makeDragon(colorHex) {
     const col = [];
     for (let i = 0; i < 6; i++) col.push(fin.r, fin.g, fin.b);
     g.setAttribute('color', new THREE.BufferAttribute(new Float32Array(col), 3));
-    const m = new THREE.Mesh(g, new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide, emissive: new THREE.Color(colorHex), emissiveIntensity: 0.4 }));
+    const m = new THREE.Mesh(g, new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide, emissive: new THREE.Color(colorHex), emissiveIntensity: 0.55 }));
     pivot.add(m);
     return pivot;
   }
@@ -721,7 +721,7 @@ function makeDragon(colorHex) {
 }
 const DRAG_PATHS = [
   { cx: 177, cz: -132, r: 150, h: 120, amp: 18, speed: 0.16, ph: 0.0 },
-  { cx: -166, cz: 143, r: 120, h: 100, amp: 16, speed: -0.12, ph: 2.1 },
+  { cx: -250, cz: 210, r: 140, h: 100, amp: 16, speed: -0.12, ph: 2.1 },
   { cx: 560, cz: 350, r: 130, h: 105, amp: 25, speed: 0.10, ph: 4.2 },
 ];
 const dragons = manifest.dragons.map((d, i) => {
