@@ -24,7 +24,7 @@ async function fetchWithProgress(url, onp) {
 
 const stallTimer = setTimeout(() => $('stall').classList.add('show'), 12000);
 
-const ASSET_V = 'v19k';
+const ASSET_V = 'v19l';
 const manifest = await (await fetch('./manifest.json?' + ASSET_V)).json();
 bar.style.width = '6%';
 const binBuf = await fetchWithProgress('./scene.bin?' + ASSET_V, (f) => { bar.style.width = (6 + f * 84) + '%'; });
@@ -72,10 +72,10 @@ scene.add(dir);
 // ---------------- sky dome (v3: sun disc, bands, clouds, moon) ----------------
 const skyMat = new THREE.ShaderMaterial({
   side: THREE.BackSide, depthWrite: false, fog: false,
-  uniforms: { uPhase: { value: 0 }, uTime: { value: 0 } },
+  uniforms: { uPhase: { value: 0 }, uTime: { value: 0 }, fogColor: { value: new THREE.Color() } },
   vertexShader: 'varying vec3 vDir;void main(){vDir=normalize(position);vec4 p=projectionMatrix*modelViewMatrix*vec4(position,1.0);gl_Position=p.xyww;}',
   fragmentShader: `
-precision highp float;uniform float uPhase;uniform float uTime;varying vec3 vDir;
+precision highp float;uniform float uPhase;uniform float uTime;uniform vec3 fogColor;varying vec3 vDir;
 float hash12(vec2 p){vec3 p3=fract(vec3(p.xyx)*0.1031);p3+=dot(p3,p3.yzx+33.33);return fract((p3.x+p3.y)*p3.z);}
 float vnoise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);
   float a=hash12(i),b=hash12(i+vec2(1.,0.)),c=hash12(i+vec2(0.,1.)),d=hash12(i+vec2(1.,1.));
@@ -125,6 +125,9 @@ void main(){
     float w=0.5+0.5*sin(atan(d.z,d.x)*3.0+uTime*0.1+d.y*4.0);
     col+=vec3(0.1,0.7,0.6)*band2*w*au*0.16;
   }
+  // blend the lowest sky band into the scene fog color so distant geometry meets the sky seamlessly
+  float hf=1.0-smoothstep(-0.045,0.075,d.y);
+  col=mix(col,fogColor,hf*0.94);
   gl_FragColor=vec4(col,1.0);
 }`,
 });
@@ -1530,6 +1533,7 @@ function frame() {
   sky.position.copy(camera.position);
 
   scene.fog.color.copy(FOG_DUSK).lerp(FOG_NIGHT, phase);
+  skyMat.uniforms.fogColor.value.copy(scene.fog.color);
   if (groundMatRef) groundMatRef.color.copy(scene.fog.color).multiplyScalar(0.62);
   waterUniforms.uTime.value = t;
   waterUniforms.uGlow.value = 0.35 + phase * 0.95;
