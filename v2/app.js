@@ -24,7 +24,7 @@ async function fetchWithProgress(url, onp) {
 
 const stallTimer = setTimeout(() => $('stall').classList.add('show'), 12000);
 
-const ASSET_V = 'v19g';
+const ASSET_V = 'v19h';
 const manifest = await (await fetch('./manifest.json?' + ASSET_V)).json();
 bar.style.width = '6%';
 const binBuf = await fetchWithProgress('./scene.bin?' + ASSET_V, (f) => { bar.style.width = (6 + f * 84) + '%'; });
@@ -208,10 +208,12 @@ const roadMat = new THREE.MeshBasicMaterial({ vertexColors: true });
 scene.add(new THREE.Mesh(geoFromSections('roads'), roadMat));
 
 // ground disc
+let groundMatRef = null;
 {
   const g = new THREE.CircleGeometry(3400, 48);
   g.rotateX(-Math.PI / 2);
   const m = new THREE.MeshBasicMaterial({ color: 0x182840 });
+  groundMatRef = m;
   const mesh = new THREE.Mesh(g, m);
   mesh.position.y = -0.05;
   scene.add(mesh);
@@ -1513,6 +1515,7 @@ function frame() {
   sky.position.copy(camera.position);
 
   scene.fog.color.copy(FOG_DUSK).lerp(FOG_NIGHT, phase);
+  if (groundMatRef) groundMatRef.color.copy(scene.fog.color).multiplyScalar(0.62);
   waterUniforms.uTime.value = t;
   waterUniforms.uGlow.value = 0.35 + phase * 0.95;
   waterUniforms.fogColor.value.copy(scene.fog.color);
