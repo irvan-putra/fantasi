@@ -8,7 +8,9 @@ import time
 
 BUILD_Z = 15
 ROAD_Z = 14
+COARSE_Z = 12
 SIMPLIFY_TOL_M = 1.5
+COARSE_SIMPLIFY_TOL_M = 4.0
 K = math.pi * 6378137.0 / 180.0
 MAX_LAT = 85.05112878
 MAX_OPEN_FILES = 64
@@ -439,6 +441,67 @@ def list_tile_files(root):
     return out
 
 
+def cmd_coarse(flags):
+    import heapq
+
+    buildings_in = flags["buildings"]
+    tiles_out = flags["tiles-out"]
+    per_tile = flags["per-tile"]
+
+    # bounded heap per coarse tile: (area, seq, height, ring); never the full set
+    heaps = {}
+    seq = 0
+    t0 = time.time()
+    with open(buildings_in, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            feat = json.loads(line)
+            try:
+                ring_raw = feat["geometry"]["coordinates"][0]
+            except (KeyError, IndexError, TypeError):
+                continue
+            ring = simplify_ring(ring_raw, COARSE_SIMPLIFY_TOL_M)
+            if ring is None:
+                continue
+            ac = ring_area_centroid(ring)
+            if ac is None:
+                continue
+            area_m2, lon_c, lat_c = ac
+            height = estimate_height(area_m2, lon_c, lat_c)
+            tx, ty, _ = lonlat_to_tile(lon_c, lat_c, COARSE_Z)
+            h = heaps.get((tx, ty))
+            if h is None:
+                h = []
+                heaps[(tx, ty)] = h
+            entry = (area_m2, seq, height, ring)
+            seq += 1
+            if len(h) < per_tile:
+                heapq.heappush(h, entry)
+            elif area_m2 > h[0][0]:
+                heapq.heapreplace(h, entry)
+
+    kept = 0
+    tile_count = 0
+    for (tx, ty), h in heaps.items():
+        if not h:
+            continue
+        feats = []
+        for _area, _seq, height, ring in sorted(h, key=lambda e: -e[0]):
+            feats.append([height, [[r6(x), r6(y)] for x, y in ring]])
+        write_tile(tiles_out, "c", tx, ty, {"z": COARSE_Z, "x": tx, "y": ty, "features": feats})
+        kept += len(feats)
+        tile_count += 1
+
+    elapsed = time.time() - t0
+    print(
+        "coarse tiles: " + str(tile_count)
+        + ", features kept: " + str(kept)
+        + " in " + format(elapsed, ".1f") + "s"
+    )
+
+
 def cmd_index(flags):
     tiles_out = flags["tiles-out"]
     parts_out = flags["parts-out"]
@@ -472,6 +535,24 @@ def cmd_index(flags):
         },
         "heights": "estimated",
     }
+
+    c_root = os.path.join(tiles_out, "c")
+    if os.path.isdir(c_root):
+        c_tiles = list_tile_files(c_root)
+        c_count = 0
+        for tx, ty in c_tiles:
+            path = os.path.join(c_root, str(tx), str(ty) + ".json")
+            try:
+                with open(path, "r", encoding="utf-8") as f:
+                    c_count += len(json.load(f).get("features", []))
+            except (OSError, ValueError):
+                pass
+        index["coarse"] = {
+            "z": COARSE_Z,
+            "tiles": [[x, y] for x, y in c_tiles],
+            "count": c_count,
+        }
+
     idx_path = os.path.join(tiles_out, "index.json")
     data = json.dumps(index, separators=(",", ":")).encode("utf-8")
     with open(idx_path, "wb") as f:
@@ -481,7 +562,7 @@ def cmd_index(flags):
 
     total_bytes = len(data)
     max_tile_bytes = 0
-    for sub in ("b", "r"):
+    for sub in ("b", "r", "c"):
         root = os.path.join(tiles_out, sub)
         if not os.path.isdir(root):
             continue
@@ -506,6 +587,7 @@ def main():
             "--total-buildings N --slice I --slices M | "
             "build_tiles.py roads --roads PATH --parts-out DIR --bbox W,S,E,N | "
             "build_tiles.py finalize --parts-out DIR --tiles-out DIR --finalize-slice J --finalize-slices K | "
+            "build_tiles.py coarse --buildings PATH --tiles-out DIR --bbox W,S,E,N --per-tile N | "
             "build_tiles.py index --tiles-out DIR --parts-out DIR --bbox W,S,E,N --roads-count M",
             file=sys.stderr,
         )
@@ -549,6 +631,18 @@ def main():
                 print("missing flag: --" + req, file=sys.stderr)
                 sys.exit(2)
         cmd_finalize(flags)
+    elif cmd == "coarse":
+        flags = parse_flags(rest, {
+            "buildings": "str",
+            "tiles-out": "str",
+            "bbox": "bbox",
+            "per-tile": "int",
+        })
+        for req in ("buildings", "tiles-out", "bbox", "per-tile"):
+            if req not in flags:
+                print("missing flag: --" + req, file=sys.stderr)
+                sys.exit(2)
+        cmd_coarse(flags)
     elif cmd == "index":
         flags = parse_flags(rest, {
             "tiles-out": "str",
