@@ -817,7 +817,7 @@ let fxStringMat, fxHaloMat;
   let sd = 7; const rnd = () => (sd = (sd * 9301 + 49297) & 65535) / 65535;
   for (let i = 0; i < 22; i++) {
     const ax = 177 + (rnd() - 0.5) * 110, az = -132 + (rnd() - 0.5) * 100;
-    const w = 6 + rnd() * 5, d = 4 + rnd() * 3, ry = rnd() * Math.PI;
+    const w = 4.5 + rnd() * 3.5, d = 3 + rnd() * 2, ry = rnd() * Math.PI;
     const p = new THREE.PlaneGeometry(w, d);
     p.rotateX(-Math.PI / 2 + 0.32); p.rotateY(ry);
     p.translate(ax, 4.2 + rnd() * 1.5, az);
@@ -920,7 +920,7 @@ let crowdMat, crowdPts, crowdBase;
   }
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.BufferAttribute(p, 3));
-  crowdMat = new THREE.PointsMaterial({ size: 2.8, map: haloTex, color: 0xffdc9e, transparent: true, opacity: 0.9, depthWrite: false, blending: THREE.AdditiveBlending });
+  crowdMat = new THREE.PointsMaterial({ size: 2.1, map: haloTex, color: 0xffdc9e, transparent: true, opacity: 0.9, depthWrite: false, blending: THREE.AdditiveBlending });
   crowdMat.toneMapped = false;
   crowdPts = new THREE.Points(g, crowdMat);
   scene.add(crowdPts);
@@ -939,8 +939,8 @@ const KEYS = [
   { pos: [-1305.9, 520, -1459.1], look: [22.13, 60, 33.16], hold: 2600, fly: 5000, title: "Dusk Horizon", note: "Amber light dissolves into the first twilight shadows" },
   { pos: [-520, 130, -820], look: [22, 50, 33], hold: 1500, fly: 5200, title: "The High Descent", note: "Sliding down toward the glowing realm" },
   { pos: [-260, 64, -430], look: [22, 40, -60], hold: 1400, fly: 5000, title: "Twin Spire Dive", note: "The tallest towers frame a canyon of light" },
-  { pos: [90, 26, -260], look: [177, 18, -132], hold: 2200, fly: 4800, title: "Gate of Lanterns", note: "Under the great gate, into the festival" },
-  { pos: [152, 24, -95], look: [177, 14, -132], hold: 2000, fly: 5000, title: "Star Market Life", note: "Vendors weave through drifting sky lanterns" },
+  { pos: [84, 34, -272], look: [177, 20, -132], hold: 2200, fly: 4800, title: "Gate of Lanterns", note: "Under the great gate, into the festival" },
+  { pos: [128, 46, -62], look: [185, 12, -140], hold: 2000, fly: 5000, title: "Star Market Life", note: "Vendors weave through drifting sky lanterns" },
   { pos: [-40, 42, -40], look: [-166, 40, 143], hold: 1600, fly: 5000, title: "Pagoda Orbit", note: "Curling around the tiered temple roof" },
   { pos: [-300, 48, 20], look: [-250, 26, 60], hold: 1600, fly: 5200, title: "Palace Mist", note: "Silhouettes of the hall pierce the low fog" },
   { pos: [-160, 130, 260], look: [700, 30, 430], hold: 1500, fly: 5400, title: "Water Reveal", note: "Rising over the glowing canals for the reveal" },
