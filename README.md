@@ -1,10 +1,16 @@
-# kota — Jakarta at 1:1
+# fantasi — Pramuka Astral, a fantasy realm at 1:1
 
-A 3D building-footprint map of the Green Pramuka City area, Jakarta (5.5 x 5.5 km, 44,795 buildings, 12,252 road segments), rendered in the browser with MapLibre GL. No build step, no tile server: static viewport tiles + a progressive viewer. Live tile payload: 9.2 MB.
+**Pramuka Astral** is an invented fantasy realm draped over the real street layout of Green Pramuka City, Jakarta (5.5 x 5.5 km, 44,795 real building footprints, 12,252 road segments), rendered in the browser with MapLibre GL. No build step, no tile server: static viewport tiles + a progressive viewer. Live tile payload: 9.2 MB. The fantasy layer (dragons, floating islands, glowing rivers, landmarks, fireflies, generative music) is fully procedural — a few dozen numbers, no binary assets.
+
+It opens on a dusk-to-night cinematic flythrough that starts by itself, with an opening title card, six named beats, a closing title card and a synthesized ambient score. **Everything magical is fictional; the streets and footprints underneath are real.**
+
+Live: <https://vanipy.com/fantasi/> (old <https://vanipy.com/kota/> links redirect here).
+
+The earlier non-fantasy builds are preserved as tags: `archive-real-green-pramuka` (daylight city viewer) and `archive-greater-jakarta` (816 MB Jabodetabek build, not served).
 
 Inspired by [Gabriel Chua's 1:1 Singapore flythrough](https://www.threads.com/share/FNCjS5T_A). The map adds simulated cars and people moving on the real road network (building footprints and roads are real data; the life on them is a sketch, like the heights).
 
-All substantive code (the data pipeline, the tiler and the map viewer) was written by **GLM-5.3-Flash** served by [Fenrir](https://fenrir.lio.id), steered through a small driver harness (`gen/driver.py`) with briefs in `gen/briefs/`. Token spend is logged in `gen/ledger.jsonl`.
+All substantive code (the data pipeline, the tiler and the map viewer) was written by AI models served by [Fenrir](https://fenrir.lio.id) — **GLM-5.3-Flash** for the original pipeline and viewer, **qwen3.8-27b** for the daylight redesign and the fantasy realm's creative direction — steered through a small driver harness (`gen/driver.py`) with briefs in `gen/briefs/`. Token spend is logged in `gen/ledger.jsonl`. AI-written and not fully reviewed. Techniques and sources: `docs/procedural-demoscene-notes.md`.
 
 ## Data
 
@@ -38,6 +44,8 @@ All substantive code (the data pipeline, the tiler and the map viewer) was writt
 - Started as a 2.6 x 2.9 km Green Pramuka demo (12,706 buildings, two JSON data files).
 - Extended to all of mainland Jakarta (DKI): 1,491,065 buildings + 306,254 road features (first tiled architecture).
 - Extended to Greater Jakarta / Jabodetabek (bbox 106.35-107.25, -6.75--5.95): 4,662,955 buildings + 732,867 road features, 6,833 tiles (816 MB) — archived as tag `archive-greater-jakarta`, not served on the live branch.
+- Daylight redesign (varied roof colors, real parks/water/trees, autoplay cinematic) by qwen3.8-27b — archived as tag `archive-real-green-pramuka`.
+- Reimagined as **Pramuka Astral** (fantasy realm, dusk-to-night arc, procedural fantasy layer, generative score) and the repo renamed `kota` -> `fantasi`; a redirect repo keeps `/kota/` links working.
 - Refocused on Green Pramuka (5.5 x 5.5 km) for fast mobile loading, with the progressive viewer.
 
 ---
