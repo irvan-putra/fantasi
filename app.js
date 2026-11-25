@@ -24,7 +24,7 @@ async function fetchWithProgress(url, onp) {
 
 const stallTimer = setTimeout(() => $('stall').classList.add('show'), 12000);
 
-const ASSET_V = 'v19u';
+const ASSET_V = 'v19v';
 const manifest = await (await fetch('./manifest.json?' + ASSET_V)).json();
 bar.style.width = '6%';
 const binBuf = await fetchWithProgress('./scene.bin?' + ASSET_V, (f) => { bar.style.width = (6 + f * 84) + '%'; });
@@ -539,6 +539,39 @@ function lmEaveRoof(w, h, rim) {
   scene.add(new THREE.Points(hgeo, hmat));
   lmTickers.push((t, phase) => { hmat.opacity = 0.55 + 0.3 * phase + Math.sin(t * 2.1) * 0.08; });
 }
+// 1b) the Twin Spires: an identical matched pair straddling the dive line at (0,-45) and (44,-75)
+function lmTwinSpire(PX, PZ) {
+  const mat = lmLambert();
+  const parts = [], glow = [];
+  const body = [0.24, 0.22, 0.42], trim = [1.0, 0.72, 0.30];
+  const drum = new THREE.CylinderGeometry(7, 8.5, 12, 8); drum.translate(PX, 6, PZ);
+  parts.push({ g: drum, c: [0.30, 0.34, 0.44] });
+  let y = 12, w = 10;
+  for (let i = 0; i < 4; i++) {
+    const segH = 13 * (1 - i * 0.07);
+    const b = new THREE.BoxGeometry(w, segH, w); b.translate(PX, y + segH / 2, PZ);
+    parts.push({ g: b, c: body });
+    const band = new THREE.BoxGeometry(w * 1.03, 1.3, w * 1.03); band.translate(PX, y + segH * 0.72, PZ);
+    glow.push({ g: band, c: trim });
+    y += segH;
+    for (const r of lmEaveRoof(w * 0.95, segH * 0.42, 0.05)) { r.g.translate(PX, y + segH * 0.16, PZ); parts.push(r); }
+    y += segH * 0.34;
+    w *= 0.78;
+  }
+  const cap = new THREE.ConeGeometry(3.1, 16, 6); cap.translate(PX, y + 8, PZ);
+  glow.push({ g: cap, c: trim });
+  const fin = new THREE.OctahedronGeometry(1.6, 0); fin.scale(1, 2.2, 1); fin.translate(PX, y + 17.5, PZ);
+  glow.push({ g: fin, c: [0.55, 0.9, 1.0] });
+  scene.add(new THREE.Mesh(mergeGeos(parts), mat));
+  const gm = lmBasic(0xffc46a);
+  scene.add(new THREE.Mesh(mergeGeos(glow), gm));
+  const h = lmHaloAt(PX, y + 17.5, PZ, 26, 0xffc46a, 0.8);
+  lmTickers.push((t, phase) => { h.opacity = 0.5 + 0.3 * phase + Math.sin(t * 2.4 + PX) * 0.08; });
+  return y + 18;
+}
+lmTwinSpire(0, -45);
+lmTwinSpire(44, -75);
+
 // 2) tiered pagoda at the temple plaza (-166, 143)
 function lmPagoda(PX, PZ, tiers, baseW, baseH) {
   const mat = lmLambert();
@@ -1515,112 +1548,52 @@ function tickCrowd(t) {
   pa.needsUpdate = true;
 }
 
-// ---------------- beats / camera (closed seamless loop) — v4 dramatic ----------------
-// Closed loop: camera pose at u=0 equals pose at u=1 (last key wraps to KEYS[0]).
-// Motion is a pure function of loop phase -> perfectly seamless.
-// Street-dives stay on real road/water corridors (x -400..600, z -400..430),
-// clearance kept at y>=8 so we thread facades without clipping.
+// ---------------- beats / camera (closed seamless loop) ----------------
 const KEYS = [
-  { pos: [-820, 330, -760], look: [22, 90, 33],     hold: 2000, fly: 5200, title: "Grand Astral Night", note: "The whole realm glitters beneath a canopy of stars" },
-  { pos: [-430, 185, -560], look: [120, 30, -150],  hold: 1200, fly: 3800, title: "The Long Fall",    note: "Sliding down through the dusk toward the lit streets" },
-  { pos: [-300, 20, -80],   look: [177, 20, -132],  hold: 1000, fly: 3200, title: "Street Dives",     note: "Diving down the lane between the towers" },
-  { pos: [128, 13, -214],   look: [128, 45, -140],  hold: 2000, fly: 2400, title: "Under the Gate",   note: "Sliding beneath the great paifang into the festival" },
-  { pos: [177, 18, -80],    look: [-166, 40, 143],  hold: 1400, fly: 3400, title: "Star Market",      note: "Lanterns and crowds fill the square" },
-  { pos: [340, 30, 220],    look: [560, 20, 380],   hold: 1400, fly: 3600, title: "Canal & Ropeways", note: "Low over the water, ropes and swaying boats overhead" },
-  { pos: [500, 26, 330],    look: [700, 30, 430],   hold: 1400, fly: 3200, title: "Magic Harbor",     note: "The beacon turns across the shimmering bay" },
-  { pos: [-40, 18, 40],     look: [-60, 150, 30],   hold: 1000, fly: 4600, title: "The Twisting Tower", note: "Spiralling up a spine of light" },
-  { pos: [60, 26, 110],     look: [177, 55, 180],   hold: 1200, fly: 3200, title: "Dragon Skim",      note: "A dragon's wing stirs the market lights" },
-  { pos: [120, 150, -30],   look: [22, 90, 33],     hold: 2000, fly: 5200, title: "The Ascent",       note: "Climbing back out to the wide night" },
+  { pos: [-1305.9, 520, -1459.1], look: [22.13, 60, 33.16], hold: 2600, fly: 5000, title: "Dusk Horizon", note: "Amber light dissolves into the first twilight shadows" },
+  { pos: [-520, 130, -820], look: [22, 50, 33], hold: 1500, fly: 5200, title: "The High Descent", note: "Sliding down toward the glowing realm" },
+  { pos: [-40, 60, 160], look: [22, 45, -60], hold: 1400, fly: 5000, title: "Twin Spire Dive", note: "Diving straight between the matched towers of light" },
+  { pos: [84, 34, -272], look: [177, 20, -132], hold: 2200, fly: 4800, title: "Gate of Lanterns", note: "Under the great gate, into the festival" },
+  { pos: [128, 66, -62], look: [185, 22, -140], hold: 2000, fly: 5000, title: "Star Market Life", note: "Vendors weave through drifting sky lanterns" },
+  { pos: [-40, 68, -40], look: [-166, 46, 143], hold: 1600, fly: 5000, title: "Pagoda Orbit", note: "Curling around the tiered temple roof" },
+  { pos: [-300, 48, 20], look: [-250, 26, 60], hold: 1600, fly: 5200, title: "Palace Mist", note: "Silhouettes of the hall pierce the low fog" },
+  { pos: [-160, 130, 260], look: [700, 30, 430], hold: 1500, fly: 5400, title: "Water Reveal", note: "Rising over the glowing canals for the reveal" },
+  { pos: [380, 60, 320], look: [700, 25, 430], hold: 1600, fly: 5200, title: "Magic Harbor", note: "The beacon sweeps across shimmering water" },
+  { pos: [480, 100, 240], look: [560, 95, 350], hold: 1500, fly: 5000, title: "Dragon Lanes", note: "A dragon's wake stirs the festival lights" },
+  { pos: [60, 190, -160], look: [-88, 150, -66], hold: 1600, fly: 5200, title: "Crystal Awakening", note: "Facets ignite in cascades of electric light" },
+  { pos: [-820, 330, -760], look: [22, 90, 33], hold: 2000, fly: 6000, title: "Grand Astral Night", note: "The city breathes under a canopy of stars" },
 ];
 const LOOP_MS = KEYS.reduce((a, k) => a + k.fly + k.hold, 0);
-
 const _smooth = (x) => { const t = Math.min(1, Math.max(0, x)); return t * t * (3 - 2 * t); };
 const _loopT = (x) => { x %= LOOP_MS; if (x < 0) x += LOOP_MS; return x; };
 const _mix3 = (a, b, f) => [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, a[2] + (b[2] - a[2]) * f];
 const _flyStarts = (() => { const a = []; let acc = 0; for (const k of KEYS) { a.push(acc); acc += k.fly + k.hold; } return a; })();
-
-// Which adjacent-pair gets a curved (Catmull-Rom) pass instead of a straight lerp.
-// Pair (i -> i+1) where i indexes KEYS[i]; true only for the low street-dives where
-// a straight line would skim facades. Everything else stays a cheap lerp.
-const _CURVE = { 0: true, 1: true, 2: true, 4: true, 5: true, 8: true };
-
-// Precomputed Catmull-Rom control points (one per curving segment, closed loop).
-// Uses P0=prev, P1=start, P2=end, P3=next (all from KEYS) -> C1-continuous and
-// identical at the wrap because it only reads the fixed KEY table.
-const _CR = (() => {
-  const N = KEYS.length, P = KEYS.map(k => k.pos), out = {};
-  const segs = [0, 1, 2, 4, 5, 8];
-  const V = []; // scratch: p0,p1,p2,p3 as flat arrays
-  for (const i of segs) {
-    const p0 = P[(i - 1 + N) % N], p1 = P[i], p2 = P[(i + 1) % N], p3 = P[(i + 2) % N];
-    // Catmull-Rom, centered (uniform alpha=0.5)
-    out[i] = (t) => {
-      const t2 = t * t, t3 = t2 * t;
-      const m = (a, b, c, d) => 0.5 * ((2 * b) + (-a + c) * t + (2 * a - 5 * b + 4 * c - d) * t2 + (-a + 3 * b - 3 * c + d) * t3);
-      return [
-        m(p0[0], p1[0], p2[0], p3[0]),
-        m(p0[1], p1[1], p2[1], p3[1]),
-        m(p0[2], p1[2], p2[2], p3[2]),
-      ];
-    };
-  }
-  return out;
-})();
-
-// Per-frame damped state (FOV only). Damped toward a phase-driven target so the
-// wrap still matches: at u=0 the target is the same as at u=1, and the damper
-// converges quickly; first/last camera *pose* is exact because pose is phase-driven.
-let _fovS = 58, _lastMs = 0;
-function _fovTarget(u) {
-  // wide during fast dives, settle to 58 in holds/vista.
-  const wide = 74, base = 58;
-  const inDive = (u > 0.12 && u < 0.78); // middle of the loop
-  const near = Math.max(0, 1 - Math.min(u / 0.12, (1 - u) / 0.22, 1));
-  return base + (wide - base) * (inDive ? 0.55 + 0.45 * Math.sin(u * Math.PI * 3) : 0.0) * near;
-}
-
 function camAt(ms) {
   const t = _loopT(ms), N = KEYS.length;
-  let pos, look;
   for (let i = 0; i < N; i++) {
     const fs = _flyStarts[i], k = KEYS[i], nx = KEYS[(i + 1) % N];
     if (t >= fs && t < fs + k.fly) {
       const f = _smooth((t - fs) / k.fly);
-      if (_CURVE[i]) {
-        pos = _CR[i](f);
-      } else {
-        pos = _mix3(k.pos, nx.pos, f);
-      }
-      look = _mix3(k.look, nx.look, f);
-      // FOV damp
-      const dt = _lastMs === 0 ? 16 : Math.min(50, ms - _lastMs);
-      _lastMs = ms;
-      const target = _fovTarget((t) / LOOP_MS);
-      _fovS += (target - _fovS) * Math.min(1, dt / 220);
-      return { pos, look, keyIdx: (i + 1) % N, fov: _fovS };
+      // title belongs to what the camera actually shows: keep the current
+      // scene's key until the fly is ~70% done, then name the destination
+      const raw = (t - fs) / k.fly;
+      return { pos: _mix3(k.pos, nx.pos, f), look: _mix3(k.look, nx.look, f), keyIdx: raw < 0.7 ? i : (i + 1) % N };
     }
     if (t >= fs + k.fly && t < fs + k.fly + k.hold) {
-      pos = nx.pos.slice(); look = nx.look.slice();
-      _fovS += (58 - _fovS) * 0.08; // settle on the held key
-      return { pos, look, keyIdx: (i + 1) % N, fov: _fovS };
+      return { pos: nx.pos.slice(), look: nx.look.slice(), keyIdx: (i + 1) % N };
     }
   }
-  _fovS = 58;
-  return { pos: KEYS[0].pos.slice(), look: KEYS[0].look.slice(), keyIdx: 0, fov: 58 };
+  return { pos: KEYS[0].pos.slice(), look: KEYS[0].look.slice(), keyIdx: 0 };
 }
-
-// Keep the dusk->night lighting phase identical to v3 so lighting stays seamless.
 function phaseAt(u) {
   u = ((u % 1) + 1) % 1;
   const up = _smooth((u - 0.10) / 0.72);
-  const down = _smooth((u - 0.982) / 0.018); // hold night through the final beats; fade only in the last ~1.5s for a seamless wrap to dusk
+  const down = _smooth((u - 0.982) / 0.018); // hold night through the Grand Astral Night beat; fade only in the last ~1.5s for a seamless wrap to dusk
   return Math.min(1, up * (1 - down));
 }
-
 let _curCard = -1;
 function cardsAt(ms) {
   const u = _loopT(ms) / LOOP_MS;
-  // Suppress cards across the wrap (first/last frames match, no flicker).
   const nearWrap = u < 1000 / LOOP_MS || u > 1 - 4200 / LOOP_MS;
   if (nearWrap) { _curCard = -1; $('card').classList.remove('show'); return; }
   const idx = camAt(ms).keyIdx;
@@ -1639,17 +1612,6 @@ function scoreFadeAt(u) {
   const dip = 0.85 * Math.exp(-Math.pow(Math.min(u, 1 - u) / 0.055, 2));
   return Math.min(1, Math.max(0, 1 - dip));
 }
-
-// v4: apply dynamic FOV (camera fov contract unchanged; just read .fov when present).
-const _origCamApply = camAt;
-camAt = function (ms) {
-  const r = _origCamApply(ms);
-  if (typeof r.fov === 'number') {
-    camera.fov = r.fov;
-    camera.updateProjectionMatrix();
-  }
-  return r;
-};
 
 // ---------------- score (ported from v1) ----------------
 const Score = (() => {
