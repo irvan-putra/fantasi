@@ -224,6 +224,7 @@ $errContinue.addEventListener('click', () => $error.classList.remove('show'));
 let cardDismissed = false;
 let cinematicAutoDone = false;
 let autoTimer = null;
+let __startCinematic = null; // assigned inside boot(); autoDismissCard runs at module scope
 function dismissCard() {
   if (cardDismissed) return;
   cardDismissed = true;
@@ -237,7 +238,7 @@ function autoDismissCard() {
   if (autoTimer) { clearTimeout(autoTimer); autoTimer = null; }
   $card.classList.add('hidden');
   $tour.classList.add('show');
-  runCinematic({ autoplay: true });
+  if (__startCinematic) __startCinematic();
 }
 $dismiss.addEventListener('click', dismissCard);
 window.addEventListener('keydown', (e) => {
@@ -980,6 +981,8 @@ async function boot() {
     if (label) label.textContent = 'Tour';
     if (opts.autoplay && !reduceMotion) startOrbit();
   }
+
+  __startCinematic = () => runCinematic({ autoplay: true });
 
   // Existing "Tour" button now replays the cinematic.
   $tour.addEventListener('click', () => {
