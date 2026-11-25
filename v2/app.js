@@ -24,7 +24,7 @@ async function fetchWithProgress(url, onp) {
 
 const stallTimer = setTimeout(() => $('stall').classList.add('show'), 12000);
 
-const ASSET_V = 'v19m';
+const ASSET_V = 'v19n';
 const manifest = await (await fetch('./manifest.json?' + ASSET_V)).json();
 bar.style.width = '6%';
 const binBuf = await fetchWithProgress('./scene.bin?' + ASSET_V, (f) => { bar.style.width = (6 + f * 84) + '%'; });
@@ -480,7 +480,8 @@ for (const b of manifest.boats) {
 const lmTickers = [];
 function tickLandmarks(t, phase) { for (const f of lmTickers) f(t, phase); }
 function lmBasic(hex) { const m = new THREE.MeshBasicMaterial({ color: hex }); m.toneMapped = false; return m; }
-function lmLambert() { return new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide, emissive: 0x332d47, emissiveIntensity: 1.0 }); }
+const _lmLamberts = [];
+function lmLambert() { const m = new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide, emissive: 0x332d47, emissiveIntensity: 1.0 }); _lmLamberts.push(m); return m; }
 function lmHaloAt(x, y, z, size, hex, opacity) {
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.BufferAttribute(new Float32Array([x, y, z]), 3));
@@ -1534,6 +1535,7 @@ function frame() {
 
   scene.fog.color.copy(FOG_DUSK).lerp(FOG_NIGHT, phase);
   skyMat.uniforms.fogColor.value.copy(scene.fog.color);
+  for (const m of _lmLamberts) m.emissive.copy(scene.fog.color).multiplyScalar(0.72);
   if (groundMatRef) groundMatRef.color.copy(scene.fog.color).multiplyScalar(0.62);
   waterUniforms.uTime.value = t;
   waterUniforms.uGlow.value = 0.35 + phase * 0.95;
