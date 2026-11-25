@@ -24,7 +24,7 @@ async function fetchWithProgress(url, onp) {
 
 const stallTimer = setTimeout(() => $('stall').classList.add('show'), 12000);
 
-const ASSET_V = 'v19q';
+const ASSET_V = 'v19r';
 const manifest = await (await fetch('./manifest.json?' + ASSET_V)).json();
 bar.style.width = '6%';
 const binBuf = await fetchWithProgress('./scene.bin?' + ASSET_V, (f) => { bar.style.width = (6 + f * 84) + '%'; });
@@ -1068,6 +1068,39 @@ window.__FY = { rock: _fRockMesh, bld: _fBldMesh, wf: _fWfPts, launchInst: _laun
 // ---------------- dragons (hero scale, close passes) ----------------
 // Serpentine dragons: one tube body deformed along a traveling-wave spine,
 // proper head (snout, jaw, horns, whiskers, glowing eyes), bat wings.
+// Runtime-generated scale texture (canvas): scalloped scales on the back,
+// broad plates on the belly band. No download cost.
+let _scaleTex = null;
+function scaleTexture() {
+  if (_scaleTex) return _scaleTex;
+  const S = 128, cv = document.createElement('canvas');
+  cv.width = cv.height = S;
+  const ctx = cv.getContext('2d');
+  ctx.fillStyle = '#8a8a8a'; ctx.fillRect(0, 0, S, S);
+  // belly band: x in [S/2, S] -> horizontal plates (maps to the lower half of the tube)
+  ctx.fillStyle = '#b8b8b8'; ctx.fillRect(S / 2, 0, S / 2, S);
+  ctx.strokeStyle = 'rgba(70,70,70,0.9)'; ctx.lineWidth = 2;
+  for (let y = 0; y <= S; y += 16) { ctx.beginPath(); ctx.moveTo(S / 2, y); ctx.lineTo(S, y); ctx.stroke(); }
+  // scalloped scales on the back half (x in [0, S/2)), two horizontal repeats
+  const rw = 16, rh = 14;
+  for (let ry = 0; ry < S / rh + 1; ry++) {
+    const off = (ry % 2) * rw / 2;
+    for (let rx = -1; rx < S / 2 / rw + 1; rx++) {
+      const x = rx * rw + off, y = ry * rh;
+      const g = ctx.createRadialGradient(x + rw / 2, y + rh * 0.35, 1, x + rw / 2, y + rh * 0.35, rw * 0.62);
+      g.addColorStop(0, 'rgba(230,230,230,0.95)');
+      g.addColorStop(0.7, 'rgba(140,140,140,0.85)');
+      g.addColorStop(1, 'rgba(60,60,60,0.9)');
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(x + rw / 2, y + rh * 0.4, rw * 0.6, 0, Math.PI);
+      ctx.fill();
+    }
+  }
+  const tex = new THREE.CanvasTexture(cv);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  return tex;
+}
 function makeDragon(colorHex, ph0) {
   const base = new THREE.Color(colorHex);
   const belly = base.clone().lerp(new THREE.Color(0xfff0cf), 0.65);
@@ -1091,7 +1124,7 @@ function makeDragon(colorHex, ph0) {
     basePts.push(new THREE.Vector3(Math.sin(t * Math.PI * 1.5) * 1.4, Math.sin(t * Math.PI) * 0.9 + 0.2, (t - 0.5) * LEN));
   }
   // per-vertex records: ring index, offsets along frame (N,B,T), normal components
-  const vRing = [], vOff = [], vNrm = [], vCol = [];
+  const vRing = [], vOff = [], vNrm = [], vCol = [], vUv = [];
   const idx = [];
   for (let i = 0; i < RINGS; i++) {
     const t = i / (RINGS - 1), r = radiusAt(t);
@@ -1101,6 +1134,7 @@ function makeDragon(colorHex, ph0) {
       const k = Math.min(1, Math.max(0, (-s - 0.15) * 1.8)); // belly on lower half
       const col = base.clone().lerp(belly, k);
       vCol.push(col.r, col.g, col.b);
+      vUv.push(j / RAD, t * 20);
     }
   }
   for (let i = 0; i < RINGS - 1; i++) for (let j = 0; j < RAD; j++) {
@@ -1118,10 +1152,10 @@ function makeDragon(colorHex, ph0) {
     const start = vRing.length;
     for (const bv of baseV) {
       vRing.push(ringOf); vOff.push(bv[0], r + 0.05, bv[2]); vNrm.push(0, 0.8, -0.6);
-      vCol.push(fin.r, fin.g, fin.b);
+      vCol.push(fin.r, fin.g, fin.b); vUv.push(0.12, 0.05);
     }
     vRing.push(ringOf); vOff.push(0, r + 0.05 + h, -h * 0.55); vNrm.push(0, 0.8, -0.6);
-    vCol.push(fin.r, fin.g, fin.b);
+    vCol.push(fin.r, fin.g, fin.b); vUv.push(0.2, 0.12);
     idx.push(start, start + 1, start + 4, start + 1, start + 2, start + 4, start + 2, start + 3, start + 4, start + 3, start + 0, start + 4);
   }
   const nv = vRing.length;
@@ -1130,8 +1164,10 @@ function makeDragon(colorHex, ph0) {
   g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
   g.setAttribute('normal', new THREE.BufferAttribute(nrm, 3));
   g.setAttribute('color', new THREE.BufferAttribute(new Float32Array(vCol), 3));
+  g.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(vUv), 2));
   g.setIndex(idx);
-  const bodyMesh = new THREE.Mesh(g, new THREE.MeshLambertMaterial({ vertexColors: true, emissive: new THREE.Color(colorHex), emissiveIntensity: 0.16 }));
+  const stex = scaleTexture();
+  const bodyMesh = new THREE.Mesh(g, new THREE.MeshPhongMaterial({ vertexColors: true, map: stex, bumpMap: stex, bumpScale: 0.7, shininess: 28, specular: new THREE.Color(0x554422), emissive: new THREE.Color(colorHex), emissiveIntensity: 0.14 }));
 
   // ---- head (static geometry, follows the neck frame) ----
   const headParts = [];
@@ -1189,7 +1225,7 @@ function makeDragon(colorHex, ph0) {
       parts.push({ g: bg, c: [fin.r, fin.g, fin.b] });
     }
     const merged = mergeGeos(parts);
-    const m = new THREE.Mesh(merged, new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide, emissive: new THREE.Color(colorHex), emissiveIntensity: 0.22 }));
+    const m = new THREE.Mesh(merged, new THREE.MeshPhongMaterial({ vertexColors: true, side: THREE.DoubleSide, shininess: 18, specular: new THREE.Color(0x332a18), emissive: new THREE.Color(colorHex), emissiveIntensity: 0.2 }));
     pivot.add(m);
     return pivot;
   }
@@ -1282,7 +1318,7 @@ function tickDragons(t, u) {
     d.L.rotation.z = 0.2 + f; d.R.rotation.z = -0.2 - f;
     d.L.rotation.y = -0.15 + f * 0.25; d.R.rotation.y = 0.15 - f * 0.25;
     const m = d.grp.children[0].material;
-    m.emissiveIntensity = 0.16 + chase * 0.4;
+    m.emissiveIntensity = 0.14 + chase * 0.4;
   }
 }
 
