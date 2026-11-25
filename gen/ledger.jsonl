@@ -35,3 +35,9 @@
 {"ts": "2026-11-25T16:27:44+0700", "brief": "sweep: repo review for irvan-putra/tuju", "note": "sweep batch", "model": "qwen/qwen3.8-27b", "usage": {"prompt_tokens": 111270, "completion_tokens": 838}, "cost_usd": 0.003273, "cumulative_usd": 0.124189, "files": []}
 {"ts": "2026-11-25T16:27:44+0700", "brief": "sweep: repo review for irvan-putra/gotong", "note": "sweep batch", "model": "qwen/qwen3.8-27b", "usage": {"prompt_tokens": 12554, "completion_tokens": 809}, "cost_usd": 0.001262, "cumulative_usd": 0.125451, "files": []}
 {"ts": "2026-11-25T16:27:44+0700", "brief": "sweep: repo review for irvan-putra/bidik", "note": "sweep batch", "model": "qwen/qwen3.8-27b", "usage": {"prompt_tokens": 79261, "completion_tokens": 1123}, "cost_usd": 0.002989, "cumulative_usd": 0.12844, "files": []}
+{"ts": "2026-11-25T16:36:47.190076", "kind": "sweep-bedah", "model": "qwen3.8-27b", "prompt_tokens": 82416, "completion_tokens": 655, "cost": 0.00246707}
+{"ts": "2026-11-25T16:36:47.190267", "kind": "sweep-suaka", "model": "qwen3.8-27b", "prompt_tokens": 6832, "completion_tokens": 746, "cost": 0.00106914}
+{"ts": "2026-11-25T16:36:47.190339", "kind": "sweep-kokok", "model": "qwen3.8-27b", "prompt_tokens": 63046, "completion_tokens": 580, "cost": 0.00198592}
+{"ts": "2026-11-25T16:36:47.190514", "kind": "sweep-simak", "model": "qwen3.8-27b", "prompt_tokens": 40873, "completion_tokens": 1279, "cost": 0.0024162100000000002}
+{"ts": "2026-11-25T16:36:47.190584", "kind": "sweep-minima", "model": "qwen3.8-27b", "prompt_tokens": 12189, "completion_tokens": 777, "cost": 0.0012150300000000002}
+{"ts": "2026-11-25T16:36:47.190643", "kind": "sweep-irvan", "model": "qwen3.8-27b", "prompt_tokens": 35664, "completion_tokens": 522, "cost": 0.00136578}
