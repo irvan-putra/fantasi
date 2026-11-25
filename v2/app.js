@@ -24,7 +24,7 @@ async function fetchWithProgress(url, onp) {
 
 const stallTimer = setTimeout(() => $('stall').classList.add('show'), 12000);
 
-const ASSET_V = 'v19v';
+const ASSET_V = 'v19w';
 const manifest = await (await fetch('./manifest.json?' + ASSET_V)).json();
 bar.style.width = '6%';
 const binBuf = await fetchWithProgress('./scene.bin?' + ASSET_V, (f) => { bar.style.width = (6 + f * 84) + '%'; });
@@ -226,13 +226,11 @@ let groundMatRef = null;
 const waterUniforms = { uTime: { value: 0 }, uGlow: { value: 0.25 }, fogColor: { value: new THREE.Color() }, fogDensity: { value: 0.00105 } };
 {
   const g = geoFromSections('water');
-  const m = new THREE.ShaderMaterial({
-    uniforms: waterUniforms,
-    vertexShader: `
+  const WATER_VERT = `
 varying vec3 vW;varying float vFogZ;
 void main(){vec4 w=modelMatrix*vec4(position,1.0);vW=w.xyz;
-vec4 mv=viewMatrix*w;vFogZ=-mv.z;gl_Position=projectionMatrix*mv;}`,
-    fragmentShader: `
+vec4 mv=viewMatrix*w;vFogZ=-mv.z;gl_Position=projectionMatrix*mv;}`;
+  const WATER_FRAG = `
 precision highp float;uniform float uTime;uniform float uGlow;uniform vec3 fogColor;uniform float fogDensity;
 varying vec3 vW;varying float vFogZ;
 float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
@@ -254,8 +252,8 @@ void main(){
   float f=1.0-exp(-fogDensity*fogDensity*vFogZ*vFogZ);
   col=mix(col,fogColor,clamp(f,0.0,1.0));
   gl_FragColor=vec4(col,1.0);
-}`,
-  });
+}`;
+  const m = new THREE.ShaderMaterial({ uniforms: waterUniforms, vertexShader: WATER_VERT, fragmentShader: WATER_FRAG });
   scene.add(new THREE.Mesh(g, m));
 }
 
@@ -655,18 +653,62 @@ lmPagoda(-320, -260, 5, 22, 8.5);
   const top = new THREE.ConeGeometry(6, 12, 8); top.translate(LX, y + 6, LZ);
   parts.push({ g: top, c: [0.12, 0.26, 0.3] });
   scene.add(new THREE.Mesh(mergeGeos(parts), mat));
-  const beamMat = lmBasic(0xffe9b0);
-  const beam = new THREE.CylinderGeometry(0.7, 3.2, 60, 6, 1, true);
-  beam.rotateZ(Math.PI / 2);
-  const beamMesh = new THREE.Mesh(beam, new THREE.MeshBasicMaterial({ color: 0xffe9b0, transparent: true, opacity: 0.28, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, depthWrite: false }));
-  beamMesh.material.toneMapped = false;
+  const beamGeo = new THREE.ConeGeometry(14, 120, 10, 1, true);
+  beamGeo.translate(0, -60, 0);
+  beamGeo.rotateX(-Math.PI / 2);
+  const beamMatB = new THREE.MeshBasicMaterial({ color: 0xffe9b0, transparent: true, opacity: 0.22, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, depthWrite: false });
+  beamMatB.toneMapped = false;
+  const beamMesh = new THREE.Mesh(beamGeo, beamMatB);
   beamMesh.position.set(LX, y + 3, LZ);
   scene.add(beamMesh);
+  const beamMesh2 = new THREE.Mesh(beamGeo, beamMatB);
+  beamMesh2.position.set(LX, y + 3, LZ);
+  beamMesh2.rotation.y = Math.PI;
+  scene.add(beamMesh2);
   const lampHalo = lmHaloAt(LX, y + 3, LZ, 40, 0xffe9b0, 0.9);
   lmTickers.push((t, phase) => {
     beamMesh.rotation.y = t * 0.7;
+    beamMesh2.rotation.y = Math.PI + t * 0.7;
     beamMesh.material.opacity = 0.16 + phase * 0.2;
     lampHalo.opacity = 0.5 + 0.4 * phase + Math.sin(t * 3.1) * 0.1;
+  });
+}
+// harbor bay water (v19w) — a real glowing basin where the harbor beats look
+const BAY = { x: 800, z: 470, r: 250 };
+{
+  const g = new THREE.CircleGeometry(BAY.r, 40); g.rotateX(-Math.PI / 2); g.translate(BAY.x, 0.4, BAY.z);
+  scene.add(new THREE.Mesh(g, new THREE.ShaderMaterial({ uniforms: waterUniforms, vertexShader: WATER_VERT, fragmentShader: WATER_FRAG })));
+}
+// lantern-lit boats drifting on the bay (v19w)
+{
+  const boatMat = lmLambert();
+  const boats = [];
+  const radii = [45, 78, 150, 195];
+  for (let i = 0; i < 4; i++) {
+    const parts = [];
+    const hull = new THREE.CylinderGeometry(1.6, 2.6, 10, 6); hull.rotateZ(Math.PI / 2); hull.scale(1, 0.55, 0.62); hull.translate(0, 1.0, 0);
+    parts.push({ g: hull, c: [0.24, 0.14, 0.08] });
+    const mast = new THREE.CylinderGeometry(0.18, 0.22, 9, 5); mast.translate(0.6, 6.0, 0);
+    parts.push({ g: mast, c: [0.3, 0.2, 0.12] });
+    const sail = new THREE.PlaneGeometry(4.6, 5.6); sail.rotateY(Math.PI / 2); sail.translate(0.6, 6.4, 0);
+    parts.push({ g: sail, c: [0.75, 0.62, 0.4] });
+    const cabin = new THREE.BoxGeometry(2.6, 1.6, 2.0); cabin.translate(-1.6, 2.0, 0);
+    parts.push({ g: cabin, c: [0.2, 0.12, 0.07] });
+    const mesh = new THREE.Mesh(mergeGeos(parts), boatMat);
+    scene.add(mesh);
+    const lampGeo = new THREE.BufferGeometry();
+    lampGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array([0, 3.4, 0]), 3));
+    const lampMatB = new THREE.PointsMaterial({ size: 14, map: haloTex, color: 0xffc46e, transparent: true, opacity: 0.9, depthWrite: false, blending: THREE.AdditiveBlending });
+    lampMatB.toneMapped = false;
+    mesh.add(new THREE.Points(lampGeo, lampMatB));
+    boats.push({ mesh, a0: i * 1.7, r: radii[i], sp: 0.021 + i * 0.006 });
+  }
+  lmTickers.push((t) => {
+    for (const b of boats) {
+      const a = b.a0 + t * b.sp;
+      b.mesh.position.set(BAY.x + Math.cos(a) * b.r, 0.4, BAY.z + Math.sin(a) * b.r * 0.72);
+      b.mesh.rotation.y = -a - Math.PI / 2;
+    }
   });
 }
 // 5) arched lantern bridge near the harbor (620, 380) — arc over water edge
@@ -1557,7 +1599,7 @@ const KEYS = [
   { pos: [128, 66, -62], look: [185, 22, -140], hold: 2000, fly: 5000, title: "Star Market Life", note: "Vendors weave through drifting sky lanterns" },
   { pos: [-40, 68, -40], look: [-166, 46, 143], hold: 1600, fly: 5000, title: "Pagoda Orbit", note: "Curling around the tiered temple roof" },
   { pos: [-300, 48, 20], look: [-250, 26, 60], hold: 1600, fly: 5200, title: "Palace Mist", note: "Silhouettes of the hall pierce the low fog" },
-  { pos: [-160, 130, 260], look: [700, 30, 430], hold: 1500, fly: 5400, title: "Water Reveal", note: "Rising over the glowing canals for the reveal" },
+  { pos: [-160, 130, 260], look: [740, 14, 450], hold: 1500, fly: 5400, title: "Water Reveal", note: "Rising over the glowing canals for the reveal" },
   { pos: [380, 60, 320], look: [700, 25, 430], hold: 1600, fly: 5200, title: "Magic Harbor", note: "The beacon sweeps across shimmering water" },
   { pos: [480, 100, 240], look: [560, 95, 350], hold: 1500, fly: 5000, title: "Dragon Lanes", note: "A dragon's wake stirs the festival lights" },
   { pos: [60, 190, -160], look: [-88, 150, -66], hold: 1600, fly: 5200, title: "Crystal Awakening", note: "Facets ignite in cascades of electric light" },
