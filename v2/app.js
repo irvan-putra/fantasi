@@ -829,9 +829,11 @@ for (let i = 0; i < F_ISLES.length; i++) {
     const a = _fh(i * 71 + k) * 6.28, rr = _fh(i * 73 + k) * rad * 0.7;
     _fLanterns.push({ x: cx + Math.cos(a) * rr, y: topY + 1.2, z: cz + Math.sin(a) * rr, col: FY.glowM });
   }
-  for (let k = 0; k < 1 + (i % 2); k++) {
-    const a = _fh(i * 83 + k) * 6.28;
-    _fFalls.push({ x: cx + Math.cos(a) * rad * 0.9, z: cz + Math.sin(a) * rad * 0.9, topY: topY - 5, len: Math.max(30, topY - 8) });
+  // waterfalls only where they read as falling to water/open ground,
+  // not over the market/roof corridors the camera flies through
+  if (topY > 85 && !(cx > 100 && cx < 450 && cz > -50 && cz < 200)) {
+    const a = _fh(i * 83) * 6.28;
+    _fFalls.push({ x: cx + Math.cos(a) * rad * 0.9, z: cz + Math.sin(a) * rad * 0.9, topY: topY - 5, len: Math.min(60, Math.max(30, topY - 8)) });
   }
 }
 // rope bridges to the nearest neighbour island
@@ -898,7 +900,7 @@ const _fWfPts = (() => {
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.BufferAttribute(p, 3));
   g.setAttribute('color', new THREE.BufferAttribute(c, 3));
-  const m = new THREE.PointsMaterial({ size: 5, map: haloTex, vertexColors: true, sizeAttenuation: true, transparent: true, opacity: 0.7, depthWrite: false, blending: THREE.AdditiveBlending });
+  const m = new THREE.PointsMaterial({ size: 3.5, map: haloTex, vertexColors: true, sizeAttenuation: true, transparent: true, opacity: 0.5, depthWrite: false, blending: THREE.AdditiveBlending });
   m.toneMapped = false;
   const pts = new THREE.Points(g, m);
   pts.frustumCulled = false;
