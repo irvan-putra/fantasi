@@ -703,7 +703,7 @@ function makeDragon(colorHex) {
     const col = [];
     for (let i = 0; i < 6; i++) col.push(fin.r, fin.g, fin.b);
     g.setAttribute('color', new THREE.BufferAttribute(new Float32Array(col), 3));
-    const m = new THREE.Mesh(g, new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide, emissive: new THREE.Color(colorHex), emissiveIntensity: 0.12 }));
+    const m = new THREE.Mesh(g, new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide, emissive: new THREE.Color(colorHex), emissiveIntensity: 0.4 }));
     pivot.add(m);
     return pivot;
   }
@@ -720,9 +720,9 @@ function makeDragon(colorHex) {
   return { grp, L, R };
 }
 const DRAG_PATHS = [
-  { cx: 177, cz: -132, r: 150, h: 85, amp: 30, speed: 0.16, ph: 0.0 },
-  { cx: -166, cz: 143, r: 120, h: 70, amp: 22, speed: -0.12, ph: 2.1 },
-  { cx: 560, cz: 350, r: 130, h: 100, amp: 35, speed: 0.10, ph: 4.2 },
+  { cx: 177, cz: -132, r: 150, h: 120, amp: 18, speed: 0.16, ph: 0.0 },
+  { cx: -166, cz: 143, r: 120, h: 100, amp: 16, speed: -0.12, ph: 2.1 },
+  { cx: 560, cz: 350, r: 130, h: 105, amp: 25, speed: 0.10, ph: 4.2 },
 ];
 const dragons = manifest.dragons.map((d, i) => {
   const { grp, L, R } = makeDragon(d.col);
