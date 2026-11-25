@@ -84,15 +84,6 @@ void main(){
   vec3 hd=mix(hD,hN,uPhase), md=mix(mD,mN,uPhase), zd=mix(zD,zN,uPhase);
   vec3 col=mix(hd,md,smoothstep(0.0,0.22,h));
   col=mix(col,zd,smoothstep(0.16,0.62,h));
-  // stars
-  float stars=smoothstep(0.12,0.7,uPhase);
-  if(stars>0.001&&d.y>0.02){
-    vec3 sp=floor(d*160.0);float hsh=hash13(sp);
-    if(hsh>0.994){
-      float tw=0.5+0.5*sin(uTime*(1.0+hsh*4.0)+hsh*40.0);
-      col+=vec3(0.8,0.88,1.0)*(0.35+0.65*tw)*stars*smoothstep(0.02,0.2,d.y);
-    }
-  }
   // moon
   vec3 mdv=normalize(vec3(0.45,0.52,-0.62));
   float dm=dot(d,mdv);
@@ -113,6 +104,29 @@ void main(){
 const sky = new THREE.Mesh(new THREE.SphereGeometry(4200, 32, 20), skyMat);
 sky.frustumCulled = false;
 scene.add(sky);
+// starfield: real points on the dome
+let starMat;
+{
+  const N = 1100, p = new Float32Array(N * 3), c = new Float32Array(N * 3);
+  let sd = 11; const rnd = () => (sd = (sd * 9301 + 49297) & 65535) / 65535;
+  for (let i = 0; i < N; i++) {
+    const az = rnd() * 6.283, el = Math.asin(rnd() * 0.94 + 0.05);
+    const r = 4000;
+    p[i * 3] = Math.cos(az) * Math.cos(el) * r;
+    p[i * 3 + 1] = Math.sin(el) * r;
+    p[i * 3 + 2] = Math.sin(az) * Math.cos(el) * r;
+    const w = rnd(), b = 0.55 + rnd() * 0.45;
+    c[i * 3] = b * (0.8 + w * 0.2); c[i * 3 + 1] = b * 0.88; c[i * 3 + 2] = b;
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(p, 3));
+  g.setAttribute('color', new THREE.BufferAttribute(c, 3));
+  starMat = new THREE.PointsMaterial({ size: 2.1, vertexColors: true, sizeAttenuation: false, transparent: true, opacity: 0, depthWrite: false });
+  starMat.toneMapped = false;
+  const pts = new THREE.Points(g, starMat);
+  pts.frustumCulled = false;
+  sky.add(pts);
+}
 
 // ---------------- window textures ----------------
 function windowTextures() {
@@ -446,7 +460,7 @@ function makeDragon(colorHex) {
     const g = new THREE.ConeGeometry(1.1, 7.2, 5); g.rotateX(-Math.PI / 2); g.translate(0, 0.3, -8.1);
     body.push({ g, c: [base.r, base.g, base.b] });
   }
-  const bodyMesh = new THREE.Mesh(mergeGeos(body), new THREE.MeshLambertMaterial({ vertexColors: true, emissive: new THREE.Color(colorHex), emissiveIntensity: 0.34 }));
+  const bodyMesh = new THREE.Mesh(mergeGeos(body), new THREE.MeshLambertMaterial({ vertexColors: true, emissive: new THREE.Color(colorHex), emissiveIntensity: 0.62 }));
   // glow: eyes + spine ridge
   const glows = [];
   for (const sx of [-0.75, 0.75]) {
@@ -636,6 +650,7 @@ function frame() {
   const phase = THREE.MathUtils.smoothstep(u, 0.04, 0.8);
   skyMat.uniforms.uPhase.value = phase;
   skyMat.uniforms.uTime.value = t;
+  starMat.opacity = THREE.MathUtils.smoothstep(phase, 0.12, 0.7);
   sky.position.copy(camera.position);
 
   scene.fog.color.copy(FOG_DUSK).lerp(FOG_NIGHT, phase);
@@ -666,7 +681,7 @@ function frame() {
     $('poster').classList.add('gone');
     $('loader').classList.add('gone');
     setTimeout(() => { $('poster').remove(); $('loader').remove(); }, 1000);
-    window.__READY = true; window.__R = renderer;
+    window.__READY = true; window.__R = renderer; window.__S = scene;
   }
 }
 frame();
