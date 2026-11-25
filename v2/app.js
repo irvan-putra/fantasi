@@ -847,7 +847,9 @@ let atRayMat, atMistPts, atMistMat, atSmokePts, atSmokeMat, atSmokeData;
   }
   atRayMat = new THREE.MeshBasicMaterial({ color: 0xffd9a0, transparent: true, opacity: 0.02, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, depthWrite: false, fog: false });
   atRayMat.toneMapped = false;
-  scene.add(new THREE.Mesh(mergeGeos(rays), atRayMat));
+  const atRayMesh = new THREE.Mesh(mergeGeos(rays), atRayMat);
+  atRayMesh.visible = false; // disabled: cone walls read as dark banding when the camera flies through them
+  scene.add(atRayMesh);
   // ground mist: big soft points drifting as a slow carousel
   const MN = 42, mp = new Float32Array(MN * 3);
   let sd = 3; const rnd = () => (sd = (sd * 9301 + 49297) & 65535) / 65535;
@@ -940,8 +942,8 @@ const KEYS = [
   { pos: [-520, 130, -820], look: [22, 50, 33], hold: 1500, fly: 5200, title: "The High Descent", note: "Sliding down toward the glowing realm" },
   { pos: [-260, 64, -430], look: [22, 40, -60], hold: 1400, fly: 5000, title: "Twin Spire Dive", note: "The tallest towers frame a canyon of light" },
   { pos: [84, 34, -272], look: [177, 20, -132], hold: 2200, fly: 4800, title: "Gate of Lanterns", note: "Under the great gate, into the festival" },
-  { pos: [128, 46, -62], look: [185, 12, -140], hold: 2000, fly: 5000, title: "Star Market Life", note: "Vendors weave through drifting sky lanterns" },
-  { pos: [-40, 42, -40], look: [-166, 40, 143], hold: 1600, fly: 5000, title: "Pagoda Orbit", note: "Curling around the tiered temple roof" },
+  { pos: [128, 66, -62], look: [185, 22, -140], hold: 2000, fly: 5000, title: "Star Market Life", note: "Vendors weave through drifting sky lanterns" },
+  { pos: [-40, 68, -40], look: [-166, 46, 143], hold: 1600, fly: 5000, title: "Pagoda Orbit", note: "Curling around the tiered temple roof" },
   { pos: [-300, 48, 20], look: [-250, 26, 60], hold: 1600, fly: 5200, title: "Palace Mist", note: "Silhouettes of the hall pierce the low fog" },
   { pos: [-160, 130, 260], look: [700, 30, 430], hold: 1500, fly: 5400, title: "Water Reveal", note: "Rising over the glowing canals for the reveal" },
   { pos: [380, 60, 320], look: [700, 25, 430], hold: 1600, fly: 5200, title: "Magic Harbor", note: "The beacon sweeps across shimmering water" },
