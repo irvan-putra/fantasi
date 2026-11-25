@@ -53,6 +53,16 @@
     transition:width .2s ease,opacity .4s ease;
   }
 
+  #stallchip{
+    position:fixed;left:50%;bottom:calc(110px + env(safe-area-inset-bottom,0px));z-index:22;
+    transform:translateX(-50%);
+    background:var(--card);border:1px solid var(--line);border-radius:999px;
+    padding:7px 14px;font-size:12px;color:var(--ink);
+    opacity:0;pointer-events:none;transition:opacity .4s ease;
+    box-shadow:0 8px 22px rgba(20,16,40,.25);
+  }
+  #stallchip.show{opacity:.95}
+
   /* stats chip */
   #counter{
     position:fixed;top:max(10px,env(safe-area-inset-top,0px));right:10px;z-index:20;
@@ -160,6 +170,7 @@
 <img id="poster" src="tiles/poster.jpg" alt="" aria-hidden="true" onerror="this.remove()">
 <div id="vignette" aria-hidden="true"></div>
 <div id="progress" aria-hidden="true"></div>
+<div id="stallchip" role="status"></div>
 
 <div id="counter">loading index…<span class="src">© Microsoft · © OpenStreetMap contributors</span></div>
 
@@ -428,13 +439,22 @@ async function boot() {
   // map 'load' is a one-shot event: capture it BEFORE any await, or a fast map races past a slow index fetch and the page hangs forever.
   const mapReady = new Promise((resolve) => { if (map.loaded()) resolve(); else map.on('load', () => resolve()); });
 
+  // Limited connections: saveData / 2G users get a lite scene (no road tiles, fewer building tiles).
+  const LITE = !!(navigator.connection && (navigator.connection.saveData || /(^|-)2g/.test(navigator.connection.effectiveType || '')));
+
   // --- fetch the tile index -------------------------------------------------
   let index = null;
   try {
     index = await fetchJSON('tiles/index.json');
   } catch (err) {
-    showError('Tile index failed to load', 'Could not fetch tiles/index.json — ' + String((err && err.message) || err) + '. Serve this folder over HTTP(S) and reload.');
-    return;
+    // limited connections: wait a beat and try once more before giving up
+    await new Promise((r) => setTimeout(r, 5000));
+    try {
+      index = await fetchJSON('tiles/index.json');
+    } catch (err2) {
+      showError('Tile index failed to load', 'Could not fetch tiles/index.json — ' + String((err2 && err2.message) || err2) + '. Check your connection and reload.');
+      return;
+    }
   }
   const bIndex = new Set((index.buildings && index.buildings.tiles || []).map((t) => t[0] + ',' + t[1]));
   const rIndex = new Set((index.roads && index.roads.tiles || []).map((t) => t[0] + ',' + t[1]));
@@ -445,7 +465,7 @@ async function boot() {
   };
 
   function counterHTML() {
-    return '<b>' + fmt.format(totals.b) + '</b> enchanted buildings · <b>' + fmt.format(totals.r) + '</b> street segments' +
+    return '<b>' + fmt.format(totals.b) + '</b> enchanted buildings · <b>' + fmt.format(totals.r) + '</b> street segments' + (LITE ? ' · <b>lite</b>' : '') +
       '<span class="src">© Microsoft · © OpenStreetMap contributors</span>';
   }
   function loadingHTML(done, total) {
@@ -669,6 +689,17 @@ async function boot() {
     return ids;
   }
 
+  const retries = new Map();
+  function noteFailure(fkey, again) {
+    failed.add(fkey);
+    const n = retries.get(fkey) || 0;
+    if (n < 2) {
+      retries.set(fkey, n + 1);
+      // failed tiles left holes on slow connections: back off and try again
+      setTimeout(() => { failed.delete(fkey); again(); }, n === 0 ? 4000 : 12000);
+    }
+  }
+
   async function loadTile(kind, x, y) {
     const key = x + ',' + y;
     const fkey = kind + ':' + key;
@@ -686,10 +717,10 @@ async function boot() {
         raw = await fetchJSON(url);
       } catch (err) {
         inflight.delete(fkey);
-        failed.add(fkey);
+        noteFailure(fkey, () => loadTile(kind, x, y));
         updateProgress();
         updateCoarseVisibility();
-        return; // missing or broken tile: treat as loaded-empty, stay silent
+        return; // retried with backoff; coarse preview covers the gap meanwhile
       }
       fc = kind === 'b' ? toBuildingsFC(raw) : toRoadsFC(raw);
       cachePut(fkey, fc);
@@ -725,6 +756,7 @@ async function boot() {
       rec.layers.push(addBuildingLayers(src, key));
       bLoaded.set(key, rec);
       hidePoster();
+      { const s2 = document.getElementById('stallchip'); if (s2) s2.classList.remove('show'); }
     } else {
       const kept = [];
       for (const f of fc.features) {
@@ -761,7 +793,7 @@ async function boot() {
       fc = toBuildingsFC(raw);
     } catch (err) {
       inflight.delete(fkey);
-      failed.add(fkey);
+      noteFailure(fkey, () => loadCoarseTile(x, y));
       updateProgress();
       updateCoarseVisibility();
       return;
@@ -838,9 +870,16 @@ async function boot() {
     if (!map.getStyle()) return;
     const b = map.getBounds();
     const zoom = map.getZoom();
-    const wantB = zoom >= 13 ? tilesForBounds(b, B_Z) : [];
-    const wantR = tilesForBounds(b, R_Z);
+    let wantB = zoom >= 13 ? tilesForBounds(b, B_Z) : [];
+    const wantR = LITE ? [] : tilesForBounds(b, R_Z);
     const wantC = zoom >= 12 ? tilesForBounds(b, C_Z) : [];
+    if (LITE && wantB.length > 9) {
+      // lite mode: only the tiles nearest the viewport center
+      const cLon = (b.getWest() + b.getEast()) / 2, cLat = (b.getNorth() + b.getSouth()) / 2;
+      const ctx_ = lon2x(cLon, B_Z), cty = lat2y(cLat, B_Z);
+      wantB = wantB.map(([x, y]) => [x, y, (x - ctx_) * (x - ctx_) + (y - cty) * (y - cty)])
+                   .sort((a, b2) => a[2] - b2[2]).slice(0, 9).map(([x, y]) => [x, y]);
+    }
 
     const needed = new Set();
     for (const [x, y] of wantC) if (cIndex.has(x + ',' + y)) needed.add('c:' + x + ',' + y);
@@ -964,6 +1003,32 @@ async function boot() {
   // Cinematic flythrough. When autoplay=true (first run), it also ends with the
   // existing slow orbit; when replayed from the Tour button it does not (so the
   // map stays still and user-controlled after the run).
+  function synthBounds(center, zoom) {
+    const span = (360 / Math.pow(2, zoom)) * 1.7;
+    const vspan = span * 1.5;
+    return {
+      getNorth: () => center[1] + vspan / 2, getSouth: () => center[1] - vspan / 2,
+      getWest: () => center[0] - span / 2, getEast: () => center[0] + span / 2,
+    };
+  }
+  function prefetchLeg(v) {
+    // warm the caches for an upcoming cinematic leg so slow connections see fewer blanks;
+    // evicted prefetched tiles stay in the LRU cache, so the fetch is never wasted
+    try {
+      const bds = synthBounds(v.center, v.zoom);
+      for (const [x, y] of tilesForBounds(bds, C_Z)) {
+        const k = x + ',' + y;
+        if (cIndex.has(k) && !coarseParts.has(k)) loadCoarseTile(x, y);
+      }
+      if (!LITE) {
+        for (const [x, y] of tilesForBounds(bds, B_Z)) {
+          const k = x + ',' + y;
+          if (bIndex.has(k) && !bLoaded.has(k) && !inflight.has('b:' + k)) loadTile('b', x, y);
+        }
+      }
+    } catch (e) { /* prefetch is best-effort */ }
+  }
+
   function applyAtmo(a) {
     if (!a) return;
     try {
@@ -991,6 +1056,8 @@ async function boot() {
       $tourLabel.classList.add('show');
       applyAtmo(v.atmo);
       Score.nightfall(li / (CINEMATIC.length - 1));
+      const nxt = CINEMATIC[li + 1];
+      if (nxt) prefetchLeg(nxt);
       map.flyTo({ center: v.center, zoom: v.zoom, pitch: v.pitch, bearing: v.bearing, duration: v.flyMs, essential: true });
       await sleep(v.flyMs + v.holdMs);
     }
@@ -1303,6 +1370,15 @@ async function boot() {
   const unlock = () => { if (soundWanted && !Score.running) Score.start(); };
   window.addEventListener('pointerdown', unlock, { once: true });
   window.addEventListener('keydown', unlock, { once: true });
+
+  // stall watchdog: if nothing has rendered after 12s, say so instead of showing blanks
+  const $stall = document.getElementById('stallchip');
+  setTimeout(() => {
+    if (bLoaded.size === 0 && coarseParts.size === 0) {
+      $stall.textContent = 'Slow connection — the realm is loading piece by piece' + (LITE ? ' (lite mode)' : '') + '…';
+      $stall.classList.add('show');
+    }
+  }, 12000);
 
   // --- go -------------------------------------------------------------------
   updateTiles();
