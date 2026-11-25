@@ -24,7 +24,7 @@ async function fetchWithProgress(url, onp) {
 
 const stallTimer = setTimeout(() => $('stall').classList.add('show'), 12000);
 
-const ASSET_V = 'v20f';
+const ASSET_V = 'v20g';
 const manifest = await (await fetch('./manifest.json?' + ASSET_V)).json();
 bar.style.width = '6%';
 const binBuf = await fetchWithProgress('./scene.bin?' + ASSET_V, (f) => { bar.style.width = (6 + f * 84) + '%'; });
@@ -649,8 +649,9 @@ lmPagoda(-320, -260, 5, 22, 8.5);
     const c2 = new THREE.CylinderGeometry(1.5, 1.7, 34, 6); c2.translate(HX + i * 12, 22, HZ);
     parts.push({ g: c2, c: [0.6, 0.36, 0.17] });
   }
-  const t1 = lmEaveRoof(46, 15, 0.12); for (const p of t1) { p.g.translate(HX, 27 + 7.5, HZ); parts.push(p); }
-  const t2 = lmEaveRoof(30, 12, 0.14); for (const p of t2) { p.g.translate(HX, 41 + 6, HZ); parts.push(p); }
+  const t1 = lmEaveRoof(46, 15, 0.12); for (const p of t1) { p.c = [0.16, 0.36, 0.4]; p.g.translate(HX, 27 + 7.5, HZ); parts.push(p); }
+  const t2 = lmEaveRoof(30, 12, 0.14); for (const p of t2) { p.c = [0.2, 0.44, 0.48]; p.g.translate(HX, 41 + 6, HZ); parts.push(p); }
+  lmHaloAt(HX, 24, HZ, 34, 0xffc46e, 0.4);
   const fin = new THREE.ConeGeometry(3.2, 9, 6); fin.translate(HX, 53 + 4.5, HZ);
   parts.push({ g: fin, c: [0.85, 0.6, 0.2] });
   scene.add(new THREE.Mesh(mergeGeos(parts), mat));
@@ -664,7 +665,7 @@ lmPagoda(-320, -260, 5, 22, 8.5);
   const mists = [];
   for (let i = 0; i < 5; i++) {
     const g = new THREE.PlaneGeometry(150 + i * 26, 15 + (i % 2) * 8);
-    const m = new THREE.MeshBasicMaterial({ map: haloTex, color: 0x8fa8cf, transparent: true, opacity: 0.09 + (i % 3) * 0.025, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
+    const m = new THREE.MeshBasicMaterial({ map: haloTex, color: 0x8fa8cf, transparent: true, opacity: 0.13 + (i % 3) * 0.03, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
     m.toneMapped = false;
     const mesh = new THREE.Mesh(g, m);
     mesh.position.set(-320 + i * 36, 8 + (i % 3) * 11, 26 + (i % 4) * 24);
@@ -1658,7 +1659,7 @@ const KEYS = [
   { pos: [84, 34, -272], look: [177, 20, -132], hold: 2200, fly: 4800, title: "Gate of Lanterns", note: "Under the great gate, into the festival" },
   { pos: [128, 66, -62], look: [185, 22, -140], hold: 2000, fly: 5000, title: "Star Market Life", note: "Vendors weave through drifting sky lanterns" },
   { pos: [-40, 68, -40], look: [-166, 46, 143], hold: 1600, fly: 5000, title: "Pagoda Orbit", note: "Curling around the tiered temple roof" },
-  { pos: [-330, 100, -20], look: [-250, 30, 60], hold: 1600, fly: 5200, title: "Palace Mist", note: "Silhouettes of the hall pierce the low fog" },
+  { pos: [-400, 70, -60], look: [-250, 40, 60], hold: 1600, fly: 5200, title: "Palace Mist", note: "Silhouettes of the hall pierce the low fog" },
   { pos: [-160, 130, 260], look: [740, 14, 450], hold: 1500, fly: 5400, title: "Water Reveal", note: "Rising over the glowing canals for the reveal" },
   { pos: [370, 85, 300], look: [740, 15, 460], hold: 1600, fly: 5200, title: "Magic Harbor", note: "The beacon sweeps across shimmering water" },
   { pos: [480, 100, 240], look: [560, 95, 350], hold: 1500, fly: 5000, title: "Dragon Lanes", note: "A dragon's wake stirs the festival lights" },
