@@ -90,6 +90,23 @@
     backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
   }
   #tourlabel.show{opacity:1;transform:translateX(-50%)}
+  #tourlabel .sub{display:block;font-size:10.5px;font-weight:500;opacity:.75;font-style:italic}
+  .titlecard{
+    position:fixed;inset:0;z-index:30;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:radial-gradient(ellipse at 50% 40%, rgba(30,20,55,.55), rgba(10,8,24,.88));
+    color:#EDE9FE;text-align:center;padding:24px;pointer-events:none;
+    opacity:0;transition:opacity 1.1s ease;
+  }
+  .titlecard.show{opacity:1}
+  .titlecard h1{font-family:Georgia,'Times New Roman',serif;font-size:34px;font-weight:600;letter-spacing:.06em;margin:0 0 10px;text-shadow:0 0 26px rgba(167,139,250,.65)}
+  .titlecard p{margin:4px 0;font-size:13.5px;opacity:.85;font-style:italic}
+  .titlecard .fict{font-size:11px;letter-spacing:.18em;text-transform:uppercase;opacity:.6;font-style:normal;margin-top:14px}
+  #sound{
+    position:fixed;top:calc(52px + env(safe-area-inset-top,0px));right:12px;z-index:25;
+    width:34px;height:34px;border-radius:50%;border:1px solid var(--line);
+    background:var(--card);color:var(--ink);font-size:15px;cursor:pointer;
+    box-shadow:0 6px 18px rgba(20,16,40,.25);opacity:.85;
+  }
 
   /* start card (daylight title card) */
   #card{
@@ -154,6 +171,19 @@
   </svg>
   <span>Tour</span>
 </button>
+
+<div id="titlecard" class="titlecard" aria-hidden="true">
+  <h1>Pramuka Astral</h1>
+  <p>Where Jakarta's grid becomes a celestial labyrinth.</p>
+  <p class="fict">an invented fantasy realm &middot; fictional</p>
+</div>
+<div id="endcard" class="titlecard" aria-hidden="true">
+  <h1>Pramuka Astral</h1>
+  <p>a fictional fantasy realm over the real streets of Green Pramuka City, Jakarta</p>
+  <p>built with Fenrir qwen3.8-27b &middot; OpenStreetMap &middot; Microsoft footprints</p>
+  <p class="fict">tap anywhere to keep exploring</p>
+</div>
+<button id="sound" type="button" aria-label="Toggle sound" title="Sound on/off">&#128266;</button>
 
 <section id="card" role="dialog" aria-label="About this map">
   <p class="kicker">a fantasy realm — fictional</p>
@@ -238,7 +268,12 @@ function autoDismissCard() {
   if (autoTimer) { clearTimeout(autoTimer); autoTimer = null; }
   $card.classList.add('hidden');
   $tour.classList.add('show');
-  if (__startCinematic) __startCinematic();
+  const tc = document.getElementById('titlecard');
+  tc.classList.add('show');
+  setTimeout(() => {
+    tc.classList.remove('show');
+    if (__startCinematic) __startCinematic();
+  }, 2400);
 }
 $dismiss.addEventListener('click', dismissCard);
 window.addEventListener('keydown', (e) => {
@@ -883,12 +918,12 @@ async function boot() {
   // Cinematic flythrough: high overview -> dive at the towers -> low toll-road
   // run -> rise + pull back to overview. ~20-25s chained.
   const CINEMATIC = [
-    { name: "The Sun's Last Whisper", center: [106.8738, -6.1893], zoom: 13.4, pitch: 10, bearing: 0,   flyMs: 4400, holdMs: 600, atmo: { bg: '#7A5A96', water: '#2E9BB5', park: '#3F6212', dragons: 0.0, flies: 0.0 } },
-    { name: "Purple Veils Descend", center: [106.8738, -6.1893], zoom: 15.5, pitch: 60, bearing: 28,  flyMs: 4800, holdMs: 600, atmo: { bg: '#5D4380', water: '#2E9BB5', park: '#37591a', dragons: 0.0, flies: 0.0 } },
-    { name: "River Begins to Sing", center: [106.8790, -6.1860], zoom: 15.9, pitch: 66, bearing: 118, flyMs: 5200, holdMs: 600, atmo: { bg: '#4A2E5E', water: '#22D3EE', park: '#2d4d17', dragons: 0.9, flies: 0.0 } },
-    { name: "Lanterns Ignite the Sky", center: [106.8720, -6.1910], zoom: 15.2, pitch: 55, bearing: 60,  flyMs: 5000, holdMs: 600, atmo: { bg: '#2E2148', water: '#22D3EE', park: '#244012', dragons: 0.9, flies: 0.85 } },
-    { name: "Crystal Towers Awake", center: [106.8740, -6.1890], zoom: 16.3, pitch: 68, bearing: 150, flyMs: 5000, holdMs: 600, atmo: { bg: '#1A1330', water: '#0E7490', park: '#14532D', dragons: 0.95, flies: 0.9 } },
-    { name: "Night's Grand Symphony", center: [106.8765, -6.1870], zoom: 14.7, pitch: 44, bearing: 205, flyMs: 4800, holdMs: 900, atmo: { bg: '#0F172A', water: '#0E7490', park: '#14532D', dragons: 1.0, flies: 1.0 } },
+    { name: "The Sun's Last Whisper", center: [106.8738, -6.1893], zoom: 13.4, pitch: 10, bearing: 0,   flyMs: 4400, holdMs: 600, note: "Amber light lingers on the western rooftops.", atmo: { bg: '#7A5A96', water: '#2E9BB5', park: '#3F6212', dragons: 0.0, flies: 0.0 } },
+    { name: "Purple Veils Descend", center: [106.8738, -6.1893], zoom: 15.5, pitch: 60, bearing: 28,  flyMs: 4800, holdMs: 600, note: "Shadows stretch long across the park pathways.", atmo: { bg: '#5D4380', water: '#2E9BB5', park: '#37591a', dragons: 0.0, flies: 0.0 } },
+    { name: "River Begins to Sing", center: [106.8790, -6.1860], zoom: 15.9, pitch: 66, bearing: 118, flyMs: 5200, holdMs: 600, note: "Water starts glowing with soft cyan bioluminescence.", atmo: { bg: '#4A2E5E', water: '#22D3EE', park: '#2d4d17', dragons: 0.9, flies: 0.0 } },
+    { name: "Lanterns Ignite the Sky", center: [106.8720, -6.1910], zoom: 15.2, pitch: 55, bearing: 60,  flyMs: 5000, holdMs: 600, note: "Warm amber lights pop up in window frames.", atmo: { bg: '#2E2148', water: '#22D3EE', park: '#244012', dragons: 0.9, flies: 0.85 } },
+    { name: "Crystal Towers Awake", center: [106.8740, -6.1890], zoom: 16.3, pitch: 68, bearing: 150, flyMs: 5000, holdMs: 600, note: "Tall structures shimmer with inner celestial energy.", atmo: { bg: '#1A1330', water: '#0E7490', park: '#14532D', dragons: 0.95, flies: 0.9 } },
+    { name: "Night's Grand Symphony", center: [106.8765, -6.1870], zoom: 14.7, pitch: 44, bearing: 205, flyMs: 4800, holdMs: 900, note: "Dragons soar above the pulsing, magical grid.", atmo: { bg: '#0F172A', water: '#0E7490', park: '#14532D', dragons: 1.0, flies: 1.0 } },
   ];
 
   function orbitStep() {
@@ -950,9 +985,12 @@ async function boot() {
     if (label) label.textContent = 'Stop';
     for (const [li, v] of CINEMATIC.entries()) {
       if (token !== tourToken) return;
-      $tourLabel.textContent = v.name;
+      $tourLabel.textContent = '';
+      const tn = document.createElement('span'); tn.textContent = v.name; $tourLabel.appendChild(tn);
+      if (v.note) { const sn = document.createElement('span'); sn.className = 'sub'; sn.textContent = v.note; $tourLabel.appendChild(sn); }
       $tourLabel.classList.add('show');
       applyAtmo(v.atmo);
+      Score.nightfall(li / (CINEMATIC.length - 1));
       map.flyTo({ center: v.center, zoom: v.zoom, pitch: v.pitch, bearing: v.bearing, duration: v.flyMs, essential: true });
       await sleep(v.flyMs + v.holdMs);
     }
@@ -962,7 +1000,17 @@ async function boot() {
     tourRunning = false;
     $tour.classList.remove('active');
     if (label) label.textContent = 'Tour';
-    if (opts.autoplay && !reduceMotion) startOrbit();
+    if (opts.autoplay && !reduceMotion) {
+      startOrbit();
+      setTimeout(() => {
+        const ec = document.getElementById('endcard');
+        if (ec && !tourRunning && !cinematicRunning) {
+          ec.classList.add('show');
+          ec.style.pointerEvents = 'auto';
+          ec.addEventListener('click', () => { ec.classList.remove('show'); ec.style.pointerEvents = 'none'; }, { once: true });
+        }
+      }, 7000);
+    }
   }
 
   __startCinematic = () => runCinematic({ autoplay: true });
@@ -1181,6 +1229,80 @@ async function boot() {
     }
     requestAnimationFrame(frame);
   }
+
+  // --- generative score: a tiny synthesized dusk-into-night pad, no audio assets ---------
+  // Starts on the first user gesture (mobile autoplay policy); the speaker button toggles it.
+  const Score = (() => {
+    let ctx = null, master = null, running = false, chimeTimer = null, brightness = 0;
+    function ensure() {
+      if (ctx) return true;
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return false;
+      ctx = new AC();
+      master = ctx.createGain(); master.gain.value = 0.0; master.connect(ctx.destination);
+      const filt = ctx.createBiquadFilter(); filt.type = 'lowpass'; filt.frequency.value = 320; filt.Q.value = 0.4; filt.connect(master);
+      // slow dusk pad: three detuned sines on an A-minor root
+      for (const [f, g] of [[110, 0.05], [130.81, 0.035], [164.81, 0.03]]) {
+        const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = f;
+        o.detune.value = (Math.random() * 8) - 4;
+        const og = ctx.createGain(); og.gain.value = g;
+        o.connect(og); og.connect(filt); o.start();
+      }
+      // very slow filter LFO so the pad breathes
+      const lfo = ctx.createOscillator(); lfo.frequency.value = 0.05;
+      const lg = ctx.createGain(); lg.gain.value = 90; lfo.connect(lg); lg.connect(filt.frequency); lfo.start();
+      Score._filt = filt;
+      return true;
+    }
+    const SCALE = [220, 261.63, 293.66, 329.63, 392, 440, 523.25, 587.33];
+    function chime() {
+      if (!running || !ctx) return;
+      const f = SCALE[Math.floor(Math.random() * SCALE.length)] * (Math.random() < 0.3 ? 2 : 1);
+      const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = f;
+      const g = ctx.createGain();
+      const t = ctx.currentTime;
+      g.gain.setValueAtTime(0.0, t);
+      g.gain.linearRampToValueAtTime(0.05 + brightness * 0.03, t + 0.06);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 2.2);
+      o.connect(g); g.connect(master); o.start(t); o.stop(t + 2.4);
+      chimeTimer = setTimeout(chime, 2200 + Math.random() * 2200 - brightness * 700);
+    }
+    return {
+      _filt: null,
+      start() {
+        if (running) return;
+        if (!ensure()) return;
+        if (ctx.state === 'suspended') ctx.resume();
+        running = true;
+        master.gain.cancelScheduledValues(ctx.currentTime);
+        master.gain.linearRampToValueAtTime(0.5, ctx.currentTime + 2.5);
+        chime();
+        document.getElementById('sound').textContent = '\u{1F50A}';
+      },
+      stop() {
+        if (!running) return;
+        running = false;
+        master.gain.linearRampToValueAtTime(0.0, ctx.currentTime + 0.6);
+        if (chimeTimer) clearTimeout(chimeTimer);
+        document.getElementById('sound').textContent = '\u{1F507}';
+      },
+      nightfall(frac) { // 0 dusk -> 1 night: brighter pad, quicker chimes
+        brightness = Math.max(0, Math.min(1, frac));
+        if (this._filt) this._filt.frequency.setTargetAtTime(320 + brightness * 900, ctx ? ctx.currentTime : 0, 1.5);
+      },
+      get running() { return running; },
+    };
+  })();
+  let soundWanted = true;
+  document.getElementById('sound').addEventListener('click', (e) => {
+    e.stopPropagation();
+    soundWanted = !soundWanted;
+    if (soundWanted) Score.start(); else Score.stop();
+  });
+  // mobile policy: the first gesture anywhere unlocks audio
+  const unlock = () => { if (soundWanted && !Score.running) Score.start(); };
+  window.addEventListener('pointerdown', unlock, { once: true });
+  window.addEventListener('keydown', unlock, { once: true });
 
   // --- go -------------------------------------------------------------------
   updateTiles();
