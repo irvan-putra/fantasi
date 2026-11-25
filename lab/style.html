@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>fantasi styleframes</title>
+<style>
+  html,body{margin:0;height:100%;overflow:hidden;background:#000}
+  #hud{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);
+    background:rgba(12,10,24,.82);border:1px solid rgba(255,255,255,.14);border-radius:14px;
+    color:#EDE9FE;padding:10px 16px;font-family:Georgia,serif;text-align:center;z-index:5;max-width:86vw}
+  #hud b{display:block;font-size:16px;letter-spacing:.04em}
+  #hud span{font-size:11px;font-style:italic;opacity:.8}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}</script>
+</head>
+<body>
+<div id="hud"><b id="sname"></b><span id="sdesc"></span></div>
+<script type="module">
+import * as THREE from 'three';
+
+const STYLES = {
+  a: {
+    name: 'A · Senja (Ghibli dusk)',
+    desc: 'warm painterly dusk, cream walls, terracotta roofs, honey lanterns, soft fog',
+    skyTop: 0x7c5a9b, skyHor: 0xff9a5c, skyNight: 0.0,
+    fog: [0xc98a6a, 90, 480], sun: [0xffd9a0, 1.1], amb: [0xffc9a0, 0.55],
+    wall: [0xf2e3c8, 0xe8d4b4, 0xefe9dc, 0xe4cfa8], roof: [0xc96f4a, 0xb85c3f, 0xd98e5f],
+    window: 0xffc66e, winLit: 0.42, water: 0x7fb8c9, lantern: 0xffbe78,
+    glow: 0.5, tree: 0x5d8a4a,
+  },
+  b: {
+    name: 'B · Kristal Malam (crystal night)',
+    desc: 'deep indigo night, crystalline emissive towers, aurora sky, glowing canals, stars',
+    skyTop: 0x050510, skyHor: 0x1e1b4b, skyNight: 1.0,
+    fog: [0x14122b, 70, 420], sun: [0x8fb4ff, 0.35], amb: [0x4a5a9a, 0.5],
+    wall: [0x2e3a6e, 0x3b3b7d, 0x353f75, 0x2a3560], roof: [0x7dd3fc, 0x8b5cf6, 0x5c6bc0],
+    window: 0x9fd8f5, winLit: 0.5, water: 0x22d3ee, lantern: 0xa78bfa,
+    glow: 1.0, tree: 0x14532d,
+  },
+  c: {
+    name: 'C · Pasar Lampion (lantern festival)',
+    desc: 'teal twilight, jewel-tone walls, a sky full of floating lanterns, festive storybook',
+    skyTop: 0x0f3a4a, skyHor: 0x2e6a7a, skyNight: 0.55,
+    fog: [0x1d4a55, 80, 440], sun: [0xffe0b0, 0.7], amb: [0x7fb8a0, 0.6],
+    wall: [0xd94f6f, 0x2fa39a, 0xe8b64c, 0x7c5cbf], roof: [0x8a2f4a, 0x1f7a70, 0xc98a2e],
+    window: 0xffd98a, winLit: 0.62, water: 0x2ea8a0, lantern: 0xffce7a,
+    glow: 0.8, tree: 0x2f7a4f,
+  },
+};
+const S = STYLES[(new URLSearchParams(location.search)).get('style') || 'a'] || STYLES.a;
+document.getElementById('sname').textContent = S.name;
+document.getElementById('sdesc').textContent = S.desc;
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+document.body.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(S.fog[0], S.fog[1], S.fog[2]);
+const cam = new THREE.PerspectiveCamera(55, innerWidth/innerHeight, 0.5, 2000);
+cam.position.set(46, 34, 64); cam.lookAt(0, 8, 0);
+
+// ---- sky dome: gradient + stars + (night) aurora, pure shader ----
+const skyU = {
+  top: { value: new THREE.Color(S.skyTop) },
+  hor: { value: new THREE.Color(S.skyHor) },
+  night: { value: S.skyNight },
+  t: { value: 0 },
+};
+const sky = new THREE.Mesh(
+  new THREE.SphereGeometry(900, 24, 16),
+  new THREE.ShaderMaterial({
+    side: THREE.BackSide, depthWrite: false, uniforms: skyU,
+    vertexShader: 'varying vec3 vP; void main(){ vP = position; gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.0); }',
+    fragmentShader: `
+      varying vec3 vP; uniform vec3 top, hor; uniform float night, t;
+      float hash(vec3 p){ return fract(sin(dot(p, vec3(12.9898,78.233,45.164)))*43758.5453); }
+      void main(){
+        vec3 d = normalize(vP);
+        float h = clamp(d.y, 0.0, 1.0);
+        vec3 col = mix(hor, top, pow(h, 0.62));
+        // stars at night
+        float st = step(0.9985, hash(floor(d*260.0)));
+        float tw = 0.6 + 0.4*sin(t*2.0 + hash(floor(d*260.0))*40.0);
+        col += st * tw * night * smoothstep(0.05, 0.25, d.y);
+        // moon
+        float m = smoothstep(0.9994, 0.9998, dot(d, normalize(vec3(0.5, 0.55, -0.4))));
+        col += vec3(0.9, 0.95, 1.0) * m * (0.3 + 0.7*night);
+        // aurora bands
+        float band = sin(d.x*7.0 + t*0.35 + sin(d.z*5.0)*1.5) * sin(d.z*4.0 - t*0.22);
+        float aur = smoothstep(0.55, 0.95, band) * smoothstep(0.1, 0.5, d.y) * night;
+        col += mix(vec3(0.13,0.83,0.93), vec3(0.55,0.36,0.96), 0.5+0.5*sin(t*0.15)) * aur * 0.35;
+        gl_FragColor = vec4(col, 1.0);
+      }`,
+  }));
+scene.add(sky);
+
+// ---- lights ----
+scene.add(new THREE.AmbientLight(S.amb[0], S.amb[1]));
+const sun = new THREE.DirectionalLight(S.sun[0], S.sun[1]);
+sun.position.set(-40, 60, 25); scene.add(sun);
+
+// ---- procedural window texture (shared) ----
+function windowCanvas(litRatio, litColor) {
+  const c = document.createElement('canvas'); c.width = 128; c.height = 256;
+  const g = c.getContext('2d');
+  g.fillStyle = '#000'; g.fillRect(0,0,128,256);
+  const cols = 8, rows = 16, cw = 128/cols, ch = 256/rows;
+  for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
+    if (Math.random() < litRatio * (1.15 - y/rows*0.5)) {
+      const warm = 0.85 + Math.random()*0.15;
+      g.fillStyle = litColor;
+      g.globalAlpha = warm;
+      g.fillRect(x*cw+cw*0.22, y*ch+ch*0.28, cw*0.56, ch*0.44);
+      g.globalAlpha = 1;
+    }
+  }
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+const winTex = windowCanvas(S.winLit, '#' + new THREE.Color(S.window).getHexString());
+
+// ---- stylized building: body box + hip roof, emissive windows on walls ----
+function makeBuilding(w, h, d, wallHex, roofHex, spire) {
+  const g = new THREE.Group();
+  const wallMat = new THREE.MeshLambertMaterial({ color: wallHex, emissive: 0xffffff, emissiveMap: winTex, emissiveIntensity: S.glow });
+  const roofMat = new THREE.MeshLambertMaterial({ color: roofHex });
+  const body = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), wallMat);
+  body.position.y = h/2; g.add(body);
+  const roofH = Math.min(w, d) * 0.45;
+  const roof = new THREE.Mesh(new THREE.ConeGeometry(Math.hypot(w, d)/2 * 0.98, roofH, 4), roofMat);
+  roof.position.y = h + roofH/2; roof.rotation.y = Math.PI/4; g.add(roof);
+  if (spire) {
+    const sp = new THREE.Mesh(new THREE.ConeGeometry(Math.min(w,d)*0.12, h*0.5, 6), roofMat);
+    sp.position.y = h + roofH + h*0.25; g.add(sp);
+    const tip = new THREE.Mesh(new THREE.SphereGeometry(Math.min(w,d)*0.07, 6, 5),
+      new THREE.MeshBasicMaterial({ color: S.lantern }));
+    tip.position.y = h + roofH + h*0.52; g.add(tip);
+  }
+  return g;
+}
+
+// ---- city block: 3 curving rows of varied buildings ----
+const rng = (() => { let s = 42; return () => (s = (s*16807) % 2147483647) / 2147483647; })();
+const city = new THREE.Group();
+for (let row = 0; row < 3; row++) {
+  const z = -26 + row * 24;
+  for (let i = 0; i < 14; i++) {
+    const x = -52 + i * 8 + Math.sin(i*0.7 + row) * 2.5;
+    if (Math.abs(x) < 5 && row === 1) continue; // canal gap
+    const tall = row === 1 && rng() < 0.3;
+    const w = 3.5 + rng()*3.5, d = 3.5 + rng()*3.5;
+    const h = tall ? 16 + rng()*22 : 4 + rng()*9;
+    const spire = tall && rng() < 0.5;
+    const b = makeBuilding(w, h, d, S.wall[(i+row)%S.wall.length], S.roof[(i*3+row)%S.roof.length], spire);
+    b.position.set(x, 0, z + (rng()-0.5)*4);
+    b.rotation.y = (rng()-0.5)*0.2;
+    city.add(b);
+  }
+}
+scene.add(city);
+
+// ---- ground + canal with glow strip ----
+const ground = new THREE.Mesh(new THREE.CircleGeometry(320, 40),
+  new THREE.MeshLambertMaterial({ color: new THREE.Color(S.skyHor).multiplyScalar(0.45) }));
+ground.rotation.x = -Math.PI/2; scene.add(ground);
+const canal = new THREE.Mesh(new THREE.PlaneGeometry(7, 130),
+  new THREE.MeshBasicMaterial({ color: S.water }));
+canal.rotation.x = -Math.PI/2; canal.position.set(0, 0.12, -2); scene.add(canal);
+
+// ---- trees: instanced cone+cylinder along the canal ----
+{
+  const canopy = new THREE.ConeGeometry(1.6, 3.4, 7);
+  const trunk = new THREE.CylinderGeometry(0.22, 0.3, 1.4, 5);
+  const cMat = new THREE.MeshLambertMaterial({ color: S.tree });
+  const tMat = new THREE.MeshLambertMaterial({ color: 0x6b4a33 });
+  const n = 26;
+  const canopies = new THREE.InstancedMesh(canopy, cMat, n);
+  const trunks = new THREE.InstancedMesh(trunk, tMat, n);
+  const m = new THREE.Matrix4();
+  for (let i = 0; i < n; i++) {
+    const side = i % 2 ? 5.2 : -5.2;
+    const zz = -58 + (i/n) * 116 + Math.sin(i*1.3)*2;
+    m.makeTranslation(side + Math.sin(i*2.1), 0.7, zz); trunks.setMatrixAt(i, m);
+    m.makeTranslation(side + Math.sin(i*2.1), 1.4+1.7, zz); canopies.setMatrixAt(i, m);
+  }
+  scene.add(trunks, canopies);
+}
+
+// ---- floating lanterns: instanced glowing spheres, bobbing ----
+const LANT = S.name.startsWith('C') ? 90 : 26;
+const lantMesh = new THREE.InstancedMesh(
+  new THREE.SphereGeometry(0.5, 8, 6),
+  new THREE.MeshBasicMaterial({ color: S.lantern }),
+  LANT);
+const lantData = [];
+for (let i = 0; i < LANT; i++) {
+  lantData.push({ x: (rng()-0.5)*120, y: 6 + rng()*26, z: (rng()-0.5)*90, ph: rng()*6.28, sp: 0.2 + rng()*0.5 });
+}
+scene.add(lantMesh);
+// soft halo sprites behind lanterns
+const haloTex = (() => {
+  const c = document.createElement('canvas'); c.width = c.height = 64;
+  const g = c.getContext('2d');
+  const rg = g.createRadialGradient(32,32,2,32,32,30);
+  rg.addColorStop(0, 'rgba(255,220,160,0.9)'); rg.addColorStop(1, 'rgba(255,220,160,0)');
+  g.fillStyle = rg; g.fillRect(0,0,64,64);
+  return new THREE.CanvasTexture(c);
+})();
+const haloMat = new THREE.SpriteMaterial({ map: haloTex, color: S.lantern, transparent: true, opacity: 0.55*S.glow, depthWrite: false, blending: THREE.AdditiveBlending });
+const halos = [];
+for (let i = 0; i < Math.min(LANT, 40); i++) {
+  const s = new THREE.Sprite(haloMat); s.scale.setScalar(3.4); scene.add(s); halos.push(s);
+}
+
+// ---- dragon: procedural low-poly with flapping wings ----
+function makeDragon(hex) {
+  const g = new THREE.Group();
+  const mat = new THREE.MeshLambertMaterial({ color: hex, emissive: hex, emissiveIntensity: 0.25 });
+  const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.5, 2.6, 3, 6), mat);
+  body.rotation.z = Math.PI/2; g.add(body);
+  const head = new THREE.Mesh(new THREE.ConeGeometry(0.45, 1.2, 6), mat);
+  head.rotation.z = -Math.PI/2; head.position.set(2.1, 0.25, 0); g.add(head);
+  const tail = new THREE.Mesh(new THREE.ConeGeometry(0.3, 2.0, 5), mat);
+  tail.rotation.z = Math.PI/2; tail.position.set(-2.2, 0.1, 0); g.add(tail);
+  const wingGeo = new THREE.BufferGeometry();
+  wingGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array([
+    0,0,0,  -0.4,0,3.2,  -1.6,0,2.2,
+    0,0,0,  -1.6,0,2.2,  -2.2,0,0.4,
+  ]), 3));
+  wingGeo.computeVertexNormals();
+  const wingMat = new THREE.MeshLambertMaterial({ color: hex, emissive: hex, emissiveIntensity: 0.55, side: THREE.DoubleSide, transparent: true, opacity: 0.92 });
+  const wl = new THREE.Mesh(wingGeo, wingMat); wl.position.set(0.3, 0.35, 0.4);
+  const wr = new THREE.Mesh(wingGeo, wingMat); wr.position.set(0.3, 0.35, -0.4); wr.scale.z = -1;
+  g.add(wl, wr);
+  return { group: g, tick(t) { const f = Math.sin(t*5.0)*0.55; wl.rotation.x = f; wr.rotation.x = -f; } };
+}
+const dragon = makeDragon(S.roof[0]);
+dragon.group.scale.setScalar(2.2);
+scene.add(dragon.group);
+
+// ---- crystals at the plaza ----
+for (let i = 0; i < 5; i++) {
+  const c = new THREE.Mesh(new THREE.OctahedronGeometry(1.1 + rng()*1.3),
+    new THREE.MeshLambertMaterial({ color: S.water, emissive: S.water, emissiveIntensity: 0.8 }));
+  c.position.set(-8 + i*4 + Math.sin(i)*2, 1.4, 14 + Math.cos(i*2)*3);
+  c.rotation.set(rng(), rng()*3, rng());
+  scene.add(c);
+}
+
+// ---- boats on the canal ----
+const boats = [];
+for (let i = 0; i < 3; i++) {
+  const boat = new THREE.Group();
+  const hull = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 0.5, 3.2, 6, 1), new THREE.MeshLambertMaterial({ color: 0x5a3a26 }));
+  hull.rotation.z = Math.PI/2; boat.add(hull);
+  const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.28, 6, 5), new THREE.MeshBasicMaterial({ color: S.lantern }));
+  lamp.position.set(0, 1.1, 0); boat.add(lamp);
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 1.4, 4), new THREE.MeshLambertMaterial({ color: 0x3a2a1a }));
+  pole.position.set(0, 0.6, 0); boat.add(pole);
+  boat.position.set(0, 0.4, -40 + i*34);
+  scene.add(boat); boats.push(boat);
+}
+
+// ---- camera: slow establishing drift ----
+let t0 = performance.now();
+function frame() {
+  requestAnimationFrame(frame);
+  const t = (performance.now() - t0) / 1000;
+  skyU.t.value = t;
+  dragon.tick(t);
+  const a = t * 0.16;
+  dragon.group.position.set(Math.cos(a)*30, 17 + Math.sin(t*0.8)*2, Math.sin(a)*30 - 8);
+  dragon.group.rotation.y = -a - Math.PI/2 + Math.PI;
+  dragon.group.rotation.z = 0.15*Math.sin(t*0.8);
+  const m = new THREE.Matrix4();
+  for (let i = 0; i < LANT; i++) {
+    const L = lantData[i];
+    m.makeTranslation(L.x + Math.sin(t*L.sp + L.ph)*2.2, L.y + Math.sin(t*0.6 + L.ph)*1.1, L.z + Math.cos(t*L.sp*0.7 + L.ph)*1.6);
+    lantMesh.setMatrixAt(i, m);
+    if (i < halos.length) halos[i].position.setFromMatrixPosition(m);
+  }
+  lantMesh.instanceMatrix.needsUpdate = true;
+  for (let i = 0; i < boats.length; i++) {
+    boats[i].position.z = ((boats[i].position.z + 0.02 + 65) % 130) - 65;
+    boats[i].position.y = 0.4 + Math.sin(t*1.2 + i)*0.08;
+  }
+  const ca = t * 0.045;
+  cam.position.set(Math.cos(ca)*72, 30 + Math.sin(t*0.1)*6, Math.sin(ca)*72);
+  cam.lookAt(0, 9, 0);
+  renderer.render(scene, cam);
+}
+frame();
+window.__READY = true;
+</script>
+</body>
+</html>
