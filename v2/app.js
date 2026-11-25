@@ -24,7 +24,7 @@ async function fetchWithProgress(url, onp) {
 
 const stallTimer = setTimeout(() => $('stall').classList.add('show'), 12000);
 
-const ASSET_V = 'v20g';
+const ASSET_V = 'v20h';
 const manifest = await (await fetch('./manifest.json?' + ASSET_V)).json();
 bar.style.width = '6%';
 const binBuf = await fetchWithProgress('./scene.bin?' + ASSET_V, (f) => { bar.style.width = (6 + f * 84) + '%'; });
@@ -493,10 +493,12 @@ function lmHaloAt(x, y, z, size, hex, opacity) {
   const CX = -88, CZ = -66;
   const shards = [];
   const defs = [[0, 0, 58, 9, 0.3], [-12, 4, 38, 6, 1.4], [11, -6, 44, 7, 2.5], [7, 9, 30, 5, 3.6], [-7, -11, 26, 4.5, 5.0]];
-  for (const [x, z, h, r, ry] of defs) {
+  const cpal = [[0.45, 0.85, 1.0], [0.62, 0.62, 1.0], [0.9, 0.96, 1.0], [0.5, 0.95, 0.92], [0.78, 0.7, 1.0]];
+  for (let di = 0; di < defs.length; di++) {
+    const [x, z, h, r, ry] = defs[di];
     const o = new THREE.OctahedronGeometry(r, 0);
     o.scale(1, h / (r * 2), 1); o.rotateY(ry); o.translate(x, h * 0.5, z);
-    shards.push({ g: o, c: [0.45, 0.85, 1.0] });
+    shards.push({ g: o, c: cpal[di % cpal.length] });
   }
   const cm = new THREE.MeshBasicMaterial({ vertexColors: true });
   cm.toneMapped = false;
@@ -665,7 +667,7 @@ lmPagoda(-320, -260, 5, 22, 8.5);
   const mists = [];
   for (let i = 0; i < 5; i++) {
     const g = new THREE.PlaneGeometry(150 + i * 26, 15 + (i % 2) * 8);
-    const m = new THREE.MeshBasicMaterial({ map: haloTex, color: 0x8fa8cf, transparent: true, opacity: 0.13 + (i % 3) * 0.03, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
+    const m = new THREE.MeshBasicMaterial({ map: haloTex, color: 0x8fa8cf, transparent: true, opacity: 0.2 + (i % 3) * 0.04, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
     m.toneMapped = false;
     const mesh = new THREE.Mesh(g, m);
     mesh.position.set(-320 + i * 36, 8 + (i % 3) * 11, 26 + (i % 4) * 24);
@@ -1656,9 +1658,9 @@ const KEYS = [
   { pos: [-1305.9, 520, -1459.1], look: [22.13, 60, 33.16], hold: 2600, fly: 5000, title: "Dusk Horizon", note: "Amber light dissolves into the first twilight shadows" },
   { pos: [-520, 130, -820], look: [22, 50, 33], hold: 1500, fly: 5200, title: "The High Descent", note: "Sliding down toward the glowing realm" },
   { pos: [-40, 60, 160], look: [22, 45, -60], hold: 1400, fly: 5000, title: "Twin Spire Dive", note: "Diving straight between the matched towers of light" },
-  { pos: [84, 34, -272], look: [177, 20, -132], hold: 2200, fly: 4800, title: "Gate of Lanterns", note: "Under the great gate, into the festival" },
+  { pos: [84, 17, -285], look: [128, 32, -214], hold: 2200, fly: 4800, title: "Gate of Lanterns", note: "Under the great gate, into the festival" },
   { pos: [128, 66, -62], look: [185, 22, -140], hold: 2000, fly: 5000, title: "Star Market Life", note: "Vendors weave through drifting sky lanterns" },
-  { pos: [-40, 68, -40], look: [-166, 46, 143], hold: 1600, fly: 5000, title: "Pagoda Orbit", note: "Curling around the tiered temple roof" },
+  { pos: [-95, 78, 25], look: [-166, 48, 143], hold: 1600, fly: 5000, title: "Pagoda Orbit", note: "Curling around the tiered temple roof" },
   { pos: [-400, 70, -60], look: [-250, 40, 60], hold: 1600, fly: 5200, title: "Palace Mist", note: "Silhouettes of the hall pierce the low fog" },
   { pos: [-160, 130, 260], look: [740, 14, 450], hold: 1500, fly: 5400, title: "Water Reveal", note: "Rising over the glowing canals for the reveal" },
   { pos: [370, 85, 300], look: [740, 15, 460], hold: 1600, fly: 5200, title: "Magic Harbor", note: "The beacon sweeps across shimmering water" },
