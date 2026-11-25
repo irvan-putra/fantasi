@@ -24,7 +24,7 @@ async function fetchWithProgress(url, onp) {
 
 const stallTimer = setTimeout(() => $('stall').classList.add('show'), 12000);
 
-const ASSET_V = 'v19z';
+const ASSET_V = 'v20a';
 const manifest = await (await fetch('./manifest.json?' + ASSET_V)).json();
 bar.style.width = '6%';
 const binBuf = await fetchWithProgress('./scene.bin?' + ASSET_V, (f) => { bar.style.width = (6 + f * 84) + '%'; });
@@ -1375,18 +1375,29 @@ function tickDragons(t, u) {
   // speed and flapping pick up, bellies glow brighter. Pure function of u.
   const cw = Math.min(Math.max((u - 0.55) / 0.13, 0), 1);
   const chase = cw > 0 && cw < 1 ? Math.sin(cw * Math.PI) ** 2 : 0;
+  const cw2 = Math.min(Math.max((u - 0.72) / 0.10, 0), 1);
+  const gather = cw2 > 0 && cw2 < 1 ? Math.sin(cw2 * Math.PI) ** 2 : 0;
   for (const d of dragons) {
     const isLead = d.ph === 0.0;
     const spd = d.speed * (1 + chase * (isLead ? 0.8 : 0.45));
     const a = t * spd + d.ph;
     // non-leaders pull toward the lead orbit center during the chase
     const pull = chase * (isLead ? 0 : 0.55);
-    const cx = d.cx + (177 - d.cx) * pull, cz = d.cz + (-132 - d.cz) * pull;
+    const pull2 = gather * 0.8;
+    const gx = d.cx + (560 - d.cx) * pull2, gz = d.cz + (350 - d.cz) * pull2;
+    const cx = gx + (177 - gx) * pull, cz = gz + (-132 - gz) * pull;
     const rr = d.r * (1 - chase * (isLead ? 0 : 0.3));
     const x = cx + Math.cos(a) * rr;
     const z = cz + Math.sin(a) * rr * 0.8;
     const y = d.h + Math.sin(t * 0.5 + d.ph) * d.amp * (1 - chase * 0.3);
     d.grp.position.set(x, y, z);
+    // never let a dragon fill or block the camera lens (Irvan 9:41 PM)
+    const cdx = x - camera.position.x, cdy = y - camera.position.y, cdz = z - camera.position.z;
+    const cd2 = cdx * cdx + cdy * cdy + cdz * cdz;
+    if (cd2 < 16900) {
+      const s = 130 / (Math.sqrt(cd2) || 1);
+      d.grp.position.set(camera.position.x + cdx * s, camera.position.y + cdy * s, camera.position.z + cdz * s);
+    }
     const na = a + 0.02 * Math.sign(d.speed);
     const nx = cx + Math.cos(na) * rr, nz = cz + Math.sin(na) * rr * 0.8;
     d.grp.lookAt(nx, y, nz);
@@ -1404,11 +1415,18 @@ function tickDragons(t, u) {
 let fxStringMat, fxHaloMat;
 {
   const far = sec('far');
-  const n = far.length / 8;
   const tops = [];
-  for (let i = 0; i < n; i++) {
-    const x = far[i * 8], z = far[i * 8 + 1], h = far[i * 8 + 3];
-    if (Math.abs(x) < 430 && Math.abs(z) < 430 && h > 16 && h < 110) tops.push([x, h, z]);
+  {
+    // v20a: far section emptied by the full-city bake — anchor strings to baked rooftops
+    const rp = sec('roofs_pos');
+    const cells = {};
+    for (let i = 0; i < rp.length; i += 3) {
+      const x = rp[i], y = rp[i + 1], z = rp[i + 2];
+      if (y < 24 || y > 120 || Math.abs(x) > 700 || Math.abs(z) > 700) continue;
+      const k = Math.round(x / 30) + ':' + Math.round(z / 30);
+      if (!cells[k] || cells[k][1] < y) cells[k] = [x, y, z];
+    }
+    for (const k in cells) tops.push(cells[k]);
   }
   // pair each rooftop with a neighbour 30-95m away (one direction only)
   const strings = [];
