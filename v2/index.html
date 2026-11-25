@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0A1420">
+<meta name="description" content="Pramuka Astral — Pasar Lampion. An invented fantasy realm over the real street layout of Green Pramuka City, Jakarta. A directed dusk-to-night flythrough.">
+<title>Pramuka Astral — Pasar Lampion</title>
+<style>
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;background:#0A1420;overflow:hidden;overscroll-behavior:none}
+  body{font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#E8E4D8;-webkit-font-smoothing:antialiased}
+  #scene{position:fixed;inset:0}
+  #poster{
+    position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:2;pointer-events:none;
+    background:#0A1420;transition:opacity .9s ease;
+  }
+  #poster.gone{opacity:0}
+  #loader{
+    position:fixed;inset:0;z-index:30;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;
+    padding-bottom:18vh;background:linear-gradient(180deg,rgba(10,20,32,.16),rgba(10,20,32,.55));
+    transition:opacity .8s ease;pointer-events:none;
+  }
+  #loader.gone{opacity:0}
+  #loader .t{font-family:Georgia,'Times New Roman',serif;font-size:26px;letter-spacing:.06em;color:#FFE9C9;text-shadow:0 2px 18px rgba(0,0,0,.6)}
+  #loader .s{margin-top:6px;font-size:12px;color:#BCD2D8;letter-spacing:.12em;text-transform:uppercase}
+  #bar{width:min(66vw,300px);height:3px;border-radius:2px;background:rgba(255,255,255,.14);margin-top:16px;overflow:hidden}
+  #bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#FFC46E,#FF9E3C);transition:width .18s ease}
+  #stall{margin-top:10px;font-size:11.5px;color:#9FB4BC;opacity:0;transition:opacity .5s ease}
+  #stall.show{opacity:.95}
+  #vignette{position:fixed;inset:0;z-index:5;pointer-events:none;
+    background:radial-gradient(130% 105% at 50% 36%,transparent 58%,rgba(4,10,18,.38) 100%)}
+  #card{
+    position:fixed;left:0;right:0;bottom:calc(7vh + env(safe-area-inset-bottom,0px));z-index:20;text-align:center;
+    pointer-events:none;opacity:0;transition:opacity .7s ease;padding:0 28px;
+  }
+  #card.show{opacity:1}
+  #card .bt{font-family:Georgia,'Times New Roman',serif;font-size:clamp(22px,6vw,30px);letter-spacing:.05em;color:#FFE9C9;text-shadow:0 2px 20px rgba(0,0,0,.65)}
+  #card .bn{margin-top:6px;font-size:12.5px;color:#AEC6CE;font-style:italic;text-shadow:0 1px 10px rgba(0,0,0,.6)}
+  #chip{
+    position:fixed;top:max(10px,env(safe-area-inset-top,0px));left:10px;z-index:20;
+    background:rgba(10,20,32,.55);border:1px solid rgba(140,180,190,.22);border-radius:12px;
+    padding:7px 11px;font-size:10.5px;line-height:1.5;color:#9FB4BC;max-width:min(70vw,270px);
+    backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  }
+  #chip b{color:#FFE9C9;font-weight:600}
+  #sound{
+    position:fixed;top:max(10px,env(safe-area-inset-top,0px));right:10px;z-index:21;
+    width:38px;height:38px;border-radius:50%;border:1px solid rgba(140,180,190,.25);
+    background:rgba(10,20,32,.55);color:#FFE9C9;font-size:16px;display:flex;align-items:center;justify-content:center;
+    backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);cursor:pointer;
+  }
+</style>
+</head>
+<body>
+<div id="scene"></div>
+<img id="poster" src="../tiles/poster.jpg" alt="">
+<div id="vignette"></div>
+<div id="chip"><b>Pramuka Astral</b> · Pasar Lampion<br><span id="stats">an invented realm over Green Pramuka City, Jakarta</span></div>
+<button id="sound" aria-label="toggle sound">&#x1F507;</button>
+<div id="card"><div class="bt" id="cardTitle"></div><div class="bn" id="cardNote"></div></div>
+<div id="loader">
+  <div class="t">Pramuka Astral</div>
+  <div class="s">Pasar Lampion · forging the realm</div>
+  <div id="bar"><i></i></div>
+  <div id="stall">Slow connection — the realm is loading piece by piece…</div>
+</div>
+<script type="importmap">{"imports":{"three":"./lib/three.module.min.js"}}</script>
+<script type="module" src="./app.js"></script>
+</body>
+</html>
