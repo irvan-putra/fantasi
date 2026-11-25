@@ -101,3 +101,4 @@
 {"ts": "17:53:43", "kind": "art-v3", "module": "atmosphere", "handle": "jsjob-35", "model": "qwen3.8-27b", "pt": 12716, "ct": 5537, "cost": 0.00718, "finish": "stop"}
 {"ts": "17:53:43", "kind": "art-v3", "module": "camera", "handle": "jsjob-36", "model": "qwen3.8-27b", "pt": 12832, "ct": 1874, "cost": 0.0026, "finish": "stop"}
 {"ts": "17:53:43", "kind": "art-v3", "module": "sky", "handle": "jsjob-37", "model": "qwen3.8-27b", "pt": 12711, "ct": 12000, "cost": 0.01525, "finish": "length"}
+{"ts": "18:03:18", "kind": "sweep-CORRECTION", "repo": "jin", "handle": "jsjob-38", "pt": 40873, "ct": 1279, "cost": 0.00242, "note": "BACKEND contamination: prompt_tokens==jin digest exactly but completion about repo simak (95% cached). Discarded, rerun with nonce."}
