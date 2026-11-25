@@ -3,26 +3,29 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="color-scheme" content="dark">
-<meta name="theme-color" content="#070b13">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#cfe3f7">
 <meta name="description" content="A 1:1 3D map of Green Pramuka City and its neighbors, Jakarta — MapLibre, tiled, every block a real building.">
 <title>kota — Jakarta at 1:1</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@3.6.2/dist/maplibre-gl.css">
 <style>
   :root{
-    --bg:#070b13;
-    --ink:#e9eef7;
-    --muted:#a3b1c7;
-    --faint:#6d7d95;
-    --amber:#f0a84b;
-    --line:rgba(148,170,205,.16);
-    --glass:rgba(9,13,21,.8);
+    --bg:#a9c9e8;
+    --bg-hi:#cfe3f7;
+    --ink:#1e2733;
+    --muted:#5b6b80;
+    --faint:#7c8899;
+    --accent:#c96f4a;
+    --accent-ink:#fff4ec;
+    --line:rgba(46,72,110,.18);
+    --card:rgba(255,255,255,.86);
+    --chip:rgba(255,255,255,.8);
   }
   *{box-sizing:border-box}
   html,body{height:100%}
   body{
     margin:0;
-    background:var(--bg);
+    background:linear-gradient(180deg,var(--bg-hi),var(--bg));
     color:var(--ink);
     overflow:hidden;
     overscroll-behavior:none;
@@ -36,16 +39,16 @@
   #poster{
     position:fixed;inset:0;width:100%;height:100%;
     object-fit:cover;z-index:2;pointer-events:none;
-    background:var(--bg);
+    background:linear-gradient(180deg,var(--bg-hi),var(--bg));
     transition:opacity .6s ease;
   }
   #vignette{
     position:fixed;inset:0;z-index:5;pointer-events:none;
-    background:radial-gradient(130% 100% at 50% 38%,transparent 52%,rgba(3,6,11,.5) 100%);
+    background:radial-gradient(130% 100% at 50% 34%,transparent 56%,rgba(50,78,120,.22) 100%);
   }
   #progress{
     position:fixed;top:0;left:0;height:3px;width:0;
-    background:var(--amber);z-index:40;pointer-events:none;
+    background:var(--accent);z-index:40;pointer-events:none;
     width:0;opacity:0;
     transition:width .2s ease,opacity .4s ease;
   }
@@ -54,82 +57,85 @@
   #counter{
     position:fixed;top:max(10px,env(safe-area-inset-top,0px));right:10px;z-index:20;
     max-width:min(80vw,300px);text-align:right;
-    background:var(--glass);border:1px solid var(--line);border-radius:12px;
+    background:var(--chip);border:1px solid var(--line);border-radius:12px;
     padding:7px 11px;font-size:11px;line-height:1.45;color:var(--muted);
     font-variant-numeric:tabular-nums;
     backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
   }
   #counter b{color:var(--ink);font-weight:600}
-  #counter .src{display:block;font-size:8.5px;letter-spacing:.02em;color:#5d6c85;margin-top:2px}
+  #counter .src{display:block;font-size:8.5px;letter-spacing:.02em;color:#93a1b3;margin-top:2px}
 
   /* tour */
   #tour{
     position:fixed;right:12px;bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:25;
     display:inline-flex;align-items:center;gap:7px;
-    background:var(--glass);border:1px solid var(--line);border-radius:999px;color:var(--ink);
+    background:var(--chip);border:1px solid var(--line);border-radius:999px;color:var(--ink);
     font-family:inherit;font-size:13px;font-weight:600;padding:10px 16px;cursor:pointer;
     backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+    box-shadow:0 6px 18px rgba(50,78,120,.16);
     opacity:0;pointer-events:none;transform:translateY(8px);
     transition:opacity .3s ease,transform .3s ease,color .3s ease,border-color .3s ease;
   }
   #tour.show{opacity:1;pointer-events:auto;transform:none}
-  #tour.active{color:var(--amber);border-color:rgba(240,168,75,.5)}
+  #tour.active{color:var(--accent);border-color:rgba(201,111,74,.5)}
   #tourlabel{
     position:fixed;left:50%;bottom:calc(72px + env(safe-area-inset-bottom,0px));z-index:22;
     transform:translateX(-50%) translateY(6px);
-    background:var(--glass);border:1px solid var(--line);border-radius:999px;
-    padding:7px 14px;font-size:12px;color:var(--ink);
+    background:var(--card);border:1px solid var(--line);border-radius:999px;
+    padding:8px 16px;font-size:12.5px;font-weight:600;color:var(--ink);
     white-space:nowrap;max-width:88vw;overflow:hidden;text-overflow:ellipsis;
+    box-shadow:0 8px 22px rgba(50,78,120,.18);
     opacity:0;pointer-events:none;
     transition:opacity .3s ease,transform .3s ease;
     backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
   }
   #tourlabel.show{opacity:1;transform:translateX(-50%)}
 
-  /* start card */
+  /* start card (daylight title card) */
   #card{
     position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px));
     transform:translateX(-50%);z-index:30;
     width:min(370px,calc(100vw - 24px));
-    max-height:min(72vh,520px);overflow-y:auto;
-    background:var(--glass);border:1px solid var(--line);border-radius:16px;
+    max-height:min(74vh,540px);overflow-y:auto;
+    background:var(--card);border:1px solid var(--line);border-radius:16px;
     padding:16px 16px 14px;
-    box-shadow:0 18px 50px rgba(0,0,0,.55);
-    backdrop-filter:blur(14px) saturate(1.15);-webkit-backdrop-filter:blur(14px) saturate(1.15);
+    box-shadow:0 20px 55px rgba(40,64,100,.32);
+    backdrop-filter:blur(14px) saturate(1.1);-webkit-backdrop-filter:blur(14px) saturate(1.1);
     transition:opacity .35s ease,transform .35s ease;
   }
   #card.hidden{opacity:0;transform:translateX(-50%) translateY(14px);pointer-events:none}
-  #card .kicker{margin:0 0 7px;font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--amber)}
-  #card h1{margin:0 0 8px;font-family:Georgia,"Times New Roman",serif;font-weight:600;font-size:21px;line-height:1.25}
+  #card .kicker{margin:0 0 7px;font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--accent)}
+  #card h1{margin:0 0 8px;font-family:Georgia,"Times New Roman",serif;font-weight:600;font-size:21px;line-height:1.25;color:#22303f}
   #card p{margin:0 0 9px;font-size:13px;line-height:1.55;color:var(--muted)}
-  #card .note{font-size:11.5px;color:#e2b568}
+  #card .note{font-size:11.5px;color:#9a6a44}
   #card .credit{font-size:11px;color:var(--faint)}
-  #card .fineprint{font-size:9.5px;line-height:1.5;color:#5d6c85;margin:10px 0 0}
-  #card .fineprint a{color:#8fa3c8}
+  #card .fineprint{font-size:9.5px;line-height:1.5;color:#9099a6;margin:8px 0 0}
+  #card .fineprint a{color:#6a7f9c}
   #dismiss{
     margin-top:12px;width:100%;appearance:none;border:0;border-radius:10px;
-    background:var(--amber);color:#1a1108;font-family:inherit;font-size:13.5px;font-weight:700;
+    background:var(--accent);color:var(--accent-ink);font-family:inherit;font-size:13.5px;font-weight:700;
     padding:11px 14px;cursor:pointer;
+    box-shadow:0 6px 16px rgba(201,111,74,.32);
   }
-  #dismiss:hover{filter:brightness(1.07)}
-  #dismiss:focus-visible,#tour:focus-visible,#error button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+  #dismiss:hover{filter:brightness(1.06)}
+  #dismiss:focus-visible,#tour:focus-visible,#error button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
   /* errors */
   #error{
     position:fixed;inset:0;z-index:50;display:none;align-items:center;justify-content:center;
-    padding:20px;background:rgba(4,7,12,.78);
+    padding:20px;background:rgba(40,58,86,.5);
     backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
   }
   #error.show{display:flex}
-  #error .box{width:100%;max-width:430px;background:#101828;border:1px solid rgba(255,120,110,.35);border-radius:14px;padding:18px}
-  #error h2{margin:0 0 8px;font-size:15px;color:#ff9f92}
+  #error .box{width:100%;max-width:430px;background:#ffffff;border:1px solid rgba(200,80,70,.4);border-radius:14px;padding:18px;box-shadow:0 20px 55px rgba(40,64,100,.4)}
+  #error h2{margin:0 0 8px;font-size:15px;color:#b23b2c}
   #error p{margin:0 0 14px;font-size:12.5px;line-height:1.6;color:var(--muted);overflow-wrap:anywhere}
   #error .row{display:flex;gap:8px;flex-wrap:wrap}
   #error button{
-    appearance:none;border:1px solid var(--line);background:rgba(148,170,205,.08);color:var(--ink);
+    appearance:none;border:1px solid var(--line);background:#eef2f7;color:var(--ink);
     font-family:inherit;font-size:13px;font-weight:600;padding:9px 14px;border-radius:9px;cursor:pointer;
   }
-  #error button:hover{background:rgba(148,170,205,.16)}
+  #error button:hover{background:#e2e9f2}
 </style>
 </head>
 <body>
@@ -152,8 +158,8 @@
 <section id="card" role="dialog" aria-label="About this map">
   <p class="kicker">Green Pramuka City</p>
   <h1>kota — Jakarta at 1:1</h1>
-  <p>A 1:1 3D map of Green Pramuka City and the blocks around it — every building you see is real.</p>
-  <p class="note">≈ Building heights are estimates — the skyline is a sketch, not a survey. Cars and people are simulated.</p>
+  <p>A 1:1 3D map of Green Pramuka City and the blocks around it — every building you see is real. It opens on a short cinematic flythrough; touch to take the controls.</p>
+  <p class="note">Building heights are estimates — the skyline is a sketch, not a survey. Cars and people are simulated. Parks and water from OpenStreetMap.</p>
   <p class="credit">Data: Microsoft building footprints · © OpenStreetMap contributors</p>
   <p class="fineprint">Generated by GLM-5.3-Flash on Fenrir (fenrir.lio.id), steered by Instinct</p>
   <p class="fineprint">Inspired by <a href="https://www.threads.com/share/FNCjS5T_A" target="_blank" rel="noopener">Gabriel Chua's 1:1 Singapore flythrough</a></p>
@@ -172,7 +178,7 @@
 </div>
 
 <noscript>
-  <div style="position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;background:#070b13;color:#e9eef7;font-family:sans-serif;padding:20px;text-align:center">
+  <div style="position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;background:#a9c9e8;color:#1e2733;font-family:sans-serif;padding:20px;text-align:center">
     This map needs JavaScript to render.
   </div>
 </noscript>
@@ -214,9 +220,24 @@ function showError(title, detail, fatal = true) {
 $errRetry.addEventListener('click', () => location.reload());
 $errContinue.addEventListener('click', () => $error.classList.remove('show'));
 
+// card state
+let cardDismissed = false;
+let cinematicAutoDone = false;
+let autoTimer = null;
 function dismissCard() {
+  if (cardDismissed) return;
+  cardDismissed = true;
+  if (autoTimer) { clearTimeout(autoTimer); autoTimer = null; }
   $card.classList.add('hidden');
   $tour.classList.add('show');
+}
+function autoDismissCard() {
+  if (cardDismissed) return;
+  cardDismissed = true;
+  if (autoTimer) { clearTimeout(autoTimer); autoTimer = null; }
+  $card.classList.add('hidden');
+  $tour.classList.add('show');
+  runCinematic({ autoplay: true });
 }
 $dismiss.addEventListener('click', dismissCard);
 window.addEventListener('keydown', (e) => {
@@ -319,6 +340,18 @@ function toRoadsFC(raw) {
   return { type: 'FeatureCollection', features: out };
 }
 
+function toGreenFC(raw) {
+  // Normalize the static green.json (FeatureCollection of Point / Polygon / LineString).
+  const out = [];
+  const list = raw && Array.isArray(raw.features) ? raw.features : [];
+  for (const f of list) {
+    if (!f || !f.geometry) continue;
+    const kind = String((f.properties && f.properties.kind) || 'green');
+    out.push({ type: 'Feature', properties: { kind, g: (f.properties && f.properties.i) || 0 }, geometry: f.geometry });
+  }
+  return { type: 'FeatureCollection', features: out };
+}
+
 // --- boot -------------------------------------------------------------------
 
 if (!window.maplibregl) {
@@ -334,9 +367,12 @@ async function boot() {
       container: 'map',
       style: {
         version: 8,
-        light: { anchor: 'viewport', color: '#ffe2b0', intensity: 0.36 },
+        light: { anchor: 'viewport', color: '#fff4de', intensity: 0.9 },
         sources: {},
-        layers: [{ id: 'bg', type: 'background', paint: { 'background-color': '#070b13' } }],
+        layers: [
+          { id: 'bg', type: 'background', paint: { 'background-color': '#b8b2a4' } },
+          { id: 'ground', type: 'background', paint: { 'background-color': '#b8b2a4' } },
+        ],
       },
       center: CENTER,
       zoom: 15.2,
@@ -383,19 +419,55 @@ async function boot() {
 
   await mapReady;
 
+  // --- daylight sky + aerial haze ------------------------------------------
+  try {
+    map.setSky({ color: '#a9c9e8', 'sky-horizon-blend': 0.6, atmosphere: { color: '#cfe3f7' } });
+  } catch (e) {}
+  try {
+    map.setFog({
+      color: '#cfe3f7',
+      'horizon-blend': 0.55,
+      'space-color': '#e6f0fb',
+      range: [13.6, 16.5],
+      'high-color': '#eef4fb',
+    });
+  } catch (e) { /* fog is best-effort */ }
+  try { map.setLight({ anchor: 'viewport', color: '#fff4de', intensity: 0.85 }); } catch (e) {}
+
+  // --- parks + water (static, loaded ONCE, non-fatal) -----------------------
+  try {
+    const g = await fetchJSON('tiles/green.json');
+    map.addSource('green-src', { type: 'geojson', data: toGreenFC(g) });
+    map.addLayer({
+      id: 'park-fill', type: 'fill', source: 'green-src',
+      filter: ['==', ['get', 'kind'], 'green'],
+      paint: { 'fill-color': '#79a861', 'fill-opacity': 0.92 },
+    }, 'ground');
+    map.addLayer({
+      id: 'water-fill', type: 'fill', source: 'green-src',
+      filter: ['==', ['get', 'kind'], 'water'],
+      paint: { 'fill-color': '#6fa8cf', 'fill-opacity': 0.95 },
+    }, 'ground');
+    map.addLayer({
+      id: 'tree-circles', type: 'circle', source: 'green-src',
+      filter: ['==', ['get', 'kind'], 'tree'],
+      paint: {
+        'circle-radius': ['interpolate', ['linear'], ['zoom'], 13, 1, 16, 3],
+        'circle-color': '#4e7d3f', 'circle-opacity': 0.85,
+      },
+    }, 'ground');
+  } catch (e) { /* parks/water are best-effort */ }
+
   // --- coarse preview layer (added first so it sits beneath everything) ------
 
   const BUILDING_COLOR = [
     'interpolate', ['linear'], ['coalesce', ['get', 'h'], 3],
-    0,   '#1f2a40',
-    10,  '#2a3752',
-    25,  '#3a4a6e',
-    50,  '#575a80',
-    90,  '#7d6285',
-    140, '#b57a52',
-    200, '#e09a4e',
-    300, '#f7bd63',
-    450, '#ffdf9e',
+    0,   '#c96f4a',
+    10,  '#d98e5f',
+    40,  '#cfc8bd',
+    90,  '#9fb6d6',
+    200, '#8fa8c8',
+    500, '#7e96bc',
   ];
 
   const coarseParts = new Map(); // "x,y" -> FeatureCollection
@@ -412,7 +484,7 @@ async function boot() {
         'fill-extrusion-color': BUILDING_COLOR,
         'fill-extrusion-opacity': 0,
         'fill-extrusion-opacity-transition': { duration: 400 },
-        'fill-extrusion-vertical-gradient': true,
+        'fill-extrusion-vertical-gradient': false,
       },
       layout: { visibility: 'none' },
     });
@@ -501,6 +573,41 @@ async function boot() {
 
   function addBuildingLayers(src, key) {
     const id = 'bldg-' + key.replace(',', '-');
+    // Daylight roof palette: pick a tone by height band, with a per-feature hash
+    // (of the index + height) sprinkling 3-4 roof tones per band. Flat colors, no vertical gradient.
+    const roofColor = ['match', ['get', 'rh'],
+      0, ['#c96f4a', '#d98e5f', '#c4835a', '#e0a06b'],
+      1, ['#cfc8bd', '#bfc4cc', '#d8cfc0'],
+      ['#8fa8c8', '#9fb6d6', '#7e96bc'],
+    ];
+    const rhExpr = [
+      'case',
+      ['<', ['coalesce', ['get', 'h'], 3], 10], 0,
+      ['<=', ['coalesce', ['get', 'h'], 3], 40], 1,
+      2,
+    ];
+    const pickExpr = [
+      'get', ['concat', ['str', ['str', ['get', 'i']], ''], ['str', ['get', 'h']]],
+    ];
+    // Build a stable per-feature index into the band array via (i*7 + h*13) mod len.
+    const idx = [
+      'mod',
+      ['+', ['*', ['coalesce', ['get', 'i'], 0], 7], ['floor', ['coalesce', ['get', 'h'], 3]], 13],
+      ['match', rhExpr, 0, 4, 1, 3, 3],
+    ];
+    const colorExpr = [
+      'get',
+      ['concat',
+        ['str', ['str', ['get', 'rh'], '_']],
+        idx,
+      ],
+    ];
+    // MapLibre match on a numeric 'rh' then concat a token string is awkward; use a direct match on 'rh' to band arrays.
+    const color = ['match', rhExpr,
+      0, ['#c96f4a', '#d98e5f', '#c4835a', '#e0a06b'],
+      1, ['#cfc8bd', '#bfc4cc', '#d8cfc0'],
+      ['#8fa8c8', '#9fb6d6', '#7e96bc'],
+    ];
     map.addLayer({
       id,
       type: 'fill-extrusion',
@@ -508,12 +615,12 @@ async function boot() {
       paint: {
         'fill-extrusion-height': ['min', ['max', ['coalesce', ['get', 'h'], 3], 2.5], 500],
         'fill-extrusion-base': 0,
-        'fill-extrusion-color': BUILDING_COLOR,
+        'fill-extrusion-color': color,
         'fill-extrusion-opacity': [
           'interpolate', ['linear'], ['zoom'],
-          13, 0, 14, 0.94,
+          13, 0, 14, 0.96,
         ],
-        'fill-extrusion-vertical-gradient': true,
+        'fill-extrusion-vertical-gradient': false,
       },
     });
     return id;
@@ -522,24 +629,34 @@ async function boot() {
   function addRoadLayers(src, key) {
     const suffix = key.replace(',', '-');
     const widths = (a, b) => ['interpolate', ['linear'], ['zoom'], 14, a, 17.5, b];
+    // Daylight road style: soft asphalt casings (wider, slightly darker edge) under crisp tops.
     const defs = [
+      // casings (edge) — drawn first so they sit under the top line
+      ['roads-case-major-' + suffix, ['all', ['==', ['get', 'kind'], 'highway'], ['==', ['get', 'tier'], 3]],
+        { 'line-color': '#8f8a80', 'line-width': widths(4.4, 8.6), 'line-opacity': 0.9 },
+        { 'line-cap': 'round', 'line-join': 'round' }, null],
+      ['roads-case-mid-' + suffix, ['all', ['==', ['get', 'kind'], 'highway'], ['==', ['get', 'tier'], 2]],
+        { 'line-color': '#9a958c', 'line-width': widths(3.4, 6.2), 'line-opacity': 0.85 },
+        { 'line-cap': 'round', 'line-join': 'round' }, null],
+      ['roads-case-minor-' + suffix, ['all', ['==', ['get', 'kind'], 'highway'], ['==', ['get', 'tier'], 1]],
+        { 'line-color': '#a7a297', 'line-width': widths(2.2, 3.6), 'line-opacity': 0.7 },
+        { 'line-cap': 'round', 'line-join': 'round' }, null],
+      // waterways (teal) + railway (dashed)
       ['waterway-' + suffix, ['==', ['get', 'kind'], 'waterway'],
-        { 'line-color': '#22415f', 'line-width': widths(1.2, 3.2), 'line-opacity': 0.9 },
+        { 'line-color': '#6fa8cf', 'line-width': widths(2, 6), 'line-opacity': 0.9 },
         { 'line-cap': 'round', 'line-join': 'round' }, null],
       ['railway-' + suffix, ['==', ['get', 'kind'], 'railway'],
-        { 'line-color': '#655e7d', 'line-width': widths(0.8, 1.7), 'line-dasharray': [2, 2.2], 'line-opacity': 0.85 },
+        { 'line-color': '#8a8494', 'line-width': widths(0.8, 1.7), 'line-dasharray': [2, 2.2], 'line-opacity': 0.85 },
         { 'line-join': 'round' }, null],
-      ['roads-glow-' + suffix, ['all', ['==', ['get', 'kind'], 'highway'], ['==', ['get', 'tier'], 3]],
-        { 'line-color': '#6f8cc9', 'line-width': widths(3.5, 9), 'line-blur': 4, 'line-opacity': 0.2 },
-        { 'line-cap': 'round', 'line-join': 'round' }, null],
+      // top lines
       ['roads-minor-' + suffix, ['all', ['==', ['get', 'kind'], 'highway'], ['==', ['get', 'tier'], 1]],
-        { 'line-color': '#333e54', 'line-width': widths(0.6, 1.3), 'line-opacity': 0.72 },
+        { 'line-color': '#c4bfb4', 'line-width': widths(1.6, 2.6), 'line-opacity': 0.92 },
         { 'line-cap': 'round', 'line-join': 'round' }, null],
       ['roads-mid-' + suffix, ['all', ['==', ['get', 'kind'], 'highway'], ['==', ['get', 'tier'], 2]],
-        { 'line-color': '#4d5b7d', 'line-width': widths(0.9, 1.9), 'line-opacity': 0.85 },
+        { 'line-color': '#b7b2a8', 'line-width': widths(2.4, 4.2), 'line-opacity': 0.96 },
         { 'line-cap': 'round', 'line-join': 'round' }, null],
       ['roads-major-' + suffix, ['all', ['==', ['get', 'kind'], 'highway'], ['==', ['get', 'tier'], 3]],
-        { 'line-color': '#93a9cf', 'line-width': widths(1.3, 2.7), 'line-opacity': 0.95 },
+        { 'line-color': '#a9a49a', 'line-width': widths(3.2, 6.4), 'line-opacity': 0.98 },
         { 'line-cap': 'round', 'line-join': 'round' }, null],
     ];
     const ids = [];
@@ -588,6 +705,12 @@ async function boot() {
 
     const rec = { src, layers: [], fc };
     if (kind === 'b') {
+      // attach the roof-band index on each feature so the color can be varied per building
+      for (const f of fc.features) {
+        const h = f.properties.h || 0;
+        const i = f.properties.i || 0;
+        f.properties.rh = h <= 10 ? 0 : (h <= 40 ? 1 : 2);
+      }
       rec.layers.push(addBuildingLayers(src, key));
       bLoaded.set(key, rec);
       hidePoster();
@@ -633,6 +756,10 @@ async function boot() {
       return;
     }
     inflight.delete(fkey);
+    for (const f of fc.features) {
+      const h = f.properties.h || 0;
+      f.properties.rh = h <= 10 ? 0 : (h <= 40 ? 1 : 2);
+    }
     coarseParts.set(key, fc);
     rebuildCoarse();
     updateProgress();
@@ -764,16 +891,26 @@ async function boot() {
     updateCoarseVisibility();
   }
 
-  // --- camera: slow orbit, guided tour, free control ------------------------
+  // --- camera: slow orbit, guided tour + cinematic, free control ----------
 
   let orbiting = false;
   let tourToken = 0;
   let tourRunning = false;
+  let cinematicRunning = false;
 
   const VIEWS = [
     { name: 'Green Pramuka City towers', center: [106.8738, -6.1893], zoom: 16.25, pitch: 63, bearing: 28 },
     { name: 'Cempaka Putih', center: [106.8725, -6.1780], zoom: 15.8, pitch: 55, bearing: -38 },
     { name: 'Rawasari · the toll-road curve', center: [106.8790, -6.1860], zoom: 15.3, pitch: 58, bearing: 115 },
+  ];
+
+  // Cinematic flythrough: high overview -> dive at the towers -> low toll-road
+  // run -> rise + pull back to overview. ~20-25s chained.
+  const CINEMATIC = [
+    { name: 'Green Pramuka City — from the air', center: [106.8738, -6.1893], zoom: 13.2, pitch: 8,  bearing: 0,   flyMs: 4200, holdMs: 500 },
+    { name: 'The towers',                        center: [106.8738, -6.1893], zoom: 15.5, pitch: 60, bearing: 28,  flyMs: 4800, holdMs: 600 },
+    { name: 'Along the toll road',                center: [106.8790, -6.1860], zoom: 16.6, pitch: 70, bearing: 118, flyMs: 5200, holdMs: 500 },
+    { name: 'Pulling back',                        center: [106.8765, -6.1870], zoom: 14.6, pitch: 32, bearing: 60,  flyMs: 4600, holdMs: 900 },
   ];
 
   function orbitStep() {
@@ -787,6 +924,7 @@ async function boot() {
   }
   function endTourUI() {
     tourRunning = false;
+    cinematicRunning = false;
     $tour.classList.remove('active');
     const label = $tour.querySelector('span');
     if (label) label.textContent = 'Tour';
@@ -795,6 +933,7 @@ async function boot() {
   function releaseCamera() {
     tourToken++;
     if (tourRunning) endTourUI();
+    if (cinematicRunning) endTourUI();
     orbiting = false;
     map.stop(); // cut any in-flight camera animation
   }
@@ -809,33 +948,40 @@ async function boot() {
   });
   map.on('zoomend', scheduleUpdate);
 
-  async function runTour() {
+  // Cinematic flythrough. When autoplay=true (first run), it also ends with the
+  // existing slow orbit; when replayed from the Tour button it does not (so the
+  // map stays still and user-controlled after the run).
+  async function runCinematic(opts = {}) {
     releaseCamera();
+    const token = tourToken;
     tourRunning = true;
+    cinematicRunning = true;
     $tour.classList.add('active');
     const label = $tour.querySelector('span');
     if (label) label.textContent = 'Stop';
-    const token = tourToken;
-    const flyMs = reduceMotion ? 900 : 5200;
-    const holdMs = reduceMotion ? 500 : 3000;
-    for (const v of VIEWS) {
+    for (const v of CINEMATIC) {
       if (token !== tourToken) return;
       $tourLabel.textContent = v.name;
       $tourLabel.classList.add('show');
-      map.flyTo({ center: v.center, zoom: v.zoom, pitch: v.pitch, bearing: v.bearing, duration: flyMs, essential: true });
-      await sleep(flyMs + holdMs);
+      map.flyTo({ center: v.center, zoom: v.zoom, pitch: v.pitch, bearing: v.bearing, duration: v.flyMs, essential: true });
+      await sleep(v.flyMs + v.holdMs);
     }
     if (token !== tourToken) return;
-    endTourUI();
-    startOrbit(); // hand the city back to the slow drift
+    $tourLabel.classList.remove('show');
+    cinematicRunning = false;
+    tourRunning = false;
+    $tour.classList.remove('active');
+    if (label) label.textContent = 'Tour';
+    if (opts.autoplay && !reduceMotion) startOrbit();
   }
 
+  // Existing "Tour" button now replays the cinematic.
   $tour.addEventListener('click', () => {
-    if (tourRunning) { releaseCamera(); return; }
-    runTour();
+    if (tourRunning || cinematicRunning) { releaseCamera(); return; }
+    runCinematic({ autoplay: false });
   });
 
-  // --- lively: simulated cars + people on the real road network ------------
+  // --- lively: simulated cars + people + buses on the real road network ----
 
   const MPD = 111320; // meters per degree latitude
   function polyMetrics(coords) {
@@ -866,7 +1012,7 @@ async function boot() {
     return [coords[lo][0] + (coords[hi][0] - coords[lo][0]) * t, coords[lo][1] + (coords[hi][1] - coords[lo][1]) * t];
   }
 
-  const N_CARS = 90, N_PEOPLE = 160;
+  const N_CARS = 90, N_PEOPLE = 160, N_BUSES = 3;
   const agents = [];
   let agentPool = [];
   let poolFromSize = -1;
@@ -883,6 +1029,7 @@ async function boot() {
     agents.length = 0;
     for (let i = 0; i < N_CARS; i++) { const a = spawnAgent('car'); if (a) agents.push(a); }
     for (let i = 0; i < N_PEOPLE; i++) { const a = spawnAgent('person'); if (a) agents.push(a); }
+    for (let i = 0; i < N_BUSES; i++) { const a = spawnAgent('bus'); if (a) agents.push(a); }
   }
 
   function spawnAgent(kind) {
@@ -890,14 +1037,18 @@ async function boot() {
     for (let tries = 0; tries < 8; tries++) {
       const e = agentPool[(Math.random() * agentPool.length) | 0];
       if (!e) return null;
-      if (kind === 'car' ? (e.tier >= 2 && e.part.len > 120) : e.part.len > 40) { best = e; break; }
+      const okPick =
+        kind === 'car' ? (e.tier >= 2 && e.part.len > 120)
+        : kind === 'bus' ? (e.tier === 3 && e.part.len > 140)
+        : e.part.len > 40;
+      if (okPick) { best = e; break; }
       if (!best) best = e;
     }
     if (!best) return null;
     return {
       part: best.part,
       d: Math.random() * best.part.len,
-      v: kind === 'car' ? 7 + Math.random() * 7 : 1 + Math.random() * 0.9,
+      v: kind === 'car' ? 7 + Math.random() * 7 : kind === 'bus' ? 3 + Math.random() * 2 : 1 + Math.random() * 0.9,
       dir: Math.random() < 0.5 ? 1 : -1,
       kind,
     };
@@ -910,30 +1061,33 @@ async function boot() {
     if (!map.getStyle()) return;
     agentsReady = true;
     map.addSource('agents', { type: 'geojson', data: EMPTY_AGENTS });
-    map.addLayer({
-      id: 'agents-cars-glow', type: 'circle', source: 'agents',
-      filter: ['==', ['get', 'k'], 'c'],
-      paint: {
-        'circle-radius': ['interpolate', ['linear'], ['zoom'], 13, 3.2, 17, 8],
-        'circle-color': '#e8a54b', 'circle-blur': 1,
-        'circle-opacity': ['interpolate', ['linear'], ['zoom'], 13.2, 0, 13.8, 0.35],
-      },
-    });
+    // Cars: warm amber with a darker outline for daylight visibility.
     map.addLayer({
       id: 'agents-cars', type: 'circle', source: 'agents',
       filter: ['==', ['get', 'k'], 'c'],
       paint: {
-        'circle-radius': ['interpolate', ['linear'], ['zoom'], 13, 1.4, 17, 3.4],
-        'circle-color': '#ffd9a0', 'circle-stroke-width': 0.4, 'circle-stroke-color': '#fff2dd',
+        'circle-radius': ['interpolate', ['linear'], ['zoom'], 13, 1.6, 17, 3.8],
+        'circle-color': '#e8a54b', 'circle-stroke-width': 0.7, 'circle-stroke-color': '#7a4a12',
         'circle-opacity': ['interpolate', ['linear'], ['zoom'], 13.2, 0, 13.8, 0.95],
       },
     });
+    // Buses: slower, bigger, TransJakarta red.
+    map.addLayer({
+      id: 'agents-buses', type: 'circle', source: 'agents',
+      filter: ['==', ['get', 'k'], 'b'],
+      paint: {
+        'circle-radius': ['interpolate', ['linear'], ['zoom'], 13, 2.6, 17, 6.2],
+        'circle-color': '#d63c2f', 'circle-stroke-width': 1.0, 'circle-stroke-color': '#5e120b',
+        'circle-opacity': ['interpolate', ['linear'], ['zoom'], 13.2, 0, 13.8, 0.95],
+      },
+    });
+    // People: light blue-grey with a subtle darker outline.
     map.addLayer({
       id: 'agents-people', type: 'circle', source: 'agents',
       filter: ['==', ['get', 'k'], 'p'],
       paint: {
         'circle-radius': ['interpolate', ['linear'], ['zoom'], 14, 0.9, 17.5, 2.4],
-        'circle-color': '#b9c7e8',
+        'circle-color': '#c4d2e6', 'circle-stroke-width': 0.4, 'circle-stroke-color': '#6d80a0',
         'circle-opacity': ['interpolate', ['linear'], ['zoom'], 14.2, 0, 14.8, 0.8],
       },
     });
@@ -961,7 +1115,7 @@ async function boot() {
           if (na) agents[i] = na; else { a.dir *= -1; a.d = Math.max(0, Math.min(a.part.len, a.d)); }
         }
         const cur = agents[i];
-        feats[i] = { type: 'Feature', properties: { k: cur.kind === 'car' ? 'c' : 'p' }, geometry: { type: 'Point', coordinates: posAt(cur.part, cur.d) } };
+        feats[i] = { type: 'Feature', properties: { k: cur.kind === 'car' ? 'c' : cur.kind === 'bus' ? 'b' : 'p' }, geometry: { type: 'Point', coordinates: posAt(cur.part, cur.d) } };
       }
       const src = map.getSource('agents');
       if (src) src.setData({ type: 'FeatureCollection', features: feats });
@@ -971,8 +1125,13 @@ async function boot() {
 
   // --- go -------------------------------------------------------------------
   updateTiles();
-  startOrbit();
   startLively();
+  if (reduceMotion) {
+    // Skip the autoplay cinematic; keep the card until the user clicks.
+    startOrbit();
+  } else {
+    autoTimer = setTimeout(autoDismissCard, 3000);
+  }
 }
 </script>
 </body>
