@@ -353,6 +353,8 @@ async function boot() {
     return;
   }
   map.on('error', (e) => console.warn('maplibre error:', (e && e.error) || e));
+  // map 'load' is a one-shot event: capture it BEFORE any await, or a fast map races past a slow index fetch and the page hangs forever.
+  const mapReady = new Promise((resolve) => { if (map.loaded()) resolve(); else map.on('load', () => resolve()); });
 
   // --- fetch the tile index -------------------------------------------------
   let index = null;
@@ -380,7 +382,7 @@ async function boot() {
   }
   $counter.innerHTML = counterHTML();
 
-  await new Promise((resolve) => map.on('load', resolve));
+  await mapReady;
 
   // --- coarse preview layer (added first so it sits beneath everything) ------
 
