@@ -360,6 +360,10 @@ if (!window.maplibregl) {
   boot().catch((err) => showError('Something went wrong', String((err && err.message) || err)));
 }
 
+window.__errs = [];
+window.addEventListener('error', (e) => window.__errs.push(String(e.message || e.error).slice(0, 300)));
+window.addEventListener('unhandledrejection', (e) => window.__errs.push('rej: ' + String((e.reason && (e.reason.stack || e.reason.message)) || e.reason).slice(0, 400)));
+
 async function boot() {
   let map;
   try {
@@ -954,14 +958,16 @@ async function boot() {
   async function runCinematic(opts = {}) {
     releaseCamera();
     const token = tourToken;
+    window.__cine = { leg: -1, err: null, tok: token };
     tourRunning = true;
     cinematicRunning = true;
     $tour.classList.add('active');
     const label = $tour.querySelector('span');
     if (label) label.textContent = 'Stop';
-    for (const v of CINEMATIC) {
+    for (const [li, v] of CINEMATIC.entries()) {
+      window.__cine.leg = li; window.__cine.tokNow = tourToken;
       if (token !== tourToken) return;
-      $tourLabel.textContent = v.name;
+      try { $tourLabel.textContent = v.name; } catch (e) { window.__cine.err = 'label: ' + String(e); }
       $tourLabel.classList.add('show');
       map.flyTo({ center: v.center, zoom: v.zoom, pitch: v.pitch, bearing: v.bearing, duration: v.flyMs, essential: true });
       await sleep(v.flyMs + v.holdMs);
