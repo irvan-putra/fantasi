@@ -24,7 +24,7 @@ async function fetchWithProgress(url, onp) {
 
 const stallTimer = setTimeout(() => $('stall').classList.add('show'), 12000);
 
-const ASSET_V = 'v19y';
+const ASSET_V = 'v19z';
 const manifest = await (await fetch('./manifest.json?' + ASSET_V)).json();
 bar.style.width = '6%';
 const binBuf = await fetchWithProgress('./scene.bin?' + ASSET_V, (f) => { bar.style.width = (6 + f * 84) + '%'; });
@@ -653,10 +653,10 @@ lmPagoda(-320, -260, 5, 22, 8.5);
   const top = new THREE.ConeGeometry(6, 12, 8); top.translate(LX, y + 6, LZ);
   parts.push({ g: top, c: [0.12, 0.26, 0.3] });
   scene.add(new THREE.Mesh(mergeGeos(parts), mat));
-  const beamGeo = new THREE.ConeGeometry(14, 120, 10, 1, true);
-  beamGeo.translate(0, -60, 0);
+  const beamGeo = new THREE.ConeGeometry(7, 150, 10, 1, true);
+  beamGeo.translate(0, -75, 0);
   beamGeo.rotateX(-Math.PI / 2);
-  const beamMatB = new THREE.MeshBasicMaterial({ color: 0xffe9b0, transparent: true, opacity: 0.22, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, depthWrite: false });
+  const beamMatB = new THREE.MeshBasicMaterial({ color: 0xffe9b0, transparent: true, opacity: 0.15, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, depthWrite: false });
   beamMatB.toneMapped = false;
   const beamMesh = new THREE.Mesh(beamGeo, beamMatB);
   beamMesh.position.set(LX, y + 3, LZ);
@@ -1600,7 +1600,7 @@ const KEYS = [
   { pos: [-40, 68, -40], look: [-166, 46, 143], hold: 1600, fly: 5000, title: "Pagoda Orbit", note: "Curling around the tiered temple roof" },
   { pos: [-300, 48, 20], look: [-250, 26, 60], hold: 1600, fly: 5200, title: "Palace Mist", note: "Silhouettes of the hall pierce the low fog" },
   { pos: [-160, 130, 260], look: [740, 14, 450], hold: 1500, fly: 5400, title: "Water Reveal", note: "Rising over the glowing canals for the reveal" },
-  { pos: [380, 60, 320], look: [700, 25, 430], hold: 1600, fly: 5200, title: "Magic Harbor", note: "The beacon sweeps across shimmering water" },
+  { pos: [370, 85, 300], look: [740, 15, 460], hold: 1600, fly: 5200, title: "Magic Harbor", note: "The beacon sweeps across shimmering water" },
   { pos: [480, 100, 240], look: [560, 95, 350], hold: 1500, fly: 5000, title: "Dragon Lanes", note: "A dragon's wake stirs the festival lights" },
   { pos: [60, 190, -160], look: [-88, 150, -66], hold: 1600, fly: 5200, title: "Crystal Awakening", note: "Facets ignite in cascades of electric light" },
   { pos: [-820, 330, -760], look: [22, 90, 33], hold: 2000, fly: 6000, title: "Grand Astral Night", note: "The city breathes under a canopy of stars" },
