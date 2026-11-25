@@ -13,11 +13,12 @@ The brief file tells the model what to build and which files to emit.
 The model answers with fenced blocks whose info string is the target path,
 e.g. ```pipeline/build_data.py ... ```
 """
-import json, os, re, sys, time, pathlib, urllib.request, urllib.error
+import json
+import os, os, re, sys, time, pathlib, urllib.request, urllib.error
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 LEDGER = ROOT / 'gen' / 'ledger.jsonl'
-KEY_PATH = pathlib.Path('/tmp/jakarta/fenrir.key')
+KEY_PATH = pathlib.Path(os.environ.get('FENRIR_KEY_FILE', '/tmp/jakarta/fenrir.key'))
 BASE_URL = os.environ.get('FENRIR_BASE_URL', 'https://fenrir.lio.id/v1')
 MODEL = 'zai/glm-5.3-flash'
 UA = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'}

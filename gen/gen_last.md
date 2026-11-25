@@ -1,221 +1,529 @@
-```python pipeline/build_data.py
-#!/usr/bin/env python3
-"""Convert raw geodata in data/ into compact web-ready JSON in site/data/."""
+```html index.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#070b13">
+<meta name="description" content="A 1:1 3D map of Green Pramuka City, Jakarta — MapLibre, no tiles, just our own data.">
+<title>kota — Jakarta at 1:1</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@3.6.2/dist/maplibre-gl.css">
+<style>
+  :root{
+    --bg:#070b13;
+    --ink:#e9eef7;
+    --muted:#a3b1c7;
+    --faint:#6d7d95;
+    --amber:#f0a84b;
+    --line:rgba(148,170,205,.16);
+    --glass:rgba(9,13,21,.8);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    overflow:hidden;
+    overscroll-behavior:none;
+    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  #map{position:fixed;inset:0}
+  .maplibregl-canvas{outline:none}
+  .maplibregl-canvas-container{cursor:grab}
+  .maplibregl-canvas-container:active{cursor:grabbing}
+  #vignette{
+    position:fixed;inset:0;z-index:5;pointer-events:none;
+    background:radial-gradient(130% 100% at 50% 38%,transparent 52%,rgba(3,6,11,.5) 100%);
+  }
 
-import hashlib
-import json
-import math
-import os
-import sys
+  /* live counter */
+  #counter{
+    position:fixed;top:max(10px,env(safe-area-inset-top,0px));right:10px;z-index:20;
+    max-width:min(80vw,280px);text-align:right;
+    background:var(--glass);border:1px solid var(--line);border-radius:12px;
+    padding:7px 11px;font-size:11px;line-height:1.45;color:var(--muted);
+    font-variant-numeric:tabular-nums;
+    backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  }
+  #counter b{color:var(--ink);font-weight:600}
+  #counter .src{display:block;font-size:8.5px;letter-spacing:.02em;color:#5d6c85;margin-top:2px}
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-BUILDINGS_IN = os.path.join(ROOT, "data", "buildings_gpc.geojsonl")
-ROADS_IN = os.path.join(ROOT, "data", "roads.json")
-OUT_DIR = os.path.join(ROOT, "site", "data")
+  /* tour */
+  #tour{
+    position:fixed;right:12px;bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:25;
+    display:inline-flex;align-items:center;gap:7px;
+    background:var(--glass);border:1px solid var(--line);border-radius:999px;color:var(--ink);
+    font-family:inherit;font-size:13px;font-weight:600;padding:10px 16px;cursor:pointer;
+    backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+    opacity:0;pointer-events:none;transform:translateY(8px);
+    transition:opacity .3s ease,transform .3s ease,color .3s ease,border-color .3s ease;
+  }
+  #tour.show{opacity:1;pointer-events:auto;transform:none}
+  #tour.active{color:var(--amber);border-color:rgba(240,168,75,.5)}
+  #tourlabel{
+    position:fixed;left:50%;bottom:calc(72px + env(safe-area-inset-bottom,0px));z-index:22;
+    transform:translateX(-50%) translateY(6px);
+    background:var(--glass);border:1px solid var(--line);border-radius:999px;
+    padding:7px 14px;font-size:12px;color:var(--ink);
+    white-space:nowrap;max-width:88vw;overflow:hidden;text-overflow:ellipsis;
+    opacity:0;pointer-events:none;
+    transition:opacity .3s ease,transform .3s ease;
+    backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  }
+  #tourlabel.show{opacity:1;transform:translateX(-50%)}
 
-TOL_M = 1.5                      # simplification tolerance in meters
-K = math.pi * 6378137.0 / 180.0  # meters per degree of latitude
-MIN_RING = 3                     # minimum unique vertices for a valid ring
+  /* start card */
+  #card{
+    position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px));
+    transform:translateX(-50%);z-index:30;
+    width:min(370px,calc(100vw - 24px));
+    max-height:min(72vh,520px);overflow-y:auto;
+    background:var(--glass);border:1px solid var(--line);border-radius:16px;
+    padding:16px 16px 14px;
+    box-shadow:0 18px 50px rgba(0,0,0,.55);
+    backdrop-filter:blur(14px) saturate(1.15);-webkit-backdrop-filter:blur(14px) saturate(1.15);
+    transition:opacity .35s ease,transform .35s ease;
+  }
+  #card.hidden{opacity:0;transform:translateX(-50%) translateY(14px);pointer-events:none}
+  #card .kicker{margin:0 0 7px;font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--amber)}
+  #card h1{margin:0 0 8px;font-family:Georgia,"Times New Roman",serif;font-weight:600;font-size:21px;line-height:1.25}
+  #card p{margin:0 0 9px;font-size:13px;line-height:1.55;color:var(--muted)}
+  #card .note{font-size:11.5px;color:#e2b568}
+  #card .credit{font-size:11px;color:var(--faint)}
+  #card .fineprint{font-size:9.5px;line-height:1.5;color:#5d6c85;margin:10px 0 0}
+  #dismiss{
+    margin-top:12px;width:100%;appearance:none;border:0;border-radius:10px;
+    background:var(--amber);color:#1a1108;font-family:inherit;font-size:13.5px;font-weight:700;
+    padding:11px 14px;cursor:pointer;
+  }
+  #dismiss:hover{filter:brightness(1.07)}
+  #dismiss:focus-visible,#tour:focus-visible,#error button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 
+  /* errors */
+  #error{
+    position:fixed;inset:0;z-index:50;display:none;align-items:center;justify-content:center;
+    padding:20px;background:rgba(4,7,12,.78);
+    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  }
+  #error.show{display:flex}
+  #error .box{width:100%;max-width:430px;background:#101828;border:1px solid rgba(255,120,110,.35);border-radius:14px;padding:18px}
+  #error h2{margin:0 0 8px;font-size:15px;color:#ff9f92}
+  #error p{margin:0 0 14px;font-size:12.5px;line-height:1.6;color:var(--muted);overflow-wrap:anywhere}
+  #error .row{display:flex;gap:8px;flex-wrap:wrap}
+  #error button{
+    appearance:none;border:1px solid var(--line);background:rgba(148,170,205,.08);color:var(--ink);
+    font-family:inherit;font-size:13px;font-weight:600;padding:9px 14px;border-radius:9px;cursor:pointer;
+  }
+  #error button:hover{background:rgba(148,170,205,.16)}
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div id="vignette" aria-hidden="true"></div>
 
-def perp_dist(p, a, b):
-    px, py = p
-    ax, ay = a
-    bx, by = b
-    dx = bx - ax
-    dy = by - ay
-    if dx == 0.0 and dy == 0.0:
-        return math.hypot(px - ax, py - ay)
-    return abs(dy * (px - ax) - dx * (py - ay)) / math.hypot(dx, dy)
+<div id="counter">counting…<span class="src">© Microsoft · © OpenStreetMap contributors</span></div>
 
+<div id="tourlabel"></div>
+<button id="tour" type="button">
+  <svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true">
+    <circle cx="12" cy="12" r="2.6" fill="currentColor"/>
+    <ellipse cx="12" cy="12" rx="9.5" ry="4.2" fill="none" stroke="currentColor" stroke-width="1.8" transform="rotate(-24 12 12)"/>
+  </svg>
+  <span>Tour</span>
+</button>
 
-def decimate(pts, tol, closed, min_pts):
-    # drop vertices whose perpendicular offset to the neighbor chord is < tol
-    pts = list(pts)
-    while len(pts) > min_pts:
-        n = len(pts)
-        drop = [False] * n
-        remaining = n
-        i = 0 if closed else 1
-        end = n if closed else n - 1
-        while i < end:
-            if remaining <= min_pts:
-                break
-            a = pts[i - 1]
-            b = pts[(i + 1) % n] if closed else pts[i + 1]
-            if perp_dist(pts[i], a, b) < tol:
-                drop[i] = True
-                remaining -= 1
-                i += 2
-            else:
-                i += 1
-        if remaining == n:
-            break
-        pts = [p for p, d in zip(pts, drop) if not d]
-    return pts
+<section id="card" role="dialog" aria-label="About this map">
+  <p class="kicker">Green Pramuka City</p>
+  <h1>kota — Jakarta at 1:1</h1>
+  <p>A 1:1 3D slice of Green Pramuka City and its neighbours — every block you see is a real building.</p>
+  <p class="note">≈ Building heights are estimates — the skyline is a sketch, not a survey.</p>
+  <p class="credit">Data: Microsoft building footprints · © OpenStreetMap contributors</p>
+  <p class="fineprint">Generated by GLM-5.3-Flash on Fenrir (fenrir.lio.id), steered by Instinct</p>
+  <button id="dismiss" type="button">Explore</button>
+</section>
 
+<div id="error" aria-live="assertive">
+  <div class="box">
+    <h2 id="err-title"></h2>
+    <p id="err-detail"></p>
+    <div class="row">
+      <button id="err-retry" type="button">Reload</button>
+      <button id="err-continue" type="button" hidden>Continue anyway</button>
+    </div>
+  </div>
+</div>
 
-def ring_area_centroid(pts):
-    # shoelace over a cyclic ring; returns (area, cx, cy)
-    s = 0.0
-    cx = 0.0
-    cy = 0.0
-    n = len(pts)
-    for i in range(n):
-        x1, y1 = pts[i]
-        x2, y2 = pts[(i + 1) % n]
-        w = x1 * y2 - x2 * y1
-        s += w
-        cx += (x1 + x2) * w
-        cy += (y1 + y2) * w
-    if s == 0.0:
-        return 0.0, 0.0, 0.0
-    return abs(s) * 0.5, cx / (3.0 * s), cy / (3.0 * s)
+<noscript>
+  <div style="position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;background:#070b13;color:#e9eef7;font-family:sans-serif;padding:20px;text-align:center">
+    This map needs JavaScript to render.
+  </div>
+</noscript>
 
+<script src="https://cdn.jsdelivr.net/npm/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
+<script type="module">
+const CENTER = [106.8738, -6.1893]; // Green Pramuka City, as [lng, lat]
 
-def estimate_height(area_m2, lon_c, lat_c):
-    # base + area growth + jitter hashed from the centroid, clamped to 3..80
-    seed = f"{lon_c:.6f},{lat_c:.6f}".encode("utf-8")
-    u = int(hashlib.sha256(seed).hexdigest()[:8], 16)
-    jitter = (u % 2000) / 1000.0 - 1.0
-    h = 3.0 + 0.45 * math.sqrt(area_m2) + jitter
-    return round(min(80.0, max(3.0, h)), 1)
+const $card = document.getElementById('card');
+const $dismiss = document.getElementById('dismiss');
+const $counter = document.getElementById('counter');
+const $tour = document.getElementById('tour');
+const $tourLabel = document.getElementById('tourlabel');
+const $error = document.getElementById('error');
+const $errTitle = document.getElementById('err-title');
+const $errDetail = document.getElementById('err-detail');
+const $errRetry = document.getElementById('err-retry');
+const $errContinue = document.getElementById('err-continue');
 
+const fmt = new Intl.NumberFormat('en-US');
+const mq = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
+const reduceMotion = !!(mq && mq.matches);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-def build_ring(ring):
-    # simplify one exterior ring; returns (area_m2, height, closed_ring) or None
-    pts = []
-    for c in ring:
-        if not isinstance(c, (list, tuple)) or len(c) < 2:
-            return None
-        pts.append((float(c[0]), float(c[1])))
-    if len(pts) > 1 and pts[0] == pts[-1]:
-        pts.pop()
-    if len(pts) < MIN_RING:
-        return None
-    lat0 = sum(p[1] for p in pts) / len(pts)
-    kx = K * math.cos(math.radians(lat0))
-    m = [(x * kx, y * K) for x, y in pts]
-    m = decimate(m, TOL_M, True, MIN_RING)
-    if len(m) < MIN_RING:
-        return None
-    area, cx, cy = ring_area_centroid(m)
-    if area <= 0.0:
-        return None
-    ring_out = [[round(x / kx, 6) + 0.0, round(y / K, 6) + 0.0] for x, y in m]
-    ring_out.append(list(ring_out[0]))
-    return area, estimate_height(area, cx / kx, cy / K), ring_out
+function showError(title, detail, fatal = true) {
+  $errTitle.textContent = title;
+  $errDetail.textContent = detail;
+  $errContinue.hidden = fatal;
+  $error.classList.add('show');
+}
 
+$errRetry.addEventListener('click', () => location.reload());
+$errContinue.addEventListener('click', () => $error.classList.remove('show'));
 
-def exterior_rings(geom):
-    if not isinstance(geom, dict):
-        return []
-    gtype = geom.get("type")
-    coords = geom.get("coordinates")
-    if gtype == "Polygon" and isinstance(coords, list) and coords:
-        return [coords[0]]
-    if gtype == "MultiPolygon" and isinstance(coords, list):
-        return [poly[0] for poly in coords if isinstance(poly, list) and poly]
-    return []
+function dismissCard() {
+  $card.classList.add('hidden');
+  $tour.classList.add('show');
+}
+$dismiss.addEventListener('click', dismissCard);
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && !$card.classList.contains('hidden')) dismissCard();
+});
 
+async function fetchJSON(url) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  return res.json();
+}
 
-def process_building(feat):
-    if not isinstance(feat, dict):
-        return None
-    best = None
-    for ring in exterior_rings(feat.get("geometry")):
-        res = build_ring(ring)
-        if res is not None and (best is None or res[0] > best[0]):
-            best = res
-    return best
+// --- data shaping -----------------------------------------------------------
 
+function toBuildingsFC(raw) {
+  const out = [];
+  const list = raw && Array.isArray(raw.features) ? raw.features : [];
+  for (let n = 0; n < list.length; n++) {
+    const f = list[n];
+    if (!Array.isArray(f) || f.length < 2 || !Array.isArray(f[1]) || f[1].length < 3) continue;
+    const hNum = Number(f[0]);
+    const h = Number.isFinite(hNum) ? hNum : 3;
+    const coords = [];
+    let ok = true;
+    for (const p of f[1]) {
+      if (!Array.isArray(p) || !Number.isFinite(p[0]) || !Number.isFinite(p[1])) { ok = false; break; }
+      coords.push([p[0], p[1]]);
+    }
+    if (!ok) continue;
+    const a = coords[0], b = coords[coords.length - 1];
+    if (a[0] !== b[0] || a[1] !== b[1]) coords.push([a[0], a[1]]); // close the ring
+    out.push({
+      type: 'Feature',
+      properties: { h, i: n },
+      geometry: { type: 'Polygon', coordinates: [coords] },
+    });
+  }
+  return { type: 'FeatureCollection', features: out };
+}
 
-def simplify_line(line):
-    # round to 6 decimals and decimate open lines with the same tolerance
-    try:
-        pts = [(float(c[0]), float(c[1])) for c in line]
-    except (TypeError, ValueError, IndexError):
-        return line
-    if len(pts) < 3:
-        return [[round(x, 6) + 0.0, round(y, 6) + 0.0] for x, y in pts]
-    lat0 = sum(p[1] for p in pts) / len(pts)
-    kx = K * math.cos(math.radians(lat0))
-    m = [(x * kx, y * K) for x, y in pts]
-    m = decimate(m, TOL_M, False, 2)
-    return [[round(x / kx, 6) + 0.0, round(y / K, 6) + 0.0] for x, y in m]
+const MAJOR_CLASSES = new Set(['motorway', 'motorway_link', 'toll', 'trunk', 'trunk_link', 'primary', 'primary_link']);
+const MID_CLASSES = new Set(['secondary', 'secondary_link', 'tertiary', 'tertiary_link']);
 
+function toRoadsFC(raw) {
+  const out = [];
+  const list = raw && Array.isArray(raw.features) ? raw.features : [];
+  for (let n = 0; n < list.length; n++) {
+    const f = list[n];
+    if (!f || !Array.isArray(f.line) || f.line.length < 2) continue;
+    const coords = [];
+    let ok = true;
+    for (const p of f.line) {
+      if (!Array.isArray(p) || !Number.isFinite(p[0]) || !Number.isFinite(p[1])) { ok = false; break; }
+      coords.push([p[0], p[1]]);
+    }
+    if (!ok || coords.length < 2) continue;
+    const cls = String(f.road_class || '').toLowerCase();
+    const tier = MAJOR_CLASSES.has(cls) ? 3 : MID_CLASSES.has(cls) ? 2 : 1;
+    out.push({
+      type: 'Feature',
+      properties: { kind: String(f.kind || ''), road_class: cls, name: String(f.name || ''), tier, i: n },
+      geometry: { type: 'LineString', coordinates: coords },
+    });
+  }
+  return { type: 'FeatureCollection', features: out };
+}
 
-def process_roads(doc):
-    out = []
-    n_in = 0
-    for feat in doc.get("features", []):
-        n_in += 1
-        item = dict(feat) if isinstance(feat, dict) else feat
-        if isinstance(feat, dict) and isinstance(feat.get("line"), list):
-            item["line"] = simplify_line(feat["line"])
-        out.append(item)
-    return n_in, out
+// --- style layers -----------------------------------------------------------
 
+function addBuildings(map, fc) {
+  map.addSource('buildings', { type: 'geojson', data: fc });
+  map.addLayer({
+    id: 'bldg',
+    type: 'fill-extrusion',
+    source: 'buildings',
+    minzoom: 12,
+    paint: {
+      'fill-extrusion-height': ['min', ['max', ['coalesce', ['get', 'h'], 3], 2.5], 500],
+      'fill-extrusion-base': 0,
+      // deep blue-grey low -> slate violet -> mauve -> warm amber tall
+      'fill-extrusion-color': [
+        'interpolate', ['linear'], ['coalesce', ['get', 'h'], 3],
+        0,   '#1f2a40',
+        10,  '#2a3752',
+        25,  '#3a4a6e',
+        50,  '#575a80',
+        90,  '#7d6285',
+        140, '#b57a52',
+        200, '#e09a4e',
+        300, '#f7bd63',
+        450, '#ffdf9e',
+      ],
+      'fill-extrusion-opacity': 0.94,
+      'fill-extrusion-vertical-gradient': true,
+    },
+  });
+}
 
-def main():
-    for path in (BUILDINGS_IN, ROADS_IN):
-        if not os.path.isfile(path):
-            sys.exit(f"missing input file: {path}")
-    os.makedirs(OUT_DIR, exist_ok=True)
+function addRoads(map, fc) {
+  map.addSource('roads', { type: 'geojson', data: fc });
+  const widths = (a, b) => ['interpolate', ['linear'], ['zoom'], 14, a, 17.5, b];
 
-    bbox = [math.inf, math.inf, -math.inf, -math.inf]
-    features = []
-    n_read = 0
-    n_skip = 0
-    with open(BUILDINGS_IN, "r", encoding="utf-8-sig") as fh:
-        for raw in fh:
-            raw = raw.strip()
-            if not raw:
-                continue
-            n_read += 1
-            try:
-                feat = json.loads(raw)
-            except ValueError:
-                n_skip += 1
-                continue
-            res = process_building(feat)
-            if res is None:
-                n_skip += 1
-                continue
-            _area, height, ring = res
-            features.append([height, ring])
-            for lon, lat in ring:
-                if lon < bbox[0]:
-                    bbox[0] = lon
-                if lat < bbox[1]:
-                    bbox[1] = lat
-                if lon > bbox[2]:
-                    bbox[2] = lon
-                if lat > bbox[3]:
-                    bbox[3] = lat
-    bbox = [round(v, 6) + 0.0 for v in bbox] if features else [0.0, 0.0, 0.0, 0.0]
+  map.addLayer({
+    id: 'waterway',
+    type: 'line',
+    source: 'roads',
+    filter: ['==', ['get', 'kind'], 'waterway'],
+    layout: { 'line-cap': 'round', 'line-join': 'round' },
+    paint: { 'line-color': '#22415f', 'line-width': widths(1.2, 3.2), 'line-opacity': 0.9 },
+  });
 
-    build_path = os.path.join(OUT_DIR, "buildings.json")
-    with open(build_path, "w", encoding="utf-8") as fh:
-        json.dump({"bbox": bbox, "features": features}, fh, separators=(",", ":"), ensure_ascii=False)
+  map.addLayer({
+    id: 'railway',
+    type: 'line',
+    source: 'roads',
+    filter: ['==', ['get', 'kind'], 'railway'],
+    layout: { 'line-join': 'round' },
+    paint: { 'line-color': '#655e7d', 'line-width': widths(0.8, 1.7), 'line-dasharray': [2, 2.2], 'line-opacity': 0.85 },
+  });
 
-    with open(ROADS_IN, "r", encoding="utf-8-sig") as fh:
-        roads_doc = json.load(fh)
-    if not isinstance(roads_doc, dict) or not isinstance(roads_doc.get("features"), list):
-        sys.exit("roads.json: unexpected top-level structure")
-    n_roads, road_features = process_roads(roads_doc)
-    roads_out = dict(roads_doc)
-    roads_out["features"] = road_features
-    roads_path = os.path.join(OUT_DIR, "roads.json")
-    with open(roads_path, "w", encoding="utf-8") as fh:
-        json.dump(roads_out, fh, separators=(",", ":"), ensure_ascii=False)
+  // soft halo under the big roads
+  map.addLayer({
+    id: 'roads-glow',
+    type: 'line',
+    source: 'roads',
+    filter: ['all', ['==', ['get', 'kind'], 'highway'], ['==', ['get', 'tier'], 3]],
+    layout: { 'line-cap': 'round', 'line-join': 'round' },
+    paint: { 'line-color': '#6f8cc9', 'line-width': widths(3.5, 9), 'line-blur': 4, 'line-opacity': 0.2 },
+  });
 
-    kb_build = os.path.getsize(build_path) / 1024.0
-    kb_roads = os.path.getsize(roads_path) / 1024.0
-    print(f"buildings: {n_read} in / {len(features)} out ({n_skip} skipped) -> {kb_build:.1f} KB")
-    print(f"roads: {n_roads} in / {len(road_features)} out -> {kb_roads:.1f} KB")
+  map.addLayer({
+    id: 'roads-minor',
+    type: 'line',
+    source: 'roads',
+    filter: ['all', ['==', ['get', 'kind'], 'highway'], ['==', ['get', 'tier'], 1]],
+    layout: { 'line-cap': 'round', 'line-join': 'round' },
+    paint: { 'line-color': '#333e54', 'line-width': widths(0.6, 1.3), 'line-opacity': 0.72 },
+  });
 
+  map.addLayer({
+    id: 'roads-mid',
+    type: 'line',
+    source: 'roads',
+    filter: ['all', ['==', ['get', 'kind'], 'highway'], ['==', ['get', 'tier'], 2]],
+    layout: { 'line-cap': 'round', 'line-join': 'round' },
+    paint: { 'line-color': '#4d5b7d', 'line-width': widths(0.9, 1.9), 'line-opacity': 0.85 },
+  });
 
-if __name__ == "__main__":
-    main()
+  map.addLayer({
+    id: 'roads-major',
+    type: 'line',
+    source: 'roads',
+    filter: ['all', ['==', ['get', 'kind'], 'highway'], ['==', ['get', 'tier'], 3]],
+    layout: { 'line-cap': 'round', 'line-join': 'round' },
+    paint: { 'line-color': '#93a9cf', 'line-width': widths(1.3, 2.7), 'line-opacity': 0.95 },
+  });
+}
+
+// --- boot -------------------------------------------------------------------
+
+if (!window.maplibregl) {
+  showError('Map library failed to load', 'maplibre-gl could not be fetched from cdn.jsdelivr.net. Check the network connection and reload the page.');
+} else {
+  boot().catch((err) => showError('Something went wrong', String((err && err.message) || err)));
+}
+
+async function boot() {
+  let map;
+  try {
+    map = new maplibregl.Map({
+      container: 'map',
+      style: {
+        version: 8,
+        light: { anchor: 'viewport', color: '#ffe2b0', intensity: 0.36 },
+        sources: {},
+        layers: [{ id: 'bg', type: 'background', paint: { 'background-color': '#070b13' } }],
+      },
+      center: CENTER,
+      zoom: 15.2,
+      pitch: 60,
+      bearing: -24,
+      maxPitch: 70,
+      attributionControl: false,
+      antialias: true,
+      fadeDuration: 0,
+    });
+  } catch (err) {
+    showError('WebGL is unavailable', 'The 3D map could not start: ' + String((err && err.message) || err));
+    return;
+  }
+  map.on('error', (e) => console.warn('maplibre error:', (e && e.error) || e));
+
+  const styleReady = new Promise((resolve) => map.on('load', resolve));
+
+  // Fetch both datasets in parallel; each may fail independently.
+  const [bRes, rRes] = await Promise.allSettled([
+    fetchJSON('data/buildings.json'),
+    fetchJSON('data/roads.json'),
+  ]);
+  await styleReady;
+
+  const buildings = bRes.status === 'fulfilled' ? toBuildingsFC(bRes.value) : null;
+  const roads = rRes.status === 'fulfilled' ? toRoadsFC(rRes.value) : null;
+
+  if (!buildings) {
+    const why = (bRes.reason && bRes.reason.message) || 'unknown error';
+    const also = roads ? '' : ' Road data failed too.';
+    showError('Building data failed to load', 'Could not fetch data/buildings.json — ' + why + '.' + also + ' Serve this folder over HTTP(S) (e.g. GitHub Pages) and reload.');
+    return;
+  }
+
+  if (roads) addRoads(map, roads);
+  addBuildings(map, buildings);
+
+  // --- live counter ---------------------------------------------------------
+
+  let dataReady = false;
+
+  function counterHTML(b, r) {
+    return '<b>' + fmt.format(b) + '</b> buildings · <b>' + fmt.format(r) + '</b> road segments' +
+      '<span class="src">© Microsoft · © OpenStreetMap contributors</span>';
+  }
+  function renderTotals() {
+    $counter.innerHTML = counterHTML(buildings.features.length, roads ? roads.features.length : 0);
+  }
+  function updateCounter() {
+    if (!dataReady) return;
+    try {
+      const layers = ['bldg', 'waterway', 'railway', 'roads-glow', 'roads-minor', 'roads-mid', 'roads-major']
+        .filter((id) => map.getLayer(id));
+      if (!layers.length) return;
+      const hits = map.queryRenderedFeatures({ layers });
+      const b = new Set();
+      const r = new Set();
+      for (const f of hits) {
+        const i = f.properties ? f.properties.i : undefined;
+        if (i === undefined || i === null) continue;
+        if (f.layer && f.layer.id === 'bldg') b.add(i);
+        else r.add(i);
+      }
+      $counter.innerHTML = counterHTML(b.size, r.size);
+    } catch (err) {
+      console.warn('counter update failed:', err);
+    }
+  }
+
+  // --- camera: slow orbit, guided tour, free control ------------------------
+
+  let orbiting = false;
+  let tourToken = 0;
+  let tourRunning = false;
+
+  const VIEWS = [
+    { name: 'Green Pramuka City towers', center: [106.8738, -6.1893], zoom: 16.25, pitch: 63, bearing: 28 },
+    { name: 'Cempaka Putih', center: [106.8725, -6.1780], zoom: 15.8, pitch: 55, bearing: -38 },
+    { name: 'Rawasari · the toll-road curve', center: [106.8790, -6.1860], zoom: 15.3, pitch: 58, bearing: 115 },
+  ];
+
+  function orbitStep() {
+    if (!orbiting) return;
+    map.easeTo({ bearing: map.getBearing() + 45, duration: 24000, easing: (t) => t });
+  }
+  function startOrbit() {
+    if (orbiting || reduceMotion) return;
+    orbiting = true;
+    orbitStep();
+  }
+  function endTourUI() {
+    tourRunning = false;
+    $tour.classList.remove('active');
+    const label = $tour.querySelector('span');
+    if (label) label.textContent = 'Tour';
+    $tourLabel.classList.remove('show');
+  }
+  function releaseCamera() {
+    tourToken++;
+    if (tourRunning) endTourUI();
+    orbiting = false;
+    map.stop(); // cut any in-flight camera animation
+  }
+
+  // Any user gesture hands over full control of the camera.
+  for (const ev of ['mousedown', 'touchstart', 'wheel', 'keydown', 'dragstart']) {
+    map.on(ev, releaseCamera);
+  }
+  map.on('moveend', () => {
+    updateCounter();
+    if (orbiting) orbitStep();
+  });
+
+  async function runTour() {
+    releaseCamera();
+    tourRunning = true;
+    $tour.classList.add('active');
+    const label = $tour.querySelector('span');
+    if (label) label.textContent = 'Stop';
+    const token = tourToken;
+    const flyMs = reduceMotion ? 900 : 5200;
+    const holdMs = reduceMotion ? 500 : 3000;
+    for (const v of VIEWS) {
+      if (token !== tourToken) return;
+      $tourLabel.textContent = v.name;
+      $tourLabel.classList.add('show');
+      map.flyTo({ center: v.center, zoom: v.zoom, pitch: v.pitch, bearing: v.bearing, duration: flyMs, essential: true });
+      await sleep(flyMs + holdMs);
+    }
+    if (token !== tourToken) return;
+    endTourUI();
+    startOrbit(); // hand the city back to the slow drift
+  }
+
+  $tour.addEventListener('click', () => {
+    if (tourRunning) { releaseCamera(); return; }
+    runTour();
+  });
+
+  // --- go -------------------------------------------------------------------
+  dataReady = true;
+  renderTotals();
+  startOrbit();
+
+  if (!roads) {
+    const why = (rRes.reason && rRes.reason.message) || 'unknown error';
+    showError('Road data failed to load', 'Could not fetch data/roads.json — ' + why + '. Buildings are still rendered; reload to retry roads.', false);
+  } else if (!buildings.features.length) {
+    showError('No buildings parsed', 'data/buildings.json loaded, but no usable building polygons were found in it.', false);
+  }
+}
+</script>
+</body>
+</html>
 ```
