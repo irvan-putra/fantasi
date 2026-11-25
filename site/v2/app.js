@@ -45,6 +45,7 @@ function geoFromSections(prefix, { uv = false } = {}) {
   g.setAttribute('color', new THREE.BufferAttribute(new Uint8Array(col.buffer, col.byteOffset, col.length), 3, true));
   if (uv) g.setAttribute('uv', new THREE.BufferAttribute(sec(prefix + '_uv'), 2));
   g.setIndex(new THREE.BufferAttribute(sec(prefix + '_idx'), 1));
+  g.computeVertexNormals();
   return g;
 }
 
@@ -61,9 +62,9 @@ const FOG_DUSK = new THREE.Color('#274B5C'), FOG_NIGHT = new THREE.Color('#0A142
 scene.fog = new THREE.FogExp2(FOG_DUSK.getHex(), 0.00105);
 const camera = new THREE.PerspectiveCamera(58, innerWidth / innerHeight, 0.5, 6000);
 
-const hemi = new THREE.HemisphereLight(0x3d7a8c, 0x18101f, 0.95);
+const hemi = new THREE.HemisphereLight(0x3d7a8c, 0x18101f, 1.18);
 scene.add(hemi);
-const dir = new THREE.DirectionalLight(0xffd9a0, 0.55);
+const dir = new THREE.DirectionalLight(0xffd9a0, 0.72);
 dir.position.set(-0.4, 0.8, 0.35);
 scene.add(dir);
 
@@ -87,11 +88,9 @@ void main(){
   float stars=smoothstep(0.12,0.7,uPhase);
   if(stars>0.001&&d.y>0.02){
     vec3 sp=floor(d*160.0);float hsh=hash13(sp);
-    if(hsh>0.92){
-      vec2 f=fract(d.xy*160.0)-0.5;
+    if(hsh>0.994){
       float tw=0.5+0.5*sin(uTime*(1.0+hsh*4.0)+hsh*40.0);
-      float b=smoothstep(0.94,1.0,hsh)*tw;
-      col+=vec3(0.8,0.88,1.0)*b*stars*smoothstep(0.02,0.2,d.y);
+      col+=vec3(0.8,0.88,1.0)*(0.35+0.65*tw)*stars*smoothstep(0.02,0.2,d.y);
     }
   }
   // moon
@@ -167,7 +166,7 @@ scene.add(new THREE.Mesh(geoFromSections('roads'), roadMat));
 {
   const g = new THREE.CircleGeometry(3400, 48);
   g.rotateX(-Math.PI / 2);
-  const m = new THREE.MeshBasicMaterial({ color: 0x0b1420 });
+  const m = new THREE.MeshBasicMaterial({ color: 0x101b2c });
   const mesh = new THREE.Mesh(g, m);
   mesh.position.y = -0.05;
   scene.add(mesh);
@@ -237,7 +236,7 @@ varying vec3 vC;varying float vFogZ;varying vec3 vN;
 void main(){
   vec3 L=normalize(vec3(-0.4,0.8,0.35));
   float d=max(dot(normalize(vN),L),0.0);
-  vec3 col=vC*(0.32+0.5*d);
+  vec3 col=vC*(0.44+0.45*d);
   col+=vC*vec3(1.0,0.8,0.5)*uNight*0.22;
   float f=1.0-exp(-fogDensity*fogDensity*vFogZ*vFogZ);
   col=mix(col,fogColor,clamp(f,0.0,1.0));
@@ -323,7 +322,7 @@ let lampMat;
 const LANT = manifest.lanterns;
 let lanternInst, lanternPts;
 {
-  const g = new THREE.BoxGeometry(1.5, 1.9, 1.5);
+  const g = new THREE.BoxGeometry(1.05, 1.35, 1.05);
   const m = new THREE.MeshBasicMaterial({ color: 0xffc46e });
   m.toneMapped = false;
   lanternInst = new THREE.InstancedMesh(g, m, LANT.length);
@@ -331,7 +330,7 @@ let lanternInst, lanternPts;
   const p = new Float32Array(LANT.length * 3);
   const pg = new THREE.BufferGeometry();
   pg.setAttribute('position', new THREE.BufferAttribute(p, 3));
-  const pm = new THREE.PointsMaterial({ size: 30, map: haloTex, color: 0xff9e3c, transparent: true, opacity: 0.55, depthWrite: false, blending: THREE.AdditiveBlending });
+  const pm = new THREE.PointsMaterial({ size: 36, map: haloTex, color: 0xff9e3c, transparent: true, opacity: 0.55, depthWrite: false, blending: THREE.AdditiveBlending });
   pm.toneMapped = false;
   lanternPts = new THREE.Points(pg, pm);
   scene.add(lanternPts);
@@ -447,7 +446,7 @@ function makeDragon(colorHex) {
     const g = new THREE.ConeGeometry(1.1, 7.2, 5); g.rotateX(-Math.PI / 2); g.translate(0, 0.3, -8.1);
     body.push({ g, c: [base.r, base.g, base.b] });
   }
-  const bodyMesh = new THREE.Mesh(mergeGeos(body), new THREE.MeshLambertMaterial({ vertexColors: true }));
+  const bodyMesh = new THREE.Mesh(mergeGeos(body), new THREE.MeshLambertMaterial({ vertexColors: true, emissive: new THREE.Color(colorHex), emissiveIntensity: 0.34 }));
   // glow: eyes + spine ridge
   const glows = [];
   for (const sx of [-0.75, 0.75]) {
@@ -481,7 +480,7 @@ function makeDragon(colorHex) {
   const L = wing(1), R = wing(-1);
   const grp = new THREE.Group();
   grp.add(bodyMesh, glowMesh, L, R);
-  grp.scale.setScalar(2.2);
+  grp.scale.setScalar(2.6);
   return { grp, L, R };
 }
 const dragons = manifest.dragons.map((d) => {
@@ -649,8 +648,8 @@ function frame() {
   wallMat.emissiveIntensity = phase * 1.25;
   glowMat.color.setScalar(phase);
   lampMat.opacity = phase * 0.9;
-  hemi.intensity = 0.95 - phase * 0.4;
-  dir.intensity = 0.55 - phase * 0.4;
+  hemi.intensity = 1.18 - phase * 0.5;
+  dir.intensity = 0.72 - phase * 0.5;
 
   tickLanterns(t, phase);
   tickDragons(t);
@@ -667,7 +666,7 @@ function frame() {
     $('poster').classList.add('gone');
     $('loader').classList.add('gone');
     setTimeout(() => { $('poster').remove(); $('loader').remove(); }, 1000);
-    window.__READY = true;
+    window.__READY = true; window.__R = renderer;
   }
 }
 frame();
