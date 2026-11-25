@@ -176,9 +176,6 @@
 </noscript>
 
 <script>
-window.__kotaErr = [];
-window.addEventListener('error', (e) => { window.__kotaErr.push(String(e.message || e.error)); document.title = 'KOTA-ERR ' + window.__kotaErr.join(' | ').slice(0, 180); });
-window.addEventListener('unhandledrejection', (e) => { window.__kotaErr.push('rej: ' + String((e.reason && (e.reason.stack || e.reason.message)) || e.reason).slice(0, 300)); document.title = 'KOTA-ERR ' + window.__kotaErr.join(' | ').slice(0, 180); });
 </script>
 <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
 <script type="module">
@@ -832,7 +829,6 @@ async function boot() {
   });
 
   // --- go -------------------------------------------------------------------
-  window.__kota = { map, bLoaded, rLoaded, inflight, getNeeded: () => Array.from(neededKeys), updateTiles, bIndex, rIndex, cIndex };
   updateTiles();
   startOrbit();
 }
