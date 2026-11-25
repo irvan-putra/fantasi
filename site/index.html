@@ -658,6 +658,7 @@ async function boot() {
   // --- go -------------------------------------------------------------------
   updateTiles();
   startOrbit();
+  window.__kota = { map: map, bLoaded: bLoaded, rLoaded: rLoaded, inflight: inflight, bIndex: bIndex, rIndex: rIndex };
 }
 </script>
 </body>
