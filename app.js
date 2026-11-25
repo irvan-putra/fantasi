@@ -1364,7 +1364,10 @@ function camAt(ms) {
     const fs = _flyStarts[i], k = KEYS[i], nx = KEYS[(i + 1) % N];
     if (t >= fs && t < fs + k.fly) {
       const f = _smooth((t - fs) / k.fly);
-      return { pos: _mix3(k.pos, nx.pos, f), look: _mix3(k.look, nx.look, f), keyIdx: (i + 1) % N };
+      // title belongs to what the camera actually shows: keep the current
+      // scene's key until the fly is ~70% done, then name the destination
+      const raw = (t - fs) / k.fly;
+      return { pos: _mix3(k.pos, nx.pos, f), look: _mix3(k.look, nx.look, f), keyIdx: raw < 0.7 ? i : (i + 1) % N };
     }
     if (t >= fs + k.fly && t < fs + k.fly + k.hold) {
       return { pos: nx.pos.slice(), look: nx.look.slice(), keyIdx: (i + 1) % N };
