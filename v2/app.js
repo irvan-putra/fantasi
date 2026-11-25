@@ -24,7 +24,7 @@ async function fetchWithProgress(url, onp) {
 
 const stallTimer = setTimeout(() => $('stall').classList.add('show'), 12000);
 
-const ASSET_V = 'v19f';
+const ASSET_V = 'v19g';
 const manifest = await (await fetch('./manifest.json?' + ASSET_V)).json();
 bar.style.width = '6%';
 const binBuf = await fetchWithProgress('./scene.bin?' + ASSET_V, (f) => { bar.style.width = (6 + f * 84) + '%'; });
@@ -460,7 +460,7 @@ for (const b of manifest.boats) {
 const lmTickers = [];
 function tickLandmarks(t, phase) { for (const f of lmTickers) f(t, phase); }
 function lmBasic(hex) { const m = new THREE.MeshBasicMaterial({ color: hex }); m.toneMapped = false; return m; }
-function lmLambert() { return new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide }); }
+function lmLambert() { return new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide, emissive: 0x332d47, emissiveIntensity: 1.0 }); }
 function lmHaloAt(x, y, z, size, hex, opacity) {
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.BufferAttribute(new Float32Array([x, y, z]), 3));
