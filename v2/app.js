@@ -209,7 +209,7 @@ scene.add(new THREE.Mesh(geoFromSections('roads'), roadMat));
 {
   const g = new THREE.CircleGeometry(3400, 48);
   g.rotateX(-Math.PI / 2);
-  const m = new THREE.MeshBasicMaterial({ color: 0x101b2c });
+  const m = new THREE.MeshBasicMaterial({ color: 0x182840 });
   const mesh = new THREE.Mesh(g, m);
   mesh.position.y = -0.05;
   scene.add(mesh);
@@ -678,7 +678,7 @@ function makeDragon(colorHex) {
     const g = new THREE.ConeGeometry(1.1, 7.2, 5); g.rotateX(-Math.PI / 2); g.translate(0, 0.3, -8.1);
     body.push({ g, c: [base.r, base.g, base.b] });
   }
-  const bodyMesh = new THREE.Mesh(mergeGeos(body), new THREE.MeshLambertMaterial({ vertexColors: true, emissive: new THREE.Color(colorHex), emissiveIntensity: 0.85 }));
+  const bodyMesh = new THREE.Mesh(mergeGeos(body), new THREE.MeshLambertMaterial({ vertexColors: true, emissive: new THREE.Color(colorHex), emissiveIntensity: 0.32 }));
   const glows = [];
   for (const sx of [-0.75, 0.75]) {
     const g = new THREE.SphereGeometry(0.3, 5, 4); g.translate(sx, 2.1, 9.3);
@@ -703,7 +703,7 @@ function makeDragon(colorHex) {
     const col = [];
     for (let i = 0; i < 6; i++) col.push(fin.r, fin.g, fin.b);
     g.setAttribute('color', new THREE.BufferAttribute(new Float32Array(col), 3));
-    const m = new THREE.Mesh(g, new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide, emissive: new THREE.Color(colorHex), emissiveIntensity: 0.35 }));
+    const m = new THREE.Mesh(g, new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide, emissive: new THREE.Color(colorHex), emissiveIntensity: 0.12 }));
     pivot.add(m);
     return pivot;
   }
@@ -711,7 +711,7 @@ function makeDragon(colorHex) {
   // halo so the dragon reads at distance
   const hg = new THREE.BufferGeometry();
   hg.setAttribute('position', new THREE.BufferAttribute(new Float32Array([0, 1, 1]), 3));
-  const hm = new THREE.PointsMaterial({ size: 30, map: haloTex, color: colorHex, transparent: true, opacity: 0.35, depthWrite: false, blending: THREE.AdditiveBlending });
+  const hm = new THREE.PointsMaterial({ size: 22, map: haloTex, color: colorHex, transparent: true, opacity: 0.18, depthWrite: false, blending: THREE.AdditiveBlending });
   hm.toneMapped = false;
   const halo = new THREE.Points(hg, hm);
   const grp = new THREE.Group();
@@ -845,7 +845,7 @@ let atRayMat, atMistPts, atMistMat, atSmokePts, atSmokeMat, atSmokeData;
     c.translate(x, 0, z);
     rays.push({ g: c, c: [1, 1, 1] });
   }
-  atRayMat = new THREE.MeshBasicMaterial({ color: 0xffd9a0, transparent: true, opacity: 0.05, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, depthWrite: false, fog: false });
+  atRayMat = new THREE.MeshBasicMaterial({ color: 0xffd9a0, transparent: true, opacity: 0.02, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, depthWrite: false, fog: false });
   atRayMat.toneMapped = false;
   scene.add(new THREE.Mesh(mergeGeos(rays), atRayMat));
   // ground mist: big soft points drifting as a slow carousel
@@ -883,7 +883,7 @@ let atRayMat, atMistPts, atMistMat, atSmokePts, atSmokeMat, atSmokeData;
   scene.add(atSmokePts);
 }
 function tickAtmosphere(t, phase) {
-  atRayMat.opacity = 0.030 + (1 - phase) * 0.045 + Math.sin(t * 0.5) * 0.008;
+  atRayMat.opacity = 0.010 + (1 - phase) * 0.018 + Math.sin(t * 0.5) * 0.004;
   atRayMat.color.setHex(phase < 0.5 ? 0xffd9a0 : 0x9fd6ec);
   atMistPts.rotation.y = t * 0.006;
   atMistMat.opacity = 0.04 + phase * 0.05;
