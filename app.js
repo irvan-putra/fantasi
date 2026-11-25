@@ -24,7 +24,7 @@ async function fetchWithProgress(url, onp) {
 
 const stallTimer = setTimeout(() => $('stall').classList.add('show'), 12000);
 
-const ASSET_V = 'v20a';
+const ASSET_V = 'v20b';
 const manifest = await (await fetch('./manifest.json?' + ASSET_V)).json();
 bar.style.width = '6%';
 const binBuf = await fetchWithProgress('./scene.bin?' + ASSET_V, (f) => { bar.style.width = (6 + f * 84) + '%'; });
@@ -245,7 +245,7 @@ void main(){
   float shimmer=(sh1+sh2)*0.5*band;
   col+=vec3(0.35,0.75,0.85)*shimmer*uGlow*0.55;
   col+=vec3(1.0,0.6,0.25)*shimmer*uGlow*0.35;
-  col+=cy*band*uGlow*0.5;
+  col+=cy*band*uGlow*0.22;
   vec2 cell=floor(vW.xz*0.9);
   float sp=hash(cell);
   if(sp>0.986){float tw=0.5+0.5*sin(uTime*2.5+sp*90.0);col+=cy*tw*uGlow*0.9;}
@@ -1375,7 +1375,7 @@ function tickDragons(t, u) {
   // speed and flapping pick up, bellies glow brighter. Pure function of u.
   const cw = Math.min(Math.max((u - 0.55) / 0.13, 0), 1);
   const chase = cw > 0 && cw < 1 ? Math.sin(cw * Math.PI) ** 2 : 0;
-  const cw2 = Math.min(Math.max((u - 0.72) / 0.10, 0), 1);
+  const cw2 = Math.min(Math.max((u - 0.70) / 0.09, 0), 1);
   const gather = cw2 > 0 && cw2 < 1 ? Math.sin(cw2 * Math.PI) ** 2 : 0;
   for (const d of dragons) {
     const isLead = d.ph === 0.0;
