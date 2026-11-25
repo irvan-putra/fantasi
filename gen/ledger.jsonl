@@ -112,3 +112,4 @@
 {"ts": "2026-11-25T12:52:13.101136Z", "kind": "pr-fix-nada", "model": "qwen3.8-27b", "prompt_tokens": 683, "completion_tokens": 633, "cost_usd": 0.000805}
 {"ts": "2026-11-25T12:52:13.101136Z", "kind": "art-v4-roofs-draft", "model": "qwen3.8-27b", "prompt_tokens": 797, "completion_tokens": 7193, "cost_usd": 0.009007}
 {"ts": "2026-11-25T16:37:06.680816Z", "kind": "pr-fix-jumpa", "model": "qwen3.8-27b", "prompt_tokens": 1014, "completion_tokens": 6413, "cost_usd": 0.012}
+{"ts": "2026-11-25T16:50:00.403974Z", "kind": "perf-tengok-reasoning-burn", "model": "qwen3.8-27b", "prompt_tokens": 1551, "completion_tokens": 16000, "cost_usd": 0.02}
