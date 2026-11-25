@@ -104,3 +104,7 @@
 {"ts": "18:03:18", "kind": "sweep-CORRECTION", "repo": "jin", "handle": "jsjob-38", "pt": 40873, "ct": 1279, "cost": 0.00242, "note": "BACKEND contamination: prompt_tokens==jin digest exactly but completion about repo simak (95% cached). Discarded, rerun with nonce."}
 {"ts": "18:05:38", "kind": "sweep", "repo": "jin", "handle": "jsjob-39", "model": "qwen3.8-27b", "pt": 12189, "ct": 777, "cost": 0.00122}
 {"ts": "2026-11-25T19:01:40+0700", "kind": "sambung-pilot", "model": "qwen/qwen3.8-27b", "job": "jsjob-50", "prompt_tokens": 5119, "completion_tokens": 6166, "cost_usd": 0.00781, "note": "parseReply/extractBalanced fixes + tests; PR irvan-putra/sambung#1"}
+{"ts": "2026-11-25T12:08:25.818031Z", "kind": "art-v4-draft-arch", "model": "qwen3.8-27b", "prompt_tokens": 21963, "completion_tokens": 9315, "cost_usd": 0.012083}
+{"ts": "2026-11-25T12:08:25.818031Z", "kind": "art-v4-draft-events", "model": "qwen3.8-27b", "prompt_tokens": 21915, "completion_tokens": 6016, "cost_usd": 0.007958}
+{"ts": "2026-11-25T12:08:25.818031Z", "kind": "art-v4-draft-light", "model": "qwen3.8-27b", "prompt_tokens": 21897, "completion_tokens": 6266, "cost_usd": 0.00827}
+{"ts": "2026-11-25T12:08:25.818031Z", "kind": "art-v4-draft-camera", "model": "qwen3.8-27b", "prompt_tokens": 21977, "completion_tokens": 4205, "cost_usd": 0.005696}
