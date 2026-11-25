@@ -24,7 +24,7 @@ async function fetchWithProgress(url, onp) {
 
 const stallTimer = setTimeout(() => $('stall').classList.add('show'), 12000);
 
-const ASSET_V = 'v19w';
+const ASSET_V = 'v19x';
 const manifest = await (await fetch('./manifest.json?' + ASSET_V)).json();
 bar.style.width = '6%';
 const binBuf = await fetchWithProgress('./scene.bin?' + ASSET_V, (f) => { bar.style.width = (6 + f * 84) + '%'; });
@@ -226,11 +226,11 @@ let groundMatRef = null;
 const waterUniforms = { uTime: { value: 0 }, uGlow: { value: 0.25 }, fogColor: { value: new THREE.Color() }, fogDensity: { value: 0.00105 } };
 {
   const g = geoFromSections('water');
-  const WATER_VERT = `
+  var WATER_VERT = `
 varying vec3 vW;varying float vFogZ;
 void main(){vec4 w=modelMatrix*vec4(position,1.0);vW=w.xyz;
 vec4 mv=viewMatrix*w;vFogZ=-mv.z;gl_Position=projectionMatrix*mv;}`;
-  const WATER_FRAG = `
+  var WATER_FRAG = `
 precision highp float;uniform float uTime;uniform float uGlow;uniform vec3 fogColor;uniform float fogDensity;
 varying vec3 vW;varying float vFogZ;
 float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
