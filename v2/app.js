@@ -24,7 +24,7 @@ async function fetchWithProgress(url, onp) {
 
 const stallTimer = setTimeout(() => $('stall').classList.add('show'), 12000);
 
-const ASSET_V = 'v20e';
+const ASSET_V = 'v20f';
 const manifest = await (await fetch('./manifest.json?' + ASSET_V)).json();
 bar.style.width = '6%';
 const binBuf = await fetchWithProgress('./scene.bin?' + ASSET_V, (f) => { bar.style.width = (6 + f * 84) + '%'; });
