@@ -24,7 +24,7 @@ async function fetchWithProgress(url, onp) {
 
 const stallTimer = setTimeout(() => $('stall').classList.add('show'), 12000);
 
-const ASSET_V = 'v19l';
+const ASSET_V = 'v19m';
 const manifest = await (await fetch('./manifest.json?' + ASSET_V)).json();
 bar.style.width = '6%';
 const binBuf = await fetchWithProgress('./scene.bin?' + ASSET_V, (f) => { bar.style.width = (6 + f * 84) + '%'; });
@@ -59,7 +59,7 @@ renderer.toneMappingExposure = 1.22;
 $('scene').appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
-const FOG_DUSK = new THREE.Color('#274B5C'), FOG_NIGHT = new THREE.Color('#0E1A2A');
+const FOG_DUSK = new THREE.Color('#5a4550'), FOG_NIGHT = new THREE.Color('#0E1A2A');
 scene.fog = new THREE.FogExp2(FOG_DUSK.getHex(), 0.00105);
 const camera = new THREE.PerspectiveCamera(58, innerWidth / innerHeight, 0.5, 6000);
 
