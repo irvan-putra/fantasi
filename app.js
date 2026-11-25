@@ -1090,6 +1090,7 @@ function frame() {
   if (start === null) start = t;
   const ms = (t - start) * 1000 + 400;
   const u = (ms % LOOP_MS) / LOOP_MS;
+  window.__U = u;
 
   const { pos, look } = camAt(ms);
   camera.position.set(pos[0], pos[1], pos[2]);
