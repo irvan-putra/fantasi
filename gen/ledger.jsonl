@@ -13,3 +13,6 @@
 {"ts": "2026-11-25T15:36:49+07:00", "kind": "repo-sweep", "repo": "encore", "model": "qwen/qwen3.8-27b", "prompt_tokens": 82238, "completion_tokens": 680, "cost_usd": 0.002495}
 {"ts": "2026-11-25T15:38:07+07:00", "kind": "kota-redesign", "model": "qwen/qwen3.8-27b", "prompt_tokens": 13744, "completion_tokens": 47, "cost_usd": 0.000334, "note": "redesign attempt 1: tool-call misfire (model emitted fake list_files call, not followed), retried with strict no-tools system prompt"}
 {"ts": "2026-11-25T15:44:33+07:00", "kind": "kota-redesign", "model": "qwen/qwen3.8-27b", "prompt_tokens": 13814, "completion_tokens": 15084, "cost_usd": 0.019131, "note": "daylight redesign + autoplay cinematic, full index.html rewrite (brief gen/briefs/redesign_day.md)"}
+{"ts": "2026-11-25T15:44:48+07:00", "kind": "repo-sweep", "repo": "onda", "model": "qwen/qwen3.8-27b", "prompt_tokens": 108187, "completion_tokens": 1236, "cost_usd": 0.003709}
+{"ts": "2026-11-25T15:44:48+07:00", "kind": "repo-sweep", "repo": "animate", "model": "qwen/qwen3.8-27b", "prompt_tokens": 126265, "completion_tokens": 916, "cost_usd": 0.00367}
+{"ts": "2026-11-25T15:44:48+07:00", "kind": "repo-sweep", "repo": "awx", "model": "qwen/qwen3.8-27b", "prompt_tokens": 87577, "completion_tokens": 574, "cost_usd": 0.002469}
