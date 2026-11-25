@@ -24,7 +24,7 @@ async function fetchWithProgress(url, onp) {
 
 const stallTimer = setTimeout(() => $('stall').classList.add('show'), 12000);
 
-const ASSET_V = 'v19r';
+const ASSET_V = 'v19s';
 const manifest = await (await fetch('./manifest.json?' + ASSET_V)).json();
 bar.style.width = '6%';
 const binBuf = await fetchWithProgress('./scene.bin?' + ASSET_V, (f) => { bar.style.width = (6 + f * 84) + '%'; });
@@ -1082,18 +1082,19 @@ function scaleTexture() {
   ctx.strokeStyle = 'rgba(70,70,70,0.9)'; ctx.lineWidth = 2;
   for (let y = 0; y <= S; y += 16) { ctx.beginPath(); ctx.moveTo(S / 2, y); ctx.lineTo(S, y); ctx.stroke(); }
   // scalloped scales on the back half (x in [0, S/2)), two horizontal repeats
-  const rw = 16, rh = 14;
+  const rw = 32, rh = 26;
   for (let ry = 0; ry < S / rh + 1; ry++) {
     const off = (ry % 2) * rw / 2;
     for (let rx = -1; rx < S / 2 / rw + 1; rx++) {
       const x = rx * rw + off, y = ry * rh;
-      const g = ctx.createRadialGradient(x + rw / 2, y + rh * 0.35, 1, x + rw / 2, y + rh * 0.35, rw * 0.62);
-      g.addColorStop(0, 'rgba(230,230,230,0.95)');
-      g.addColorStop(0.7, 'rgba(140,140,140,0.85)');
-      g.addColorStop(1, 'rgba(60,60,60,0.9)');
+      const g = ctx.createRadialGradient(x + rw / 2, y + rh * 0.3, 1, x + rw / 2, y + rh * 0.3, rw * 0.62);
+      g.addColorStop(0, 'rgba(245,245,245,1)');
+      g.addColorStop(0.55, 'rgba(150,150,150,0.95)');
+      g.addColorStop(0.9, 'rgba(45,45,45,1)');
+      g.addColorStop(1, 'rgba(20,20,20,1)');
       ctx.fillStyle = g;
       ctx.beginPath();
-      ctx.arc(x + rw / 2, y + rh * 0.4, rw * 0.6, 0, Math.PI);
+      ctx.arc(x + rw / 2, y + rh * 0.35, rw * 0.62, 0, Math.PI);
       ctx.fill();
     }
   }
@@ -1134,7 +1135,7 @@ function makeDragon(colorHex, ph0) {
       const k = Math.min(1, Math.max(0, (-s - 0.15) * 1.8)); // belly on lower half
       const col = base.clone().lerp(belly, k);
       vCol.push(col.r, col.g, col.b);
-      vUv.push(j / RAD, t * 20);
+      vUv.push(j / RAD * 2, t * 8);
     }
   }
   for (let i = 0; i < RINGS - 1; i++) for (let j = 0; j < RAD; j++) {
@@ -1207,8 +1208,9 @@ function makeDragon(colorHex, ph0) {
       D = [4.2 * sign, 0.5, -4.6], E = [2.1 * sign, -0.5, -4.8], F = [0.5 * sign, -1.0, -2.8];
     const tris = [[A, B, F], [B, E, F], [B, D, E], [B, C, D]];
     const v = [], col = [];
-    const membrane = fin.clone().lerp(base, 0.35);
-    for (const t of tris) for (const p of t) { v.push(p[0], p[1], p[2]); col.push(membrane.r, membrane.g, membrane.b); }
+    const membrane = fin.clone().lerp(base, 0.45);
+    const shadeOf = p => { const d = Math.min(1, (Math.abs(p[0]) + Math.abs(p[2])) / 8); return 1.05 - d * 0.55; };
+    for (const t of tris) for (const p of t) { v.push(p[0], p[1], p[2]); const sh = shadeOf(p); col.push(membrane.r * sh, membrane.g * sh, membrane.b * sh); }
     const wg = new THREE.BufferGeometry();
     wg.setAttribute('position', new THREE.BufferAttribute(new Float32Array(v), 3));
     wg.setAttribute('color', new THREE.BufferAttribute(new Float32Array(col), 3));
