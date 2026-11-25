@@ -24,7 +24,7 @@ async function fetchWithProgress(url, onp) {
 
 const stallTimer = setTimeout(() => $('stall').classList.add('show'), 12000);
 
-const ASSET_V = 'v19o';
+const ASSET_V = 'v19p';
 const manifest = await (await fetch('./manifest.json?' + ASSET_V)).json();
 bar.style.width = '6%';
 const binBuf = await fetchWithProgress('./scene.bin?' + ASSET_V, (f) => { bar.style.width = (6 + f * 84) + '%'; });
@@ -1066,57 +1066,129 @@ function tickFireworks(u) {
 window.__FY = { rock: _fRockMesh, bld: _fBldMesh, wf: _fWfPts, launchInst: _launch.inst, launchHalo: _launch.hm, fw: _fw.pts, glow: _fGlowMat };
 
 // ---------------- dragons (hero scale, close passes) ----------------
-function makeDragon(colorHex) {
+// Serpentine dragons: one tube body deformed along a traveling-wave spine,
+// proper head (snout, jaw, horns, whiskers, glowing eyes), bat wings.
+function makeDragon(colorHex, ph0) {
   const base = new THREE.Color(colorHex);
   const belly = base.clone().lerp(new THREE.Color(0xfff0cf), 0.65);
   const fin = base.clone().multiplyScalar(0.5);
-  const body = [];
-  const addS = (r, x, y, z, sx, sy, sz, c) => {
-    const g = new THREE.SphereGeometry(r, 6, 4); g.scale(sx, sy, sz); g.translate(x, y, z);
-    body.push({ g, c: [c.r, c.g, c.b] });
+  const RINGS = 36, RAD = 8, LEN = 26;
+  const radiusAt = t => {
+    // tail tip -> chest -> neck
+    const prof = [[0, 0.28], [0.12, 0.85], [0.35, 1.55], [0.55, 1.95], [0.68, 1.75], [0.82, 1.2], [0.93, 0.95], [1, 0.7]];
+    for (let i = 1; i < prof.length; i++) {
+      if (t <= prof[i][0]) {
+        const [t0, r0] = prof[i - 1], [t1, r1] = prof[i];
+        return r0 + (r1 - r0) * (t - t0) / (t1 - t0);
+      }
+    }
+    return 0.7;
   };
-  const segs = [[0, 0, -3.6, 2.5, 1.0], [0, 0, -0.7, 2.4, 1.05], [0, 0.12, 1.9, 2.0, 1.0], [0, 0.36, 4.2, 1.55, 1.0], [0, 0.6, 6.1, 1.1, 1.0]];
-  for (const s of segs) addS(s[3], s[0], s[1], s[2], 1.15, 1, s[4] * 1.4, base);
-  addS(2.4, 0, -1.0, -0.6, 1.1, 0.8, 1.9, belly);
-  addS(1.8, 0, 1.7, 8.1, 0.95, 1, 1.1, base);
+  // base spine: gentle S, tail at -z, neck at +z
+  const basePts = [];
+  for (let i = 0; i < RINGS; i++) {
+    const t = i / (RINGS - 1);
+    basePts.push(new THREE.Vector3(Math.sin(t * Math.PI * 1.5) * 1.4, Math.sin(t * Math.PI) * 0.9 + 0.2, (t - 0.5) * LEN));
+  }
+  // per-vertex records: ring index, offsets along frame (N,B,T), normal components
+  const vRing = [], vOff = [], vNrm = [], vCol = [];
+  const idx = [];
+  for (let i = 0; i < RINGS; i++) {
+    const t = i / (RINGS - 1), r = radiusAt(t);
+    for (let j = 0; j < RAD; j++) {
+      const th = j / RAD * Math.PI * 2, c = Math.cos(th), s = Math.sin(th);
+      vRing.push(i); vOff.push(r * c, r * s, 0); vNrm.push(c, s, 0);
+      const k = Math.min(1, Math.max(0, (-s - 0.15) * 1.8)); // belly on lower half
+      const col = base.clone().lerp(belly, k);
+      vCol.push(col.r, col.g, col.b);
+    }
+  }
+  for (let i = 0; i < RINGS - 1; i++) for (let j = 0; j < RAD; j++) {
+    const a = i * RAD + j, b = i * RAD + (j + 1) % RAD, c2 = (i + 1) * RAD + j, d = (i + 1) * RAD + (j + 1) % RAD;
+    idx.push(a, c2, b, b, c2, d);
+  }
+  // dorsal spikes: small cones riding the spine, leaning back
+  const spikeAt = [0.16, 0.28, 0.40, 0.52, 0.63, 0.74, 0.84, 0.92];
+  for (const t of spikeAt) {
+    const i = Math.round(t * (RINGS - 1)), r = radiusAt(t);
+    const h = 1.15 * (1 - Math.abs(t - 0.55) * 0.9), w = 0.34;
+    const ringOf = Math.max(0, i - 1);
+    // 4 base verts + tip, as two triangles (front/back) + sides
+    const baseV = [[-w, 0, w * 0.6], [w, 0, w * 0.6], [w, 0, -w * 0.6], [-w, 0, -w * 0.6]];
+    const start = vRing.length;
+    for (const bv of baseV) {
+      vRing.push(ringOf); vOff.push(bv[0], r + 0.05, bv[2]); vNrm.push(0, 0.8, -0.6);
+      vCol.push(fin.r, fin.g, fin.b);
+    }
+    vRing.push(ringOf); vOff.push(0, r + 0.05 + h, -h * 0.55); vNrm.push(0, 0.8, -0.6);
+    vCol.push(fin.r, fin.g, fin.b);
+    idx.push(start, start + 1, start + 4, start + 1, start + 2, start + 4, start + 2, start + 3, start + 4, start + 3, start + 0, start + 4);
+  }
+  const nv = vRing.length;
+  const pos = new Float32Array(nv * 3), nrm = new Float32Array(nv * 3);
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  g.setAttribute('normal', new THREE.BufferAttribute(nrm, 3));
+  g.setAttribute('color', new THREE.BufferAttribute(new Float32Array(vCol), 3));
+  g.setIndex(idx);
+  const bodyMesh = new THREE.Mesh(g, new THREE.MeshLambertMaterial({ vertexColors: true, emissive: new THREE.Color(colorHex), emissiveIntensity: 0.4 }));
+
+  // ---- head (static geometry, follows the neck frame) ----
+  const headParts = [];
+  const addH = (geo, c) => headParts.push({ g: geo, c: [c.r, c.g, c.b] });
   {
-    const g = new THREE.ConeGeometry(1.0, 3.3, 5); g.rotateX(Math.PI / 2); g.translate(0, 1.45, 10.5);
-    body.push({ g, c: [base.r, base.g, base.b] });
+    const s = new THREE.SphereGeometry(1.5, 8, 6); s.scale(0.95, 0.85, 1.25); s.translate(0, 0.25, 0.8); addH(s, base);
+    const snout = new THREE.BoxGeometry(1.7, 1.0, 4.0); snout.translate(0, 0.15, 3.2); addH(snout, base);
+    const nose = new THREE.BoxGeometry(1.2, 0.7, 1.0); nose.translate(0, 0.35, 5.3); addH(nose, base);
+    const jaw = new THREE.BoxGeometry(1.45, 0.42, 3.6); jaw.rotateX(0.10); jaw.translate(0, -0.72, 3.1); addH(jaw, belly);
+    for (const sx of [-0.85, 0.85]) { // swept-back horns
+      const h = new THREE.ConeGeometry(0.34, 3.0, 5); h.rotateX(-2.05); h.rotateZ(sx * 0.28); h.translate(sx, 1.35, -0.5); addH(h, fin);
+    }
+    for (const sx of [-0.95, 0.95]) { // cheek spikes
+      const h = new THREE.ConeGeometry(0.22, 1.3, 4); h.rotateZ(sx * 1.9); h.translate(sx * 1.15, 0.1, 0.9); addH(h, fin);
+    }
+    for (const sx of [-0.5, 0.5]) { // whiskers flowing back
+      const h = new THREE.ConeGeometry(0.07, 5.0, 3); h.rotateX(Math.PI / 2 + 0.35); h.rotateY(sx * 0.5); h.translate(sx * 1.6, -0.1, 2.2); addH(h, belly);
+    }
   }
-  for (const sx of [-0.72, 0.72]) {
-    const g = new THREE.ConeGeometry(0.6, 1.4, 4); g.translate(sx, 2.9, 8.1);
-    body.push({ g, c: [fin.r, fin.g, fin.b] });
+  const headMesh = new THREE.Mesh(mergeGeos(headParts), bodyMesh.material);
+  const eyeGlows = [];
+  for (const sx of [-0.82, 0.82]) {
+    const e = new THREE.SphereGeometry(0.3, 6, 5); e.translate(sx, 0.72, 1.7);
+    eyeGlows.push({ g: e, c: [1.0, 0.78, 0.25] });
   }
-  {
-    const g = new THREE.ConeGeometry(1.1, 7.2, 5); g.rotateX(-Math.PI / 2); g.translate(0, 0.3, -8.1);
-    body.push({ g, c: [base.r, base.g, base.b] });
-  }
-  const bodyMesh = new THREE.Mesh(mergeGeos(body), new THREE.MeshLambertMaterial({ vertexColors: true, emissive: new THREE.Color(colorHex), emissiveIntensity: 0.45 }));
-  const glows = [];
-  for (const sx of [-0.75, 0.75]) {
-    const g = new THREE.SphereGeometry(0.3, 5, 4); g.translate(sx, 2.1, 9.3);
-    glows.push({ g, c: [1.0, 0.82, 0.3] });
-  }
-  for (let i = 0; i < 7; i++) {
-    const g = new THREE.ConeGeometry(0.35, 1.2, 4); g.translate(0, 2.2 - i * 0.12, 5.5 - i * 1.7);
-    glows.push({ g, c: [0.55, 0.9, 1.0] });
-  }
-  const glowMesh = new THREE.Mesh(mergeGeos(glows), new THREE.MeshBasicMaterial({ vertexColors: true }));
-  glowMesh.material.toneMapped = false;
+  const eyeMesh = new THREE.Mesh(mergeGeos(eyeGlows), new THREE.MeshBasicMaterial({ vertexColors: true }));
+  eyeMesh.material.toneMapped = false;
+  const headG = new THREE.Group();
+  headG.add(headMesh, eyeMesh);
+
+  // ---- bat wings: scalloped membrane + finger bones ----
   function wing(sign) {
     const pivot = new THREE.Group();
-    pivot.position.set(0.8 * sign, 1.8, 0.9);
-    const P = [[0, 0, 0], [3.3 * sign, -1.5, 0], [0.7 * sign, 3.3, 0], [5.1 * sign, 3.7, 0]];
-    const g = new THREE.BufferGeometry();
-    const v = [];
-    const idx = [0, 1, 2, 2, 1, 3];
-    for (const k of idx) v.push(P[k][0], P[k][1], P[k][2]);
-    g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(v), 3));
-    g.computeVertexNormals();
-    const col = [];
-    for (let i = 0; i < 6; i++) col.push(fin.r, fin.g, fin.b);
-    g.setAttribute('color', new THREE.BufferAttribute(new Float32Array(col), 3));
-    const m = new THREE.Mesh(g, new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide, emissive: new THREE.Color(colorHex), emissiveIntensity: 0.55 }));
+    pivot.position.set(0.9 * sign, 1.4, 3.2);
+    const A = [0, 0, 0], B = [2.8 * sign, 1.9, -0.7], C = [5.8 * sign, 2.8, -2.6],
+      D = [4.2 * sign, 0.5, -4.6], E = [2.1 * sign, -0.5, -4.8], F = [0.5 * sign, -1.0, -2.8];
+    const tris = [[A, B, F], [B, E, F], [B, D, E], [B, C, D]];
+    const v = [], col = [];
+    const membrane = fin.clone().lerp(base, 0.35);
+    for (const t of tris) for (const p of t) { v.push(p[0], p[1], p[2]); col.push(membrane.r, membrane.g, membrane.b); }
+    const wg = new THREE.BufferGeometry();
+    wg.setAttribute('position', new THREE.BufferAttribute(new Float32Array(v), 3));
+    wg.setAttribute('color', new THREE.BufferAttribute(new Float32Array(col), 3));
+    wg.computeVertexNormals();
+    const parts = [{ g: wg, c: [membrane.r, membrane.g, membrane.b] }];
+    for (const tip of [C, D, E]) { // finger bones
+      const from = new THREE.Vector3(...A).lerp(new THREE.Vector3(...B), 0.5);
+      const to = new THREE.Vector3(...tip);
+      const len = from.distanceTo(to);
+      const bg = new THREE.CylinderGeometry(0.09, 0.16, len, 4);
+      bg.translate(0, len / 2, 0);
+      const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), to.clone().sub(from).normalize());
+      bg.applyQuaternion(q); bg.translate(from.x, from.y, from.z);
+      parts.push({ g: bg, c: [fin.r, fin.g, fin.b] });
+    }
+    const merged = mergeGeos(parts);
+    const m = new THREE.Mesh(merged, new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide, emissive: new THREE.Color(colorHex), emissiveIntensity: 0.5 }));
     pivot.add(m);
     return pivot;
   }
@@ -1128,9 +1200,50 @@ function makeDragon(colorHex) {
   hm.toneMapped = false;
   const halo = new THREE.Points(hg, hm);
   const grp = new THREE.Group();
-  grp.add(bodyMesh, glowMesh, L, R, halo);
+  grp.add(bodyMesh, L, R, halo, headG);
   grp.scale.setScalar(5.2);
-  return { grp, L, R };
+
+  // ---- per-frame spine update ----
+  const waved = basePts.map(p => p.clone());
+  const up = new THREE.Vector3(0, 1, 0);
+  const Tv = new THREE.Vector3(), Nv = new THREE.Vector3(), Bv = new THREE.Vector3(), zero = new THREE.Vector3();
+  const m4 = new THREE.Matrix4();
+  const frames = basePts.map(() => ({ N: new THREE.Vector3(1, 0, 0), B: new THREE.Vector3(0, 1, 0), T: new THREE.Vector3(0, 0, 1) }));
+  function upd(time) {
+    for (let i = 0; i < RINGS; i++) {
+      const t = i / (RINGS - 1);
+      const sway = Math.sin(t * 7.2 - time * 3.1 + ph0) * 1.15 * (0.25 + t * 0.95);
+      const bob = Math.cos(t * 5.1 - time * 3.1 + ph0) * 0.42 * (0.3 + t * 0.55);
+      waved[i].set(basePts[i].x + sway, basePts[i].y + bob, basePts[i].z);
+    }
+    for (let i = 0; i < RINGS; i++) {
+      const a = waved[Math.max(0, i - 1)], b = waved[Math.min(RINGS - 1, i + 1)];
+      Tv.subVectors(b, a).normalize();
+      Nv.crossVectors(up, Tv);
+      if (Nv.lengthSq() < 1e-6) Nv.set(1, 0, 0); else Nv.normalize();
+      Bv.crossVectors(Tv, Nv).normalize();
+      frames[i].N.copy(Nv); frames[i].B.copy(Bv); frames[i].T.copy(Tv);
+    }
+    for (let k = 0; k < nv; k++) {
+      const f = frames[vRing[k]], p = waved[vRing[k]];
+      const on = vOff[k * 3], ob = vOff[k * 3 + 1], ot = vOff[k * 3 + 2];
+      pos[k * 3] = p.x + f.N.x * on + f.B.x * ob + f.T.x * ot;
+      pos[k * 3 + 1] = p.y + f.N.y * on + f.B.y * ob + f.T.y * ot;
+      pos[k * 3 + 2] = p.z + f.N.z * on + f.B.z * ob + f.T.z * ot;
+      const nn = vNrm[k * 3], nb = vNrm[k * 3 + 1], nt = vNrm[k * 3 + 2];
+      nrm[k * 3] = f.N.x * nn + f.B.x * nb + f.T.x * nt;
+      nrm[k * 3 + 1] = f.N.y * nn + f.B.y * nb + f.T.y * nt;
+      nrm[k * 3 + 2] = f.N.z * nn + f.B.z * nb + f.T.z * nt;
+    }
+    g.attributes.position.needsUpdate = true;
+    g.attributes.normal.needsUpdate = true;
+    const fe = frames[RINGS - 1];
+    headG.position.copy(waved[RINGS - 1]);
+    m4.lookAt(zero, fe.T.clone().negate(), fe.B);
+    headG.quaternion.setFromRotationMatrix(m4);
+  }
+  upd(0);
+  return { grp, L, R, upd };
 }
 const DRAG_PATHS = [
   { cx: 177, cz: -132, r: 150, h: 120, amp: 18, speed: 0.16, ph: 0.0 },
@@ -1138,10 +1251,10 @@ const DRAG_PATHS = [
   { cx: 560, cz: 350, r: 130, h: 105, amp: 25, speed: 0.10, ph: 4.2 },
 ];
 const dragons = manifest.dragons.map((d, i) => {
-  const { grp, L, R } = makeDragon(d.col);
+  const { grp, L, R, upd } = makeDragon(d.col, DRAG_PATHS[i % DRAG_PATHS.length].ph);
   scene.add(grp);
   const p = DRAG_PATHS[i % DRAG_PATHS.length];
-  return { grp, L, R, ...p };
+  return { grp, L, R, upd, ...p };
 });
 function tickDragons(t, u) {
   // chase window: mid-loop the pack closes on the lead dragon's orbit,
@@ -1163,10 +1276,12 @@ function tickDragons(t, u) {
     const na = a + 0.02 * Math.sign(d.speed);
     const nx = cx + Math.cos(na) * rr, nz = cz + Math.sin(na) * rr * 0.8;
     d.grp.lookAt(nx, y, nz);
+    d.upd(t * (1 + chase * 0.5));
     const f = Math.sin(t * (4.2 + chase * 2.6) + d.ph) * (0.6 + chase * 0.3);
     d.L.rotation.z = 0.2 + f; d.R.rotation.z = -0.2 - f;
+    d.L.rotation.y = -0.15 + f * 0.25; d.R.rotation.y = 0.15 - f * 0.25;
     const m = d.grp.children[0].material;
-    m.emissiveIntensity = 0.45 + chase * 0.5;
+    m.emissiveIntensity = 0.4 + chase * 0.5;
   }
 }
 
