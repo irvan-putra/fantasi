@@ -681,7 +681,7 @@ function frame() {
     $('poster').classList.add('gone');
     $('loader').classList.add('gone');
     setTimeout(() => { $('poster').remove(); $('loader').remove(); }, 1000);
-    window.__READY = true; window.__R = renderer; window.__S = scene;
+    window.__READY = true; window.__R = renderer; window.__S = scene; window.__C = camera;
   }
 }
 frame();
