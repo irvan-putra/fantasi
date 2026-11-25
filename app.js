@@ -24,7 +24,7 @@ async function fetchWithProgress(url, onp) {
 
 const stallTimer = setTimeout(() => $('stall').classList.add('show'), 12000);
 
-const ASSET_V = 'v19e';
+const ASSET_V = 'v19f';
 const manifest = await (await fetch('./manifest.json?' + ASSET_V)).json();
 bar.style.width = '6%';
 const binBuf = await fetchWithProgress('./scene.bin?' + ASSET_V, (f) => { bar.style.width = (6 + f * 84) + '%'; });
@@ -441,7 +441,7 @@ for (const b of manifest.boats) {
   }
   const rockG = mergeGeos(items);
   const crysG = mergeGeos(crysGeo.map((o) => ({ g: o, c: [0.35, 0.85, 1.0] })));
-  const rockMat = new THREE.MeshLambertMaterial({ vertexColors: true });
+  const rockMat = new THREE.MeshLambertMaterial({ vertexColors: true, emissive: 0x2a2438, emissiveIntensity: 1.0 });
   const crysMat = new THREE.MeshBasicMaterial({ vertexColors: true });
   crysMat.toneMapped = false;
   for (const c of manifest.crystals) {
