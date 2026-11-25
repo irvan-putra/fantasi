@@ -24,7 +24,7 @@ async function fetchWithProgress(url, onp) {
 
 const stallTimer = setTimeout(() => $('stall').classList.add('show'), 12000);
 
-const ASSET_V = 'v19s';
+const ASSET_V = 'v19t';
 const manifest = await (await fetch('./manifest.json?' + ASSET_V)).json();
 bar.style.width = '6%';
 const binBuf = await fetchWithProgress('./scene.bin?' + ASSET_V, (f) => { bar.style.width = (6 + f * 84) + '%'; });
@@ -1555,7 +1555,7 @@ function camAt(ms) {
 function phaseAt(u) {
   u = ((u % 1) + 1) % 1;
   const up = _smooth((u - 0.10) / 0.72);
-  const down = _smooth((u - 0.86) / 0.14);
+  const down = _smooth((u - 0.982) / 0.018); // hold night through the Grand Astral Night beat; fade only in the last ~1.5s for a seamless wrap to dusk
   return Math.min(1, up * (1 - down));
 }
 let _curCard = -1;
