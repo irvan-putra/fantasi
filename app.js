@@ -715,11 +715,11 @@ function _isleBuilding(cx, cz, topY, kind, i) {
   body.translate(bx, topY + bh / 2 - 0.5, bz);
   parts.push({ g: body, c: kind === 1 ? FY.wood : FY.stone });
   if (kind === 0) {
-    const r1 = new THREE.ConeGeometry(bw * 0.95, 4, 4); r1.rotateY(Math.PI / 4); r1.translate(bx, topY + bh + 1.5, bz);
-    const r2 = new THREE.ConeGeometry(bw * 0.6, 3, 4); r2.rotateY(Math.PI / 4); r2.translate(bx, topY + bh + 4.2, bz);
+    const r1 = new THREE.ConeGeometry(bw * 0.95, 4, 4); r1.translate(bx, topY + bh + 1.5, bz);
+    const r2 = new THREE.ConeGeometry(bw * 0.6, 3, 4); r2.translate(bx, topY + bh + 4.2, bz);
     parts.push({ g: r1, c: FY.rock }, { g: r2, c: FY.rockD });
   } else {
-    const roof = new THREE.ConeGeometry(bw * 1.05, 5, 4); roof.rotateY(Math.PI / 4); roof.translate(bx, topY + bh + 2, bz);
+    const roof = new THREE.ConeGeometry(bw * 1.05, 5, 4); roof.translate(bx, topY + bh + 2, bz);
     parts.push({ g: roof, c: FY.rock });
   }
   return { parts, x: bx, y: topY + bh, z: bz };
@@ -754,8 +754,8 @@ function _twistTower(cx, cz, topY, i) {
     const segH = 9 - k * 0.5;
     const off = (k % 2 === 0 ? 1 : -1) * (1.2 + _fh(i * 100 + k) * 1.5);
     const b = new THREE.BoxGeometry(w, segH, w);
-    b.translate(cx + off * (k / segs), y + segH / 2, cz + off * (k / segs) * 0.6);
     b.rotateY(rot0 + k * 0.45);
+    b.translate(cx + off * (k / segs), y + segH / 2, cz + off * (k / segs) * 0.6);
     parts.push({ g: b, c: FY.stone });
     y += segH * 0.94; w *= 0.9;
   }
@@ -772,8 +772,8 @@ function _crystalSpires(cx, cz, topY, i) {
     const o = new THREE.OctahedronGeometry(r, 0);
     o.scale(1, h / (r * 2), 1);
     const ang = _fh(i * 47 + k) * 6.28, rad = _fh(i * 53 + k) * 9;
-    o.translate(cx + Math.cos(ang) * rad, topY + h * 0.5 - 0.5, cz + Math.sin(ang) * rad);
     o.rotateY(_fh(i * 59 + k) * 6.28);
+    o.translate(cx + Math.cos(ang) * rad, topY + h * 0.5 - 0.5, cz + Math.sin(ang) * rad);
     parts.push({ g: o, c: FY.glowC });
   }
   const base = new THREE.IcosahedronGeometry(6, 0); base.scale(1.4, 0.5, 1.2); base.translate(cx, topY - 0.5, cz);
