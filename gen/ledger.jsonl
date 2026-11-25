@@ -83,3 +83,9 @@
 {"ts": "17:44:34", "kind": "sweep", "repo": "utak", "handle": "jsjob-16", "model": "qwen3.8-27b", "pt": 20217, "ct": 550, "cost": 0.00109}
 {"ts": "17:44:34", "kind": "sweep", "repo": "kunjung", "handle": "jsjob-17", "model": "qwen3.8-27b", "pt": 19885, "ct": 743, "cost": 0.00133}
 {"ts": "17:44:34", "kind": "sweep", "repo": "irvan-putra.github.io", "handle": "jsjob-18", "model": "qwen3.8-27b", "pt": 21340, "ct": 562, "cost": 0.00113}
+{"ts": "17:50:25", "kind": "sweep", "repo": "paper2repo", "handle": "jsjob-19", "model": "qwen3.8-27b", "pt": 31098, "ct": 591, "cost": 0.00136}
+{"ts": "17:50:25", "kind": "sweep", "repo": "tangkai", "handle": "jsjob-20", "model": "qwen3.8-27b", "pt": 7814, "ct": 507, "cost": 0.00079}
+{"ts": "17:50:25", "kind": "sweep", "repo": "aiq", "handle": "jsjob-21", "model": "qwen3.8-27b", "pt": 13749, "ct": 692, "cost": 0.00114}
+{"ts": "17:50:25", "kind": "sweep", "repo": "gitsafescan", "handle": "jsjob-22", "model": "qwen3.8-27b", "pt": 13209, "ct": 740, "cost": 0.00119}
+{"ts": "17:50:25", "kind": "sweep", "repo": "hello-lambda-jakarta", "handle": "jsjob-23", "model": "qwen3.8-27b", "pt": 606, "ct": 701, "cost": 0.00089}
+{"ts": "17:50:25", "kind": "sweep", "repo": "irvan-putra", "handle": "jsjob-24", "model": "qwen3.8-27b", "pt": 644, "ct": 655, "cost": 0.00083}
