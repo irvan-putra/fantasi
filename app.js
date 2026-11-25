@@ -24,7 +24,7 @@ async function fetchWithProgress(url, onp) {
 
 const stallTimer = setTimeout(() => $('stall').classList.add('show'), 12000);
 
-const ASSET_V = 'v19h';
+const ASSET_V = 'v19i';
 const manifest = await (await fetch('./manifest.json?' + ASSET_V)).json();
 bar.style.width = '6%';
 const binBuf = await fetchWithProgress('./scene.bin?' + ASSET_V, (f) => { bar.style.width = (6 + f * 84) + '%'; });
@@ -260,10 +260,25 @@ void main(){
 {
   const far = sec('far');
   const n = far.length / 8;
-  const base = new THREE.BoxGeometry(1, 1, 1);
-  base.translate(0, 0.5, 0);
+  // house geometry: wall box (y 0..0.75) + gable roof prism (y 0.75..1.0, eave overhang), non-indexed
+  const HQ = [];
+  const quad = (a, b, c, d, n, col) => { HQ.push([a, b, c, n, col], [a, c, d, n, col]); };
+  const W = [1, 1, 1], RS = [0.60, 0.56, 0.72], GB = [0.84, 0.80, 0.92];
+  quad([-0.5, 0, 0.5], [0.5, 0, 0.5], [0.5, 0.75, 0.5], [-0.5, 0.75, 0.5], [0, 0, 1], W);      // +z wall
+  quad([0.5, 0, -0.5], [-0.5, 0, -0.5], [-0.5, 0.75, -0.5], [0.5, 0.75, -0.5], [0, 0, -1], W);   // -z wall
+  quad([0.5, 0, 0.5], [0.5, 0, -0.5], [0.5, 0.75, -0.5], [0.5, 0.75, 0.5], [1, 0, 0], W);        // +x wall
+  quad([-0.5, 0, -0.5], [-0.5, 0, 0.5], [-0.5, 0.75, 0.5], [-0.5, 0.75, -0.5], [-1, 0, 0], W);   // -x wall
+  const SN1 = [0, 0.914, 0.408], SN2 = [0, 0.914, -0.408];
+  quad([-0.56, 0.75, 0.56], [0.56, 0.75, 0.56], [0.56, 1.0, 0], [-0.56, 1.0, 0], SN1, RS);       // south slope
+  quad([0.56, 0.75, -0.56], [-0.56, 0.75, -0.56], [-0.56, 1.0, 0], [0.56, 1.0, 0], SN2, RS);     // north slope
+  HQ.push([[0.56, 0.75, 0.56], [0.56, 0.75, -0.56], [0.56, 1.0, 0], [1, 0, 0], GB]);             // +x gable
+  HQ.push([[-0.56, 0.75, -0.56], [-0.56, 0.75, 0.56], [-0.56, 1.0, 0], [-1, 0, 0], GB]);         // -x gable
+  const hp = [], hn = [], hc = [];
+  for (const [a, b, c, n, col] of HQ) for (const v of [a, b, c]) { hp.push(...v); hn.push(...n); hc.push(...col); }
   const g = new THREE.InstancedBufferGeometry();
-  g.index = base.index; g.attributes.position = base.attributes.position; g.attributes.normal = base.attributes.normal;
+  g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(hp), 3));
+  g.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(hn), 3));
+  g.setAttribute('acol', new THREE.BufferAttribute(new Float32Array(hc), 3));
   g.instanceCount = n;
   const off = new Float32Array(n * 3), scl = new Float32Array(n * 3), col = new Float32Array(n * 3);
   for (let i = 0; i < n; i++) {
@@ -277,9 +292,9 @@ void main(){
   const m = new THREE.ShaderMaterial({
     uniforms: { uNight: { value: 0 }, fogColor: { value: new THREE.Color() }, fogDensity: { value: 0.00105 } },
     vertexShader: `
-attribute vec3 ioff;attribute vec3 iscl;attribute vec3 icol;
+attribute vec3 ioff;attribute vec3 iscl;attribute vec3 icol;attribute vec3 acol;
 varying vec3 vC;varying float vFogZ;varying vec3 vN;
-void main(){vC=icol;vN=normal;
+void main(){vC=icol*acol;vN=normal;
 vec3 p=position*iscl+ioff;
 vec4 mv=viewMatrix*vec4(p,1.0);vFogZ=-mv.z;gl_Position=projectionMatrix*mv;}`,
     fragmentShader: `
