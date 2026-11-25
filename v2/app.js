@@ -24,7 +24,7 @@ async function fetchWithProgress(url, onp) {
 
 const stallTimer = setTimeout(() => $('stall').classList.add('show'), 12000);
 
-const ASSET_V = 'v20d';
+const ASSET_V = 'v20e';
 const manifest = await (await fetch('./manifest.json?' + ASSET_V)).json();
 bar.style.width = '6%';
 const binBuf = await fetchWithProgress('./scene.bin?' + ASSET_V, (f) => { bar.style.width = (6 + f * 84) + '%'; });
@@ -488,6 +488,28 @@ function lmHaloAt(x, y, z, size, hex, opacity) {
   scene.add(new THREE.Points(g, m));
   return m;
 }
+// hero crystal cluster for Crystal Awakening (v20e)
+{
+  const CX = -88, CZ = -66;
+  const shards = [];
+  const defs = [[0, 0, 58, 9, 0.3], [-12, 4, 38, 6, 1.4], [11, -6, 44, 7, 2.5], [7, 9, 30, 5, 3.6], [-7, -11, 26, 4.5, 5.0]];
+  for (const [x, z, h, r, ry] of defs) {
+    const o = new THREE.OctahedronGeometry(r, 0);
+    o.scale(1, h / (r * 2), 1); o.rotateY(ry); o.translate(x, h * 0.5, z);
+    shards.push({ g: o, c: [0.45, 0.85, 1.0] });
+  }
+  const cm = new THREE.MeshBasicMaterial({ vertexColors: true });
+  cm.toneMapped = false;
+  const hero = new THREE.Mesh(mergeGeos(shards), cm);
+  hero.position.set(CX, 140, CZ);
+  scene.add(hero);
+  lmHaloAt(CX, 172, CZ, 90, 0x7fd8ff, 0.55);
+  lmHaloAt(CX, 148, CZ, 50, 0xb48aff, 0.4);
+  lmTickers.push((t, phase) => {
+    hero.rotation.y = t * 0.12;
+    cm.color.setScalar(0.75 + 0.25 * Math.sin(t * 1.7) + phase * 0.3);
+  });
+}
 // upturned-eave roof: squashed cone + rim ring
 function lmEaveRoof(w, h, rim) {
   const cone = new THREE.ConeGeometry(w, h, 4, 1);
@@ -645,7 +667,7 @@ lmPagoda(-320, -260, 5, 22, 8.5);
     const m = new THREE.MeshBasicMaterial({ map: haloTex, color: 0x8fa8cf, transparent: true, opacity: 0.09 + (i % 3) * 0.025, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
     m.toneMapped = false;
     const mesh = new THREE.Mesh(g, m);
-    mesh.position.set(-320 + i * 36, 5 + (i % 3) * 5, 26 + (i % 4) * 24);
+    mesh.position.set(-320 + i * 36, 8 + (i % 3) * 11, 26 + (i % 4) * 24);
     mesh.rotation.y = (i * 0.5) % 1.2 - 0.6;
     scene.add(mesh);
     mists.push({ mesh, x0: mesh.position.x, sp: 0.05 + i * 0.017, ph: i * 1.9 });
@@ -1636,7 +1658,7 @@ const KEYS = [
   { pos: [84, 34, -272], look: [177, 20, -132], hold: 2200, fly: 4800, title: "Gate of Lanterns", note: "Under the great gate, into the festival" },
   { pos: [128, 66, -62], look: [185, 22, -140], hold: 2000, fly: 5000, title: "Star Market Life", note: "Vendors weave through drifting sky lanterns" },
   { pos: [-40, 68, -40], look: [-166, 46, 143], hold: 1600, fly: 5000, title: "Pagoda Orbit", note: "Curling around the tiered temple roof" },
-  { pos: [-312, 56, 6], look: [-250, 30, 60], hold: 1600, fly: 5200, title: "Palace Mist", note: "Silhouettes of the hall pierce the low fog" },
+  { pos: [-330, 100, -20], look: [-250, 30, 60], hold: 1600, fly: 5200, title: "Palace Mist", note: "Silhouettes of the hall pierce the low fog" },
   { pos: [-160, 130, 260], look: [740, 14, 450], hold: 1500, fly: 5400, title: "Water Reveal", note: "Rising over the glowing canals for the reveal" },
   { pos: [370, 85, 300], look: [740, 15, 460], hold: 1600, fly: 5200, title: "Magic Harbor", note: "The beacon sweeps across shimmering water" },
   { pos: [480, 100, 240], look: [560, 95, 350], hold: 1500, fly: 5000, title: "Dragon Lanes", note: "A dragon's wake stirs the festival lights" },
