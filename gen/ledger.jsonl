@@ -89,3 +89,15 @@
 {"ts": "17:50:25", "kind": "sweep", "repo": "gitsafescan", "handle": "jsjob-22", "model": "qwen3.8-27b", "pt": 13209, "ct": 740, "cost": 0.00119}
 {"ts": "17:50:25", "kind": "sweep", "repo": "hello-lambda-jakarta", "handle": "jsjob-23", "model": "qwen3.8-27b", "pt": 606, "ct": 701, "cost": 0.00089}
 {"ts": "17:50:25", "kind": "sweep", "repo": "irvan-putra", "handle": "jsjob-24", "model": "qwen3.8-27b", "pt": 644, "ct": 655, "cost": 0.00083}
+{"ts": "17:53:43", "kind": "sweep", "repo": "tayang", "handle": "jsjob-26", "model": "qwen3.8-27b", "pt": 5023, "ct": 582, "cost": 0.00083}
+{"ts": "17:53:43", "kind": "sweep", "repo": "kembang", "handle": "jsjob-27", "model": "qwen3.8-27b", "pt": 1049, "ct": 361, "cost": 0.00047}
+{"ts": "17:53:43", "kind": "sweep", "repo": "picu", "handle": "jsjob-28", "model": "qwen3.8-27b", "pt": 1949, "ct": 436, "cost": 0.00058}
+{"ts": "17:53:43", "kind": "sweep", "repo": "pustaka", "handle": "jsjob-29", "model": "qwen3.8-27b", "pt": 1896, "ct": 689, "cost": 0.0009}
+{"ts": "17:53:43", "kind": "sweep", "repo": "jasa", "handle": "jsjob-30", "model": "qwen3.8-27b", "pt": 1596, "ct": 785, "cost": 0.00101}
+{"ts": "17:53:43", "kind": "sweep", "repo": "myschoolcampid", "handle": "jsjob-31", "model": "qwen3.8-27b", "pt": 204, "ct": 953, "cost": 0.0012}
+{"ts": "17:53:43", "kind": "art-v3", "module": "landmarks", "handle": "jsjob-32", "model": "qwen3.8-27b", "pt": 12726, "ct": 6486, "cost": 0.00836, "finish": "stop"}
+{"ts": "17:53:43", "kind": "art-v3", "module": "dragons", "handle": "jsjob-33", "model": "qwen3.8-27b", "pt": 12675, "ct": 2995, "cost": 0.004, "finish": "stop"}
+{"ts": "17:53:43", "kind": "art-v3", "module": "festival", "handle": "jsjob-34", "model": "qwen3.8-27b", "pt": 12738, "ct": 12000, "cost": 0.01525, "finish": "length"}
+{"ts": "17:53:43", "kind": "art-v3", "module": "atmosphere", "handle": "jsjob-35", "model": "qwen3.8-27b", "pt": 12716, "ct": 5537, "cost": 0.00718, "finish": "stop"}
+{"ts": "17:53:43", "kind": "art-v3", "module": "camera", "handle": "jsjob-36", "model": "qwen3.8-27b", "pt": 12832, "ct": 1874, "cost": 0.0026, "finish": "stop"}
+{"ts": "17:53:43", "kind": "art-v3", "module": "sky", "handle": "jsjob-37", "model": "qwen3.8-27b", "pt": 12711, "ct": 12000, "cost": 0.01525, "finish": "length"}
