@@ -2,6 +2,8 @@
 
 A 3D building-footprint map of the Green Pramuka City area, Jakarta (5.5 x 5.5 km, 44,795 buildings, 12,252 road segments), rendered in the browser with MapLibre GL. No build step, no tile server: static viewport tiles + a progressive viewer. Live tile payload: 9.2 MB.
 
+Inspired by [Gabriel Chua's 1:1 Singapore flythrough](https://www.threads.com/share/FNCjS5T_A). The map adds simulated cars and people moving on the real road network (building footprints and roads are real data; the life on them is a sketch, like the heights).
+
 All substantive code (the data pipeline, the tiler and the map viewer) was written by **GLM-5.3-Flash** served by [Fenrir](https://fenrir.lio.id), steered through a small driver harness (`gen/driver.py`) with briefs in `gen/briefs/`. Token spend is logged in `gen/ledger.jsonl`.
 
 ## Data
