@@ -1038,6 +1038,8 @@ function tickFireworks(u) {
   _fw.pts.visible = anyVisible;
 }
 
+window.__FY = { rock: _fRockMesh, bld: _fBldMesh, wf: _fWfPts, launchInst: _launch.inst, launchHalo: _launch.hm, fw: _fw.pts, glow: _fGlowMat };
+
 // ---------------- dragons (hero scale, close passes) ----------------
 function makeDragon(colorHex) {
   const base = new THREE.Color(colorHex);
