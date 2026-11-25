@@ -108,3 +108,6 @@
 {"ts": "2026-11-25T12:08:25.818031Z", "kind": "art-v4-draft-events", "model": "qwen3.8-27b", "prompt_tokens": 21915, "completion_tokens": 6016, "cost_usd": 0.007958}
 {"ts": "2026-11-25T12:08:25.818031Z", "kind": "art-v4-draft-light", "model": "qwen3.8-27b", "prompt_tokens": 21897, "completion_tokens": 6266, "cost_usd": 0.00827}
 {"ts": "2026-11-25T12:08:25.818031Z", "kind": "art-v4-draft-camera", "model": "qwen3.8-27b", "prompt_tokens": 21977, "completion_tokens": 4205, "cost_usd": 0.005696}
+{"ts": "2026-11-25T12:52:13.101136Z", "kind": "pr-fix-kapan", "model": "qwen3.8-27b", "prompt_tokens": 5607, "completion_tokens": 282, "cost_usd": 0.000465}
+{"ts": "2026-11-25T12:52:13.101136Z", "kind": "pr-fix-nada", "model": "qwen3.8-27b", "prompt_tokens": 683, "completion_tokens": 633, "cost_usd": 0.000805}
+{"ts": "2026-11-25T12:52:13.101136Z", "kind": "art-v4-roofs-draft", "model": "qwen3.8-27b", "prompt_tokens": 797, "completion_tokens": 7193, "cost_usd": 0.009007}
