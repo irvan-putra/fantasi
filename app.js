@@ -24,7 +24,7 @@ async function fetchWithProgress(url, onp) {
 
 const stallTimer = setTimeout(() => $('stall').classList.add('show'), 12000);
 
-const ASSET_V = 'v19p';
+const ASSET_V = 'v19q';
 const manifest = await (await fetch('./manifest.json?' + ASSET_V)).json();
 bar.style.width = '6%';
 const binBuf = await fetchWithProgress('./scene.bin?' + ASSET_V, (f) => { bar.style.width = (6 + f * 84) + '%'; });
@@ -1131,16 +1131,16 @@ function makeDragon(colorHex, ph0) {
   g.setAttribute('normal', new THREE.BufferAttribute(nrm, 3));
   g.setAttribute('color', new THREE.BufferAttribute(new Float32Array(vCol), 3));
   g.setIndex(idx);
-  const bodyMesh = new THREE.Mesh(g, new THREE.MeshLambertMaterial({ vertexColors: true, emissive: new THREE.Color(colorHex), emissiveIntensity: 0.4 }));
+  const bodyMesh = new THREE.Mesh(g, new THREE.MeshLambertMaterial({ vertexColors: true, emissive: new THREE.Color(colorHex), emissiveIntensity: 0.16 }));
 
   // ---- head (static geometry, follows the neck frame) ----
   const headParts = [];
   const addH = (geo, c) => headParts.push({ g: geo, c: [c.r, c.g, c.b] });
   {
     const s = new THREE.SphereGeometry(1.5, 8, 6); s.scale(0.95, 0.85, 1.25); s.translate(0, 0.25, 0.8); addH(s, base);
-    const snout = new THREE.BoxGeometry(1.7, 1.0, 4.0); snout.translate(0, 0.15, 3.2); addH(snout, base);
-    const nose = new THREE.BoxGeometry(1.2, 0.7, 1.0); nose.translate(0, 0.35, 5.3); addH(nose, base);
-    const jaw = new THREE.BoxGeometry(1.45, 0.42, 3.6); jaw.rotateX(0.10); jaw.translate(0, -0.72, 3.1); addH(jaw, belly);
+    const snout = new THREE.BoxGeometry(1.5, 0.9, 3.0); snout.translate(0, 0.12, 2.6); addH(snout, base);
+    const nose = new THREE.BoxGeometry(1.05, 0.6, 0.9); nose.translate(0, 0.3, 4.25); addH(nose, base);
+    const jaw = new THREE.BoxGeometry(1.25, 0.38, 2.7); jaw.rotateX(0.10); jaw.translate(0, -0.62, 2.4); addH(jaw, belly);
     for (const sx of [-0.85, 0.85]) { // swept-back horns
       const h = new THREE.ConeGeometry(0.34, 3.0, 5); h.rotateX(-2.05); h.rotateZ(sx * 0.28); h.translate(sx, 1.35, -0.5); addH(h, fin);
     }
@@ -1154,13 +1154,14 @@ function makeDragon(colorHex, ph0) {
   const headMesh = new THREE.Mesh(mergeGeos(headParts), bodyMesh.material);
   const eyeGlows = [];
   for (const sx of [-0.82, 0.82]) {
-    const e = new THREE.SphereGeometry(0.3, 6, 5); e.translate(sx, 0.72, 1.7);
+    const e = new THREE.SphereGeometry(0.28, 6, 5); e.translate(sx, 0.66, 1.5);
     eyeGlows.push({ g: e, c: [1.0, 0.78, 0.25] });
   }
   const eyeMesh = new THREE.Mesh(mergeGeos(eyeGlows), new THREE.MeshBasicMaterial({ vertexColors: true }));
   eyeMesh.material.toneMapped = false;
   const headG = new THREE.Group();
   headG.add(headMesh, eyeMesh);
+  headG.scale.setScalar(0.8);
 
   // ---- bat wings: scalloped membrane + finger bones ----
   function wing(sign) {
@@ -1188,7 +1189,7 @@ function makeDragon(colorHex, ph0) {
       parts.push({ g: bg, c: [fin.r, fin.g, fin.b] });
     }
     const merged = mergeGeos(parts);
-    const m = new THREE.Mesh(merged, new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide, emissive: new THREE.Color(colorHex), emissiveIntensity: 0.5 }));
+    const m = new THREE.Mesh(merged, new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide, emissive: new THREE.Color(colorHex), emissiveIntensity: 0.22 }));
     pivot.add(m);
     return pivot;
   }
@@ -1281,7 +1282,7 @@ function tickDragons(t, u) {
     d.L.rotation.z = 0.2 + f; d.R.rotation.z = -0.2 - f;
     d.L.rotation.y = -0.15 + f * 0.25; d.R.rotation.y = 0.15 - f * 0.25;
     const m = d.grp.children[0].material;
-    m.emissiveIntensity = 0.4 + chase * 0.5;
+    m.emissiveIntensity = 0.16 + chase * 0.4;
   }
 }
 
