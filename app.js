@@ -1863,7 +1863,7 @@ const KEYS = [
   { pos: [30, 30, -350], look: [128, 30, -214], hold: 2200, fly: 4800, title: "Gate of Lanterns", note: "Under the great gate, into the festival" },
   { pos: [128, 66, -62], look: [185, 22, -140], hold: 2000, fly: 5000, lift: 42, title: "Star Market Life", note: "Vendors weave through drifting sky lanterns" },
   // v23by: Market Street Walk and Lantern Lane merged into one orbit around the market junction (150,-150): comfortable height, natural scattered crowd below
-  ...[90, 45, 0, -45, -90, -135, -180].map((d, i) => { const th = d * Math.PI / 180; return { pos: [150 + 76 * Math.cos(th), 74, -150 + 76 * Math.sin(th)], look: i === 6 ? [70, 28, -95] : [150, 10, -150], hold: 0, fly: 3000, lift: 0, title: "Market Life Orbit", note: "Circling the market: stalls, lanterns and folk gathering" }; }),
+  ...[90, 45, 0, -45, -90, -135, -180].map((d, i) => { const th = d * Math.PI / 180; return { pos: [150 + 76 * Math.cos(th), 74, -150 + 76 * Math.sin(th)], look: i === 6 ? [70, 28, -95] : i === 0 ? [150, 24, -150] : [150, 10, -150], hold: 0, fly: 3000, lift: 0, title: "Market Life Orbit", note: "Circling the market: stalls, lanterns and folk gathering" }; }),
   { pos: [148, 64, -84], look: [60, 45, -10], hold: 0, fly: 5200, lift: 45, title: "Market Life Orbit", note: "Circling the market: stalls, lanterns and folk gathering" },
   { pos: [-85, 42, 15], look: [-166, 45, 143], hold: 1600, fly: 5000, title: "Pagoda Orbit", note: "Curling around the tiered temple roof" },
   { pos: [-410, 50, -50], look: [-250, 62, 60], hold: 1600, fly: 5200, title: "Palace Mist", note: "Silhouettes of the hall pierce the low fog" },
@@ -2166,7 +2166,7 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
         part(box(0.6, 0.26, 0.1), fur, 0, 1.3, -0.2) // back cloak
       ];
       if (k === 0) { ex.push(T(5, part(new THREE.SphereGeometry(0.23, 5, 2, 0, Math.PI * 2, 0, Math.PI / 2), hair, 0, 1.72)), T(4, part(box(0.14, 2.0, 0.14), 0x5a3f28, 0.62, 1.3, 0.15)), T(4, part(box(0.34, 0.5, 0.34), 0x5a3f28, 0.62, 2.35, 0.15)), T(4, part(cone(0.08, 0.25, 4), 0xc0c0c8, 0.62, 2.7, 0.15))); }
-      if (k === 1) { ex.push(T(5, part(new THREE.SphereGeometry(0.23, 5, 2, 0, Math.PI * 2, 0, Math.PI / 2), 0x8a8a96, 0, 1.72)), T(5, part(cone(0.07, 0.4, 4), 0xf0e8d0, -0.24, 1.9, 0, 0, 0.9)), T(5, part(cone(0.07, 0.4, 4), 0xf0e8d0, 0.24, 1.9, 0, 0, -0.9)), T(4, part(box(0.05, 0.5, 0.05), 0x4a3a2a, 0.62, 0.9, 0.15)), T(4, part(box(0.26, 0.3, 0.26), 0xffd070, 0.62, 0.55, 0.15)), T(4, part(box(0.12, 2.6, 0.12), 0x4a4038, -0.6, 1.4, 0.15))); }
+      if (k === 1) { ex.push(T(5, part(new THREE.SphereGeometry(0.23, 5, 2, 0, Math.PI * 2, 0, Math.PI / 2), 0x8a8a96, 0, 1.72)), T(5, part(cone(0.07, 0.4, 4), 0xf0e8d0, -0.24, 1.9, 0, 0, 0.9)), T(5, part(cone(0.07, 0.4, 4), 0xf0e8d0, 0.24, 1.9, 0, 0, -0.9)), T(4, part(box(0.05, 0.5, 0.05), 0x4a3a2a, 0.62, 0.9, 0.15)), T(4, part(box(0.26, 0.3, 0.26), 0xffd070, 0.62, 0.55, 0.15)), T(3, part(box(0.12, 1.9, 0.12), 0x4a4038, -0.6, 1.05, 0.15)), T(3, part(box(0.3, 0.34, 0.3), 0xffd070, -0.6, 2.1, 0.15)), T(3, part(box(0.4, 0.06, 0.4), 0x4a4038, -0.6, 1.9, 0.15))); }
       if (k === 2) { ex.push(T(5, part(ball(0.1), hair, 0, 1.95)), T(5, part(box(0.3, 0.1, 0.3), hair, 0, 1.82)), T(4, part(box(0.4, 0.3, 0.4), 0xa04a28, 0.55, 0.78, 0.2)), T(4, part(box(0.44, 0.06, 0.44), 0xf0d8a0, 0.55, 0.95, 0.2))); }
       return man({ cloth, pants, skin, boots: 0x2a2018, sx: 1.25, sy: 1 }, ex);
     },
