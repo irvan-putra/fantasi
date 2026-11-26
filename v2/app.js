@@ -1362,7 +1362,7 @@ function makeDragon(colorHex, ph0) {
   const RINGS = 60, RAD = 8, LEN = 44;
   const radiusAt = t => {
     // tail tip -> chest -> neck
-    const prof = [[0, 0.4], [0.12, 1.2], [0.35, 2.1], [0.55, 2.6], [0.68, 2.35], [0.82, 1.8], [0.93, 1.5], [1, 1.2]];
+    const prof = [[0, 0.54], [0.12, 1.62], [0.35, 2.84], [0.55, 3.51], [0.68, 3.17], [0.82, 2.43], [0.93, 2.03], [1, 1.62]]; // v22h: body 1.35x thicker (Irvan: bolder dragons)
     for (let i = 1; i < prof.length; i++) {
       if (t <= prof[i][0]) {
         const [t0, r0] = prof[i - 1], [t1, r1] = prof[i];
@@ -1572,7 +1572,7 @@ function tickDragons(t, u) {
     const az = (i - 1) * 8 + Math.sin(TAU * u + d.ph) * 2.0;              // [-10,-6] / [-2,2] / [6,10]
     const el = (i === 1 ? 19 : (i === 0 ? 16 : 18)) + Math.sin(TAU * 2 * u + d.ph * 1.7) * 2.0;
     let ew = pitch + el;                                    // world elevation of the anchor
-    let dist = 560 + i * 70;
+    let dist = 480 + i * 65;                            // v22h: pulled in from 560+i*70 (bolder)
     if (ew > topEdge - 1) ew = topEdge - 1;
     if (ew < 12.5) {
       if (topEdge - 1 >= 12.5) ew = 12.5;                    // lift into the relaxed band
@@ -1632,7 +1632,7 @@ function tickDragons(t, u) {
     d.upd(TAU * 13 * u + chase * 4);
     // v22d: half size on escort beats (the ribbon is ~360u long - full size covered
     // a third of the screen), full size for the gather flypast where it reads well
-    d.grp.scale.setScalar(0.85 + gather * 0.15);
+    d.grp.scale.setScalar(1.0); // v22h: full size on escort beats too (Irvan approved bolder)
     const m = d.grp.children[0].material;
     m.emissiveIntensity = 0.55 + chase * 0.3;
   }
