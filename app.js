@@ -2086,8 +2086,8 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
       part(box(0.52, 0.66, 0.28), o.cloth, 0, 1.15, 0),
       T(3, part(box(0.13, 0.66, 0.15), o.cloth, -0.34, 1.12, 0, 0, 0.14)), T(4, part(box(0.13, 0.66, 0.15), o.cloth, 0.34, 1.12, 0, 0, -0.14)),
       T(5, part(ball(0.19), o.skin, 0, 1.68)),
-      T(5, part(box(0.05, 0.06, 0.04), 0x15110e, -0.07, 1.7, 0.19)), T(5, part(box(0.05, 0.06, 0.04), 0x15110e, 0.07, 1.7, 0.19)),
-      T(5, part(box(0.1, 0.022, 0.04), 0x4a1414, 0, 1.615, 0.19)), T(5, part(box(0.022, 0.03, 0.04), 0x4a1414, -0.062, 1.632, 0.19)), T(5, part(box(0.022, 0.03, 0.04), 0x4a1414, 0.062, 1.632, 0.19)), ...(extra || [])];
+      T(5, part(box(0.07, 0.08, 0.05), 0x15110e, -0.075, 1.7, 0.19)), T(5, part(box(0.07, 0.08, 0.05), 0x15110e, 0.075, 1.7, 0.19)),
+      T(5, part(box(0.12, 0.03, 0.05), 0x4a1414, 0, 1.61, 0.19)), T(5, part(box(0.03, 0.04, 0.05), 0x4a1414, -0.075, 1.63, 0.19)), T(5, part(box(0.03, 0.04, 0.05), 0x4a1414, 0.075, 1.63, 0.19)), ...(extra || [])];
     const g = merge(gs);
     if (o.sx !== 1 || o.sy !== 1) { g.scale(o.sx, o.sy, o.sx); g.computeVertexNormals(); }
     return g;
@@ -2358,7 +2358,7 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
     // retarget the balcony beat at a real seated balcony figure, with a camera line in open air (checked against roofs and walls)
     const ri = KEYS.findIndex((k) => k.title === 'Rooftop Glide');
     if (ri >= 0) { const cand = picF.filter((o) => o.y >= 8 && o.y <= 60).sort((p, q) => Math.hypot(p.x - 47, p.z - 205) - Math.hypot(q.x - 47, q.z - 205));
-      outer: for (const o of cand.slice(0, 60)) for (let dir = 0; dir < 7; dir++) { const ang = o.yaw + Math.PI + [0, 0.5, -0.5, 1.0, -1.0, 1.5, -1.5][dir], nx = Math.sin(ang), nz = Math.cos(ang), tx = -nz, tz = nx, cy = o.y + 9; let ok = true;
+      outer: for (const o of cand.slice(0, 60)) for (let dir = 0; dir < 7; dir++) { const ang = o.yaw + [0, 0.5, -0.5, 1.0, -1.0, 1.5, -1.5][dir], nx = Math.sin(ang), nz = Math.cos(ang), tx = -nz, tz = nx, cy = o.y + 9; let ok = true;
         const P = (u, d) => [o.x + nx * d + tx * u, o.z + nz * d + tz * u];
         for (const [u, d] of [[-10, 14], [-5, 14], [0, 14], [5, 14], [10, 14], [0, 8], [0, 4]]) { const [px, pz] = P(u, d); if (roofAt(px, pz) > cy - 3 || wallNear(px, pz)[0] < 3) { ok = false; break; } }
         if (!ok) continue; const a = P(-10, 14), b = P(10, 14), L = [o.x, o.y + 1.5, o.z];
