@@ -113,3 +113,6 @@
 {"ts": "2026-11-25T12:52:13.101136Z", "kind": "art-v4-roofs-draft", "model": "qwen3.8-27b", "prompt_tokens": 797, "completion_tokens": 7193, "cost_usd": 0.009007}
 {"ts": "2026-11-25T16:37:06.680816Z", "kind": "pr-fix-jumpa", "model": "qwen3.8-27b", "prompt_tokens": 1014, "completion_tokens": 6413, "cost_usd": 0.012}
 {"ts": "2026-11-25T16:50:00.403974Z", "kind": "perf-tengok-reasoning-burn", "model": "qwen3.8-27b", "prompt_tokens": 1551, "completion_tokens": 16000, "cost_usd": 0.02}
+{"ts": "2026-11-26T02:21:43.810699Z", "kind": "himpun-photosynthesis", "model": "qwen3.8-27b", "prompt_tokens": 33, "completion_tokens": 806, "cost_usd": 0.001008}
+{"ts": "2026-11-26T02:21:43.824878Z", "kind": "himpun-smoke-burn", "model": "qwen3.8-27b", "prompt_tokens": 133, "completion_tokens": 2500, "cost_usd": 0.003128}
+{"ts": "2026-11-26T02:21:43.824878Z", "kind": "himpun-smoke-burn", "model": "qwen3.8-27b", "prompt_tokens": 73, "completion_tokens": 8000, "cost_usd": 0.010001}
