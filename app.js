@@ -2133,7 +2133,7 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
       balc.push([cx + nx * 1.3, fy, cz + nz * 1.3, Math.atan2(nx, nz)]); } }
   const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = (rnd() * (i + 1)) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
   // v23d: market crowd clusters from the manifest get real folk too
-  { const cr = manifest.crowd; const extra = []; for (const p of cr) for (let j = 0; j < 3; j++) extra.push([p[0] + (rnd() - 0.5) * 7, 0.5, p[1] + (rnd() - 0.5) * 7]); shuffle(extra); ground.unshift(...extra); }
+  { const cr = manifest.crowd; const extra = []; for (const p of cr) for (let j = 0; j < 1; j++) extra.push([p[0] + (rnd() - 0.5) * 16, 0.5, p[1] + (rnd() - 0.5) * 16]); shuffle(extra); ground.unshift(...extra); }
   shuffle(roofs); shuffle(balc);
   // v23b: favour spots the camera can actually see (within ~230 m of a low camera key), the rest fill in behind
   { const seen = camPts.filter((p) => p[1] < 150); const dnear = (s) => { let d = 1e9; for (const p of seen) { const dx = p[0] - s[0], dz = p[2] - s[2], dy = p[1] - s[1]; const q = dx * dx + dz * dz + dy * dy * 0.3; if (q < d) d = q; } return d; };
