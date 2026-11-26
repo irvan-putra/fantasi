@@ -2327,7 +2327,7 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
         items.push({ race, v: (rnd() * 12) | 0, x, y: 0.5, z, yaw, ph: rnd() * 6.28, w: 'g', lx: wd, lz: 0, ly: 0.5, ledgeYaw: yaw, mode }); FOLK_COUNT[race]++; made++; } } }
   items.push({ race: 'giant', v: 4, x: 188.6, y: 0.5, z: 196.7, yaw: Math.PI / 2, ph: 1.3, w: 'g', lx: 10, lz: 0, ly: 0.5, ledgeYaw: Math.PI / 2, mode: 0 }); FOLK_COUNT.giant++; // v23w: the giant of the Giant of the Lanes beat
   // v23bg: keep ground folk out of the Festival Hall and the ground props (carts, drums, picnics, smith, mules, kids, procession)
-  { const Z = [[212, -75, 22, 20], [224, -146, 9], [295, -163, 9], [150, -96, 9], [-173, 148, 9], [262, -172, 6], [150, -75, 6], [273, -129, 6], [146, -108, 6], [-150, 104, 6], [190, -170, 7], [151, -130, 11], [200, 170, 5], [-120, 106, 5], [162, -62, 15], [188.6, 196.7, 6]];
+  { const Z = [[212, -75, 22, 20], [224, -146, 9], [295, -163, 9], [150, -96, 9], [-173, 148, 9], [262, -172, 6], [150, -75, 6], [273, -129, 6], [146, -108, 6], [-150, 104, 6], [190, -170, 7], [151, -130, 11], [200, 170, 5], [-120, 106, 5], [162, -62, 15], [188.6, 196.7, 2.5]];
     const inZ = (x, z) => Z.some((q) => q.length === 4 ? (Math.abs(x - q[0]) < q[2] + 2 && Math.abs(z - q[1]) < q[3] + 2) : Math.hypot(x - q[0], z - q[1]) < q[2] + 1.5);
     let rm = 0; for (let i = items.length - 1; i >= 0; i--) { const o = items[i]; if (o.w === 'g' && o.race !== 'giant' || (o.w === 'g' && !(o.x === 188.6 && o.z === 196.7))) { if (inZ(o.x, o.z)) { FOLK_COUNT[o.race]--; items.splice(i, 1); rm++; } } } window.__PROPCLEAR = rm; }
   // ---- ledges (small balcony slabs)
