@@ -2314,19 +2314,24 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
     }
   }
   // v23u: crowd along the street-level camera lanes (the normal pools skip anything near the camera route, which left these lanes empty)
-  { const LANES = [[145, -150, 215, -150, 30], [148, -184, 148, -114, 30], [210.6, 196.7, 198.6, 196.7, 0], [-47.5, 66, -78, 56.4, 0]];
+  { const LANES = [[145, -150, 215, -150, 46], [148, -184, 148, -114, 46], [210.6, 196.7, 198.6, 196.7, 0], [-47.5, 66, -78, 56.4, 0]];
     for (const [ax, az, bx, bz, cnt] of LANES) { if (!cnt) continue; const dx = bx - ax, dz = bz - az, L = Math.hypot(dx, dz), ux = dx / L, uz = dz / L, px = -uz, pz = ux;
-      let made = 0, g = 0; while (made < cnt && g++ < 400) { const u = rnd() * L, side = rnd() < 0.5 ? -1 : 1, off = 2.6 + rnd() * 5.5; const x = ax + ux * u + px * off * side, z = az + uz * u + pz * off * side;
+      // v23bx: natural crowd, not an aisle: clusters at stalls plus loose scatter across the whole street, only a narrow lens-path lane (+-1.8 m) kept clear
+      const cl = []; for (let c = 0; c < 8; c++) cl.push({ u: (0.06 + 0.88 * rnd()) * L, off: (rnd() < 0.5 ? -1 : 1) * (2.5 + rnd() * 4.5) });
+      let made = 0, g = 0; while (made < cnt && g++ < 1200) { const inC = rnd() < 0.55, C = cl[(rnd() * cl.length) | 0];
+        const u = inC ? C.u + (rnd() - 0.5) * 5 : rnd() * L, off = inC ? C.off + (rnd() - 0.5) * 4 : (rnd() * 2 - 1) * 8.5, side = 1; if (u < 0 || u > L || Math.abs(off) < 1.8) continue;
+        const x = ax + ux * u + px * off * side, z = az + uz * u + pz * off * side;
         if (roofAt(x, z) >= 0) continue; const wd = wallNear(x, z)[0]; if (wd < 2.0) continue;
         if (items.some((o) => Math.hypot(o.x - x, o.z - z) < 1.6)) continue;
         const rr = rnd(); let mode, yaw;
-        if (rr < 0.4 && wd >= 5.5) { mode = 1; yaw = Math.atan2(ux, uz) + (rnd() < 0.5 ? 0 : Math.PI); }
-        else if (rr < 0.7) { mode = 2; yaw = Math.atan2(-px * side, -pz * side) + (rnd() - 0.5) * 1.2; }
-        else if (rr < 0.9) { mode = 3; yaw = Math.atan2(-px * side, -pz * side) + (rnd() - 0.5) * 0.5; }
-        else { mode = 0; yaw = Math.atan2(ux, uz) + (rnd() - 0.5) * 3; }
+        const cxw = ax + ux * C.u + px * C.off, czw = az + uz * C.u + pz * C.off, face = Math.atan2(cxw - x, czw - z);
+        if (rr < 0.3 && wd >= 3.5) { mode = 1; yaw = rnd() < 0.4 ? Math.atan2(px, pz) * (rnd() < 0.5 ? 1 : -1) : Math.atan2(ux, uz) + (rnd() < 0.5 ? 0 : Math.PI); }
+        else if (rr < 0.65) { mode = 2; yaw = inC ? face + (rnd() - 0.5) * 0.8 : rnd() * 6.28; }
+        else if (rr < 0.88) { mode = 3; yaw = inC ? face + (rnd() - 0.5) * 0.6 : rnd() * 6.28; }
+        else { mode = 0; yaw = rnd() * 6.28; }
         const q = rnd(), race = q < 0.7 ? 'human' : q < 0.82 ? 'elf' : 'dwarf';
         items.push({ race, v: (rnd() * 12) | 0, x, y: 0.5, z, yaw, ph: rnd() * 6.28, w: 'g', lx: wd, lz: 0, ly: 0.5, ledgeYaw: yaw, mode }); FOLK_COUNT[race]++; made++; } } }
-  items.push({ race: 'giant', v: 4, x: 188.6, y: 0.5, z: 196.7, yaw: Math.PI / 2, ph: 1.3, w: 'g', lx: 10, lz: 0, ly: 0.5, ledgeYaw: Math.PI / 2, mode: 0 }); FOLK_COUNT.giant++; // v23w: the giant of the Giant of the Lanes beat
+  items.push({ race: 'giant', v: 4, x: 188.6, y: 0.5, z: 196.7, yaw: -Math.PI / 2, ph: 1.3, w: 'g', lx: 10, lz: 0, ly: 0.5, ledgeYaw: -Math.PI / 2, mode: 0 }); FOLK_COUNT.giant++; // v23w: the giant of the Giant of the Lanes beat
   // v23bq: a lively crowd ringed around the giant (never at its crotch: keep-out below), kids and lantern folk looking up
   { let sg = 41; const rg = () => (sg = (sg * 9301 + 49297) & 65535) / 65535; let made2 = 0;
     for (let t = 0; t < 900 && made2 < 34; t++) {
