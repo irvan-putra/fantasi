@@ -1831,6 +1831,7 @@ let crowdMat, crowdPts, crowdBase;
   crowdMat.toneMapped = false;
   crowdPts = new THREE.Points(g, crowdMat);
   scene.add(crowdPts);
+  crowdPts.visible = false; // v23f: the glow dots read as spheres on a phone; real folk replace them
 }
 function tickCrowd(t) {
   const pa = crowdPts.geometry.attributes.position;
@@ -2058,32 +2059,48 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
   const ball = (r) => new THREE.SphereGeometry(r, 5, 3);
   const SKIN = [0xf2c7a0, 0xd9a273, 0xb57a4e, 0x8a5a38];
   // units: 1 = about 1.8 m human; the whole thing is scaled up so figures read at festival distances
+  const box = (w, h, d) => new THREE.BoxGeometry(w, h, d);
+  // v23f: real humanoids: two legs, torso, two arms, head, per-race extras. 1 unit = ~1.8 m human.
+  const man = (o, extra) => {
+    const gs = [
+      part(box(0.17, 0.82, 0.18), o.pants, -0.11, 0.41, 0), part(box(0.17, 0.82, 0.18), o.pants, 0.11, 0.41, 0),
+      part(box(0.2, 0.1, 0.3), o.boots || 0x3a2a1c, -0.11, 0.05, 0.05), part(box(0.2, 0.1, 0.3), o.boots || 0x3a2a1c, 0.11, 0.05, 0.05),
+      part(box(0.52, 0.66, 0.28), o.cloth, 0, 1.15, 0),
+      part(box(0.13, 0.66, 0.15), o.cloth, -0.34, 1.12, 0, 0, 0.14), part(box(0.13, 0.66, 0.15), o.cloth, 0.34, 1.12, 0, 0, -0.14),
+      part(box(0.12, 0.14, 0.14), o.skin, -0.38, 0.76, 0), part(box(0.12, 0.14, 0.14), o.skin, 0.38, 0.76, 0),
+      part(ball(0.19), o.skin, 0, 1.68), ...(extra || [])];
+    const g = merge(gs);
+    if (o.sx !== 1 || o.sy !== 1) { g.scale(o.sx, o.sy, o.sx); g.computeVertexNormals(); }
+    return g;
+  };
   const BUILD = {
     human(v) {
-      const cloth = [0xd9534f, 0x3a86c8, 0x5aa469, 0xe0a030, 0x8e5cc4][v % 5], skin = SKIN[v % 4];
-      return merge([part(cone(0.34, 1.25, 6), cloth, 0, 0.62), part(ball(0.2), skin, 0, 1.45)]);
+      const cloth = [0xd9534f, 0x3a86c8, 0x5aa469, 0xe0a030, 0x8e5cc4][v % 5], pants = [0x3a3f58, 0x5a4a3a, 0x2f4a3a][v % 3], skin = SKIN[v % 4], hair = [0x2a1c14, 0x5a3a20, 0xc8a050, 0x1a1a1a][v % 4];
+      return man({ cloth, pants, skin, sx: 1, sy: 1 }, [part(new THREE.SphereGeometry(0.2, 5, 2, 0, Math.PI * 2, 0, Math.PI / 2), hair, 0, 1.72)]);
     },
     elf(v) {
-      const cloth = [0x2f9e8f, 0x7fc86a, 0xc8d6ff, 0x9b7fe0, 0xe8e0a0][v % 5], skin = [0xf3ddc4, 0xe6c8a8, 0xd8b896][v % 3];
-      const hair = [0xf4ecc0, 0xc8c8d8, 0x6b4a2a, 0xf0a0c0][v % 4];
-      return merge([part(cone(0.24, 1.7, 6), cloth, 0, 0.85), part(ball(0.17), skin, 0, 1.95),
-        part(cone(0.1, 0.55, 4), skin, -0.36, 2.1, 0, 0, 1.2), part(cone(0.1, 0.55, 4), skin, 0.36, 2.1, 0, 0, -1.2),
-        part(cone(0.22, 0.5, 4), hair, 0, 2.12, -0.02)]);
+      const cloth = [0x2f9e8f, 0x7fc86a, 0xc8d6ff, 0x9b7fe0, 0xe8e0a0][v % 5], skin = [0xf3ddc4, 0xe6c8a8, 0xd8b896][v % 3], hair = [0xf4ecc0, 0xc8c8d8, 0x6b4a2a, 0xf0a0c0][v % 4];
+      return man({ cloth, pants: 0x4a5a48, skin, boots: 0x6a5a3a, sx: 0.78, sy: 1.22 }, [
+        part(cone(0.07, 0.5, 4), skin, -0.3, 1.82, 0, 0, 1.25), part(cone(0.07, 0.5, 4), skin, 0.3, 1.82, 0, 0, -1.25), // long pointed ears
+        part(box(0.42, 0.5, 0.06), cloth, 0, 0.78, -0.17), // long coat tail
+        part(new THREE.SphereGeometry(0.2, 5, 2, 0, Math.PI * 2, 0, Math.PI / 2), hair, 0, 1.72), part(box(0.1, 0.55, 0.08), hair, 0, 1.45, -0.2)]);
     },
     dwarf(v) {
       const cloth = [0x8a4b2a, 0x5a6b7a, 0xa85a2a, 0x6a3a3a][v % 4], beard = [0xc06a2a, 0x8a8a8a, 0x3a2a1a, 0xd8b060][v % 4];
-      return merge([part(cyl(0.52, 0.56, 0.62, 6), cloth, 0, 0.31), part(ball(0.3), SKIN[(v + 1) % 4], 0, 0.82),
-        part(cone(0.34, 0.62, 5), beard, 0, 0.5, 0.2, Math.PI), part(new THREE.SphereGeometry(0.34, 5, 2, 0, Math.PI * 2, 0, Math.PI / 2), 0x7a7f88, 0, 0.9),
-        part(cyl(0.09, 0.09, 0.7, 4), 0x6a4a2a, 0.62, 0.55, 0), part(cyl(0.2, 0.2, 0.12, 4), 0x888888, 0.62, 0.95, 0, 0, Math.PI / 2)]);
+      return man({ cloth, pants: 0x4a3a2a, skin: SKIN[(v + 1) % 4], boots: 0x2a2018, sx: 1.55, sy: 0.62 }, [
+        part(box(0.36, 0.5, 0.14), beard, 0, 1.35, 0.17), // big beard down the chest
+        part(new THREE.SphereGeometry(0.24, 5, 2, 0, Math.PI * 2, 0, Math.PI / 2), 0x7a7f88, 0, 1.72), // helmet
+        part(box(0.56, 0.08, 0.3), 0x2a2018, 0, 0.88, 0), // belt
+        part(box(0.07, 0.8, 0.07), 0x6a4a2a, 0.5, 0.95, 0.1), part(box(0.3, 0.2, 0.06), 0x9a9aa4, 0.5, 1.45, 0.1)]); // axe
     },
     giant(v) {
       const cloth = [0x6a5a48, 0x4a6a58, 0x6a4a58][v % 3], skin = [0xb09070, 0x90a080, 0xa08878][v % 3];
-      return merge([part(cyl(0.6, 0.85, 1.5, 6), cloth, 0, 0.75), part(cyl(0.9, 0.6, 0.9, 6), cloth, 0, 1.75), part(ball(0.5), skin, 0, 2.55),
-        part(cyl(0.22, 0.18, 1.4, 5), skin, -1.0, 1.55, 0, 0, 0.25), part(cyl(0.22, 0.18, 1.4, 5), skin, 1.0, 1.55, 0, 0, -0.25),
-        part(cyl(0.12, 0.2, 2.4, 5), 0x5a3f28, 1.35, 1.3, 0.2, 0, -0.1)]);
+      return man({ cloth, pants: 0x4a4038, skin, boots: 0x2a2018, sx: 1.25, sy: 1 }, [
+        part(box(0.14, 2.2, 0.14), 0x5a3f28, 0.62, 1.3, 0.15), part(box(0.34, 0.5, 0.34), 0x5a3f28, 0.62, 2.45, 0.15), // huge club
+        part(box(0.6, 0.12, 0.34), 0x2a2018, 0, 0.9, 0)]);
     },
   };
-  const SC = { human: 2.6, elf: 2.6, dwarf: 2.6, giant: 4.5 }; // world scale per unit (giants ~ 2.7x humans' height with bulk)
+  const SC = { human: 2.6, elf: 2.6, dwarf: 2.6, giant: 6.0 }; // world scale per unit (giants ~ 2.7x humans' height with bulk)
   const meshes = {}; const lamb = [];
   const caps = { human: [0, 0], elf: [0, 0], dwarf: [0, 0], giant: [0, 0] };
   // ---- spots
