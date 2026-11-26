@@ -2159,11 +2159,11 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
       const ux = T[3] - T[0], uy = T[4] - T[1], uz = T[5] - T[2], vx = T[6] - T[0], vy = T[7] - T[1], vz = T[8] - T[2];
       const nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx, ln = Math.hypot(nx, ny, nz); if (ln < 1e-3 || Math.abs(ny) / ln < 0.985) continue;
       if (Math.max(T[1], T[4], T[7]) - Math.min(T[1], T[4], T[7]) > 0.2 || T[1] < 6 || T[1] > 95) continue;
-      if (rnd() > 0.5) continue;
+      if (rnd() > 0.6) continue;
       const bs = [[1 / 3, 1 / 3, 1 / 3], [0.5, 0.25, 0.25], [0.25, 0.5, 0.25], [0.25, 0.25, 0.5]];
       const [b0, b1, b2] = bs[(rnd() * 4) | 0]; const x = b0 * T[0] + b1 * T[3] + b2 * T[6], z = b0 * T[2] + b1 * T[5] + b2 * T[8], y = T[1];
-      let ok = true; for (let e = 0; e < 3 && ok; e++) { const ax = T[e * 3], az = T[e * 3 + 2], bx = T[((e + 1) % 3) * 3], bz = T[((e + 1) % 3) * 3 + 2]; const dx = bx - ax, dz = bz - az, l = Math.hypot(dx, dz) || 1; if (Math.abs((x - ax) * dz - (z - az) * dx) / l < 2.4) ok = false; }
-      if (!ok || Math.abs(roofAt(x, z) - y) > 0.3) continue;
+      if (wallNear(x, z)[0] < 2.6) continue;
+      if (Math.abs(roofAt(x, z) - y) > 0.3) continue;
       roofs.push([x, y, z, rnd() * 6.283]); } }
   // balcony ledges: flush to a wall face, outward side open (no roof overhead, no other wall within 1.5 m)
   { const nt = wi.length / 3;
@@ -2179,7 +2179,7 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
       if (cA === cB) continue; if (cA) { nx = -nx; nz = -nz; }
       const fy = Math.round(cy / 3.4) * 3.4; if (Math.abs(fy - cy) > 1.2 || fy < 3.4) continue;
       const tx = -nz, tz = nx; let ok = true;
-      for (const [o, s] of [[1.7, 0], [3.2, 2.1], [3.2, -2.1], [3.2, 0]]) { const px = cx + nx * o + tx * s, pz = cz + nz * o + tz * s; if (roofAt(px, pz) > fy - 0.5) { ok = false; break; } if (o > 3 && wallNear(px, pz)[0] < 1.5) { ok = false; break; } }
+      for (const [o, s] of [[1.75, 0.8], [1.75, -0.8], [1.7, 0], [3.2, 2.1], [3.2, -2.1], [3.2, 0]]) { const px = cx + nx * o + tx * s, pz = cz + nz * o + tz * s; if (roofAt(px, pz) > fy - 0.5) { ok = false; break; } if (o > 3 && wallNear(px, pz)[0] < 1.5) { ok = false; break; } }
       if (!ok) continue;
       const lx = cx + nx * 1.75, lz = cz + nz * 1.75, sgn = rnd() < 0.5 ? -1 : 1;
       balc.push([lx + tx * 0.8 * sgn, fy, lz + tz * 0.8 * sgn, Math.atan2(nx, nz), lx, lz]); } }
