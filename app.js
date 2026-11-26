@@ -1569,7 +1569,7 @@ function tickDragons(t, u) {
     // 640-800u out so they stay a skyline presence and never cover a third of the
     // screen (Irvan 12:59 PM); heads point inward so a head plus a good length of
     // body is always in frame (stripes alone don't read as dragons).
-    const az = (i - 1) * 8 + Math.sin(TAU * u + d.ph) * 2.0;              // [-10,-6] / [-2,2] / [6,10]
+    const az = (i - 1) * 11 + Math.sin(TAU * u + d.ph) * 2.0; // v22h: wider lane spread so no two dragons overlap (was *8)              // [-10,-6] / [-2,2] / [6,10]
     const el = (i === 1 ? 19 : (i === 0 ? 16 : 18)) + Math.sin(TAU * 2 * u + d.ph * 1.7) * 2.0;
     let ew = pitch + el;                                    // world elevation of the anchor
     let dist = 480 + i * 65;                            // v22h: pulled in from 560+i*70 (bolder)
