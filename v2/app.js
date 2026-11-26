@@ -24,7 +24,7 @@ async function fetchWithProgress(url, onp) {
 
 const stallTimer = setTimeout(() => $('stall').classList.add('show'), 12000);
 
-const ASSET_V = 'v21c';
+const ASSET_V = 'v22';
 const manifest = await (await fetch('./manifest.json?' + ASSET_V)).json();
 bar.style.width = '6%';
 const binBuf = await fetchWithProgress('./scene.bin?' + ASSET_V, (f) => { bar.style.width = (6 + f * 84) + '%'; });
@@ -1553,25 +1553,41 @@ function tickDragons(t, u) {
   const cw3 = Math.min(Math.max((0.825 - u) / 0.04, 0), 1);
   const gather = Math.sin(cw2 * Math.PI / 2) ** 2 * Math.sin(cw3 * Math.PI / 2) ** 2; // rise 0.70-0.74, full through Dragon Lanes hold (0.744-0.762), release by 0.825
   const TAU = Math.PI * 2;
+  // v22: escort band (Irvan 12:39-12:40 PM: the flypast "looks like just one dragon",
+  // the water beat "i don't see any dragons"). Each dragon rides the upper sky RELATIVE
+  // TO THE BEAT CAMERA, a pure function of loop phase u, so routes stay identical every
+  // loop. Band: 16-26 deg off the view axis, >=12.5 deg above the horizon, 400-470u out:
+  // inside the relaxed camera rule, never central, in frame at portrait FOV.
+  const fwv = _fwd.set(0, 0, -1).applyQuaternion(camera.quaternion).clone();
+  const pitch = Math.asin(THREE.MathUtils.clamp(fwv.y, -1, 1)) * 180 / Math.PI;
+  const topEdge = pitch + 26; // world elevation of the frame's top edge (portrait margin)
+  const heading0 = Math.atan2(fwv.x, fwv.z);
+  let di = 0;
   for (const d of dragons) {
-    const isLead = d.ph === 0.0;
-    // route is a pure function of loop phase u: identical path every loop (Irvan 8:38 AM)
-    const a = TAU * d.loops * u + 2.95 + d.ph + chase * (isLead ? 0.5 : 0.2);
-    // non-leaders pull toward the lead orbit center during the chase
-    const pull = chase * (isLead ? 0 : 0.55);
-    const cx = d.cx + (177 - d.cx) * pull, cz = d.cz + (-132 - d.cz) * pull;
-    const rr = d.r * (1 - chase * (isLead ? 0 : 0.3)) * (1 - 0.22 * Math.sin(TAU * 2 * u + d.ph * 1.3) * (1 - gather)); // v21b: coiling radius
-    let x = cx + Math.cos(a) * rr;
-    let z = cz + Math.sin(a) * rr * 0.8;
-    let y = d.h + Math.sin(TAU * 2 * u + d.ph) * d.amp * (1 - chase * 0.3) * (1 - gather * 0.6) + Math.sin(TAU * 7 * u + d.ph * 2.0) * d.amp * 0.25 * (1 - gather); // v21b: rise/dive arcs + flutter
-    // v21a: gather = line-abreast flypast across the UPPER band of the Dragon Lanes
-    // frame, side-on to the beat camera (350,120,150 -> 560,95,350). Never central.
+    const i = di++;
+    const az = Math.sin(TAU * u + d.ph) * 11;               // +-11 deg across the frame
+    const el = 20 + Math.sin(TAU * 2 * u + d.ph * 1.7) * 4; // 16-24 deg above the view axis
+    let ew = pitch + el;                                    // world elevation of the anchor
+    let dist = 400 + i * 35;
+    if (ew > topEdge - 1) ew = topEdge - 1;
+    if (ew < 12.5) {
+      if (topEdge - 1 >= 12.5) ew = 12.5;                    // lift into the relaxed band
+      else if (topEdge > 5) { ew = topEdge - 1; dist = 1100; } // down-beat: distant top-edge silhouette
+      else { ew = 20; dist = 470; }                          // no sky in frame this beat
+    }
+    const azr = az * Math.PI / 180, ewr = ew * Math.PI / 180;
+    const horiz = Math.cos(ewr);
+    let x = camera.position.x + Math.sin(heading0 + azr) * horiz * dist;
+    let y = camera.position.y + Math.sin(ewr) * dist;
+    let z = camera.position.z + Math.cos(heading0 + azr) * horiz * dist;
+    // v22: gather = staggered flypast, three clearly separated dragons (Irvan 12:39 PM).
+    // Slots +-110u across the lane, the high dragon in the middle (222/300/222), so no
+    // two overlap in frame and each head reads on its own. Beat camera (350,120,150)->(560,95,350).
     if (gather > 0) {
-      // v21c: formation sits ON the relaxed-rule ray - ~18 deg above the beat view axis,
-      // 420-430u out, so the cap does not shove it out of frame. Camera (350,120,150)->(560,95,350).
       const dirx = -0.689, dirz = 0.725; // lane direction across the frame (right vector of the beat view)
-      const slot = (isLead ? -1 : (d.ph < 3 ? 0 : 1)) * 85;
-      const tx = 646 + dirx * slot, ty = 216 + (isLead ? 12 : 0) + Math.sin(TAU * 3 * u + slot * 0.05) * 8, tz = 432 + dirz * slot;
+      const slot = (i - 1) * 110;
+      const ty = (i === 1 ? 300 : 222) + Math.sin(TAU * 3 * u + slot * 0.05) * 8;
+      const tx = 646 + dirx * slot, tz = 432 + dirz * slot;
       x += (tx - x) * gather; y += (ty - y) * gather; z += (tz - z) * gather;
     }
     d.grp.position.set(x, y, z);
@@ -1599,10 +1615,9 @@ function tickDragons(t, u) {
       d.grp.lookAt(d.grp.position.x - 0.689, d.grp.position.y, d.grp.position.z + 0.725); // v21c: hold the side-on lane heading
       d.grp.rotateZ(Math.sin(TAU * 3 * u + d.ph) * 0.35); // v21b: roll through the dance
     } else {
-      const na = a + 0.02 * Math.sign(d.loops);
-      const nx = cx + Math.cos(na) * rr, nz = cz + Math.sin(na) * rr * 0.8;
-      d.grp.lookAt(nx, y, nz);
-      d.grp.rotateZ(Math.sin(TAU * 3 * u + d.ph) * 0.55); // v21b: bank into coils and dives
+      // v22: side-on to the camera so the silhouette and the head read at phone size
+      d.grp.lookAt(d.grp.position.x - fwv.z, d.grp.position.y, d.grp.position.z + fwv.x);
+      d.grp.rotateZ(Math.sin(TAU * 3 * u + d.ph) * 0.55); // v21b: bank through the dance
     }
     d.upd(TAU * 13 * u + chase * 4);
     const m = d.grp.children[0].material;
