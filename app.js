@@ -24,7 +24,7 @@ async function fetchWithProgress(url, onp) {
 
 const stallTimer = setTimeout(() => $('stall').classList.add('show'), 12000);
 
-const ASSET_V = 'v20t';
+const ASSET_V = 'v20u';
 const manifest = await (await fetch('./manifest.json?' + ASSET_V)).json();
 bar.style.width = '6%';
 const binBuf = await fetchWithProgress('./scene.bin?' + ASSET_V, (f) => { bar.style.width = (6 + f * 84) + '%'; });
@@ -251,6 +251,7 @@ void main(){
   float sp=hash(cell);
   if(sp>0.986){float tw=0.5+0.5*sin(uTime*2.5+sp*90.0);col+=cy*tw*uGlow*0.9;}
   float f=1.0-exp(-fogDensity*fogDensity*vFogZ*vFogZ);
+  f=max(f,smoothstep(900.0,2200.0,vFogZ)); // v20u: melt the far water rim into fog - kills the thin horizon seam
   col=mix(col,fogColor,clamp(f,0.0,1.0));
   gl_FragColor=vec4(col,1.0);
 }`;
@@ -535,8 +536,14 @@ function lmHaloAt(x, y, z, size, hex, opacity) {
   spMat.toneMapped = false;
   const sparks = new THREE.Points(spGeo, spMat);
   scene.add(sparks);
-  const pilGeo = new THREE.CylinderGeometry(2.2, 6, 300, 8, 1, true);
-  const pilMat = new THREE.MeshBasicMaterial({ color: 0x9fe4ff, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
+  const pcv = document.createElement('canvas'); pcv.width = 2; pcv.height = 64;
+  const pcx = pcv.getContext('2d');
+  const pgr = pcx.createLinearGradient(0, 0, 0, 64);
+  pgr.addColorStop(0, 'rgba(255,255,255,0)'); pgr.addColorStop(0.55, 'rgba(255,255,255,0.45)'); pgr.addColorStop(1, 'rgba(255,255,255,1)');
+  pcx.fillStyle = pgr; pcx.fillRect(0, 0, 2, 64);
+  const pilFadeTex = new THREE.CanvasTexture(pcv);
+  const pilGeo = new THREE.CylinderGeometry(0.8, 7, 300, 12, 1, true); // v20u: tapered light shaft
+  const pilMat = new THREE.MeshBasicMaterial({ color: 0x9fe4ff, map: pilFadeTex, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
   pilMat.toneMapped = false;
   const pillar = new THREE.Mesh(pilGeo, pilMat);
   pillar.position.set(CX, CY + 120, CZ);
@@ -745,7 +752,7 @@ lmPagoda(-320, -260, 5, 22, 8.5);
   const cx2 = cv.getContext('2d');
   for (let x = 0; x < 256; x++) {
     const hue = 150 + 90 * Math.sin(x * 0.05) + 40 * Math.sin(x * 0.013 + 2);
-    const a = 0.55 * Math.max(0, Math.sin(x * 0.11 + 1)) * (0.5 + 0.5 * Math.sin(x * 0.031 + 4));
+    const a = 0.8 * Math.pow(Math.max(0, Math.sin(x * 0.23 + 1)), 2.0) * (0.6 + 0.4 * Math.sin(x * 0.061 + 4)); // v20u: crisp streaks
     const gr = cx2.createLinearGradient(0, 0, 0, 128);
     gr.addColorStop(0, 'hsla(' + hue.toFixed(0) + ',100%,65%,0)');
     gr.addColorStop(0.45, 'hsla(' + hue.toFixed(0) + ',100%,62%,' + a.toFixed(3) + ')');
@@ -756,10 +763,13 @@ lmPagoda(-320, -260, 5, 22, 8.5);
   const aurTex = new THREE.CanvasTexture(cv);
   aurTex.wrapS = THREE.RepeatWrapping;
   const auroras = [];
-  const adefs = [
-    [0x77ffd9, -300, 138, 40, 260, 120, 0.55, 0.5],
-    [0x9a6bff, -225, 158, 95, 220, 110, 0.48, -0.35],
-    [0x64ff9a, -275, 128, -15, 300, 130, 0.45, 0.95],
+  const adefs = [ // v20u: six narrow curtains, varied hue/tilt - reads as ribbons, not wash
+    [0x77ffd9, -310, 138, 40, 110, 120, 0.55, 0.5],
+    [0x9a6bff, -225, 158, 95, 90, 110, 0.5, -0.35],
+    [0x64ff9a, -280, 128, -15, 130, 130, 0.45, 0.95],
+    [0x5fe8ff, -195, 148, 30, 80, 100, 0.42, 0.15],
+    [0xb48aff, -255, 118, 70, 95, 90, 0.4, -0.7],
+    [0x64ff9a, -330, 168, 90, 100, 110, 0.38, 0.8],
   ];
   for (const [col, x, y, z, w, h, op, ry] of adefs) {
     const m = new THREE.MeshBasicMaterial({ map: aurTex, color: col, transparent: true, opacity: op, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
