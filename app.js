@@ -2354,6 +2354,14 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
     picF.forEach((o, i) => { const sc = SC[o.race] * 1.3; dummy.position.set(o.x, o.y, o.z); dummy.rotation.set(0, o.yaw, 0); dummy.scale.setScalar(sc); dummy.updateMatrix(); blk.setMatrixAt(i, dummy.matrix); blk.setColorAt(i, new THREE.Color(BC[i % 5])); });
     blk.count = picF.length; blk.instanceMatrix.needsUpdate = true; if (blk.instanceColor) blk.instanceColor.needsUpdate = true; blk.frustumCulled = false; scene.add(blk);
     // retarget the balcony beat at a real seated balcony figure, with a camera line in open air (checked against roofs and walls)
+    const ri = KEYS.findIndex((k) => k.title === 'Rooftop Glide');
+    if (ri >= 0) { const cand = picF.filter((o) => o.y >= 8 && o.y <= 60).sort((p, q) => Math.hypot(p.x - 47, p.z - 205) - Math.hypot(q.x - 47, q.z - 205));
+      outer: for (const o of cand.slice(0, 60)) for (let dir = 0; dir < 4; dir++) { const ang = dir * Math.PI / 2 + 0.4, nx = Math.sin(ang), nz = Math.cos(ang), tx = -nz, tz = nx, cy = o.y + 9; let ok = true;
+        const P = (u, d) => [o.x + nx * d + tx * u, o.z + nz * d + tz * u];
+        for (const [u, d] of [[-10, 14], [-5, 14], [0, 14], [5, 14], [10, 14], [0, 8], [0, 4]]) { const [px, pz] = P(u, d); if (roofAt(px, pz) > cy - 3 || wallNear(px, pz)[0] < 3) { ok = false; break; } }
+        if (!ok) continue; const a = P(-10, 14), b = P(10, 14), L = [o.x, o.y + 1.5, o.z];
+        const set = (kk, p, y) => { kk.pos = [p[0], y, p[1]]; kk.look = L.slice(); };
+        set(KEYS[ri], a, 62); set(KEYS[ri + 1], a, cy); set(KEYS[ri + 2], b, cy); set(KEYS[ri + 3], b, 62); window.__ROOF = { x: o.x, y: o.y, z: o.z, a, b, cy }; break outer; } }
     const bi = KEYS.findIndex((k) => k.title === 'Balcony Fly-by');
     if (bi >= 0) { const cand = seatF.filter((o) => o.y >= 6.5 && o.y <= 26).sort((p, q) => Math.hypot(p.x + 62, p.z - 60) - Math.hypot(q.x + 62, q.z - 60));
       for (const o of cand.slice(0, 40)) { const nx = Math.sin(o.ledgeYaw), nz = Math.cos(o.ledgeYaw), tx = -nz, tz = nx; let ok = true; const cy = o.y + 2.5;
