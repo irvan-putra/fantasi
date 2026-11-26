@@ -1869,6 +1869,11 @@ const KEYS = [
   { pos: [-410, 50, -50], look: [-250, 40, 60], hold: 1600, fly: 5200, title: "Palace Mist", note: "Silhouettes of the hall pierce the low fog" },
   ..._beat("Rooftop Glide", "Skimming the terrace where the rooftop folk wave", [22, 25, 210], [58, 25, 210], [37, 16.8, 194.5], [37, 16.8, 194.5], 6500, 62, 0, 14),
   ..._beat("Giant of the Lanes", "A giant looms over the lane", [238, 20, 196.7], [226, 20, 196.7], [188.6, 10.8, 196.7], [188.6, 10.8, 196.7], 6500, 40, 0, 0),
+  { pos: [158, 15, -75], look: [200, 6, -75], hold: 0, fly: 3500, title: "Festival Hall", note: "Through the open front into the hall, folk at tables and on their feet" },
+  { pos: [190, 8, -75], look: [216, 5, -75], hold: 0, fly: 3500, title: "Festival Hall", note: "Through the open front into the hall, folk at tables and on their feet" },
+  { pos: [206, 7.5, -83], look: [215, 3.5, -72], hold: 600, fly: 4500, title: "Festival Hall", note: "Through the open front into the hall, folk at tables and on their feet" },
+  { pos: [206, 7.5, -67], look: [215, 3.5, -78], hold: 600, fly: 3500, title: "Festival Hall", note: "Through the open front into the hall, folk at tables and on their feet" },
+  { pos: [160, 16, -75], look: [200, 6, -75], hold: 0, fly: 4600, lift: 20, title: "Festival Hall", note: "Through the open front into the hall, folk at tables and on their feet" },
   { pos: [-160, 130, 260], look: [740, 14, 450], hold: 1500, fly: 5400, title: "Water Reveal", note: "Rising over the glowing canals for the reveal" },
   { pos: [370, 85, 300], look: [740, 15, 460], hold: 1600, fly: 5200, title: "Magic Harbor", note: "The beacon sweeps across shimmering water" },
   { pos: [350, 120, 150], look: [567, 150, 357], hold: 1500, fly: 5000, title: "Dragon Lanes", note: "A dragon's wake stirs the festival lights" },
@@ -2455,6 +2460,20 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
     const kids = (x, z) => { const q = []; for (let i = 0; i < 6; i++) person(q, Math.cos(i * 1.05) * 2.6, Math.sin(i * 1.05) * 2.6, [0xe0503a, 0x3a9ae0, 0xe0b030, 0x5ab040, 0xc04ac0, 0x40c0c0][i], 0.6, true); const m = merge(q); m.translate(x, 0.1, z); P.push(m); };
     const proc = (x, z) => { const q = []; for (let i = 0; i < 8; i++) person(q, i * 3, Math.sin(i * 0.9) * 1.2, [0xe0503a, 0x3a9ae0, 0xe0b030, 0x5ab040, 0xc04ac0, 0x40c0c0, 0xf08040, 0x8a6ae0][i], 1, i % 2 === 0); q.push(part(box(0.2, 7, 0.2), 0x5a3a1a, 10, 3.5, 3), part(box(0.2, 7, 0.2), 0x5a3a1a, 18, 3.5, 3), part(box(8.2, 2.5, 0.15), 0xd03a3a, 14, 6, 3), part(box(6, 0.8, 0.2), 0xf0c030, 14, 6, 3.1)); const m = merge(q); m.translate(x, 0.1, z); P.push(m); };
     smith(190, -170); train(144, -130); kids(200, 170); kids(-120, 106); proc(150, -62);
+    { // v23bb: Festival Hall, open front facing west, people at tables and standing, wide interior beat
+      const q = [], B = (w, h, d, c, x, y, z) => q.push(part(box(w, h, d), c, x, y, z));
+      B(36, 0.4, 24, 0xa87444, 0, 0.2, -12); B(36, 12, 0.8, 0x7a5068, 0, 6, -24); B(0.8, 12, 24, 0x6a4a5e, -18, 6, -12); B(0.8, 12, 24, 0x6a4a5e, 18, 6, -12); B(40, 0.8, 28, 0x5a3a52, 0, 12.4, -12); B(40.4, 0.5, 28.4, 0xe0a030, 0, 11.9, -12); B(36, 1.6, 1, 0xd0503a, 0, 11, -0.4);
+      for (const x of [-18, -9, 0, 9, 18]) B(1.2, 11, 1.2, 0xc8503a, x, 5.5, -0.4);
+      B(6, 0.12, 24, 0xd04a4a, 0, 0.45, -12); B(14, 1, 5, 0xb08040, 0, 0.9, -21); B(11, 5, 0.3, 0xd03a3a, 0, 6.5, -23.5); B(8, 0.9, 0.35, 0xf0c030, 0, 6.5, -23.4);
+      for (const x of [-13, -4.5, 4.5, 13]) for (const z of [-5, -13, -19]) { q.push(part(new THREE.SphereGeometry(0.8, 8, 6), 0xffcc66, x, 8.6, z)); B(0.08, 3, 0.08, 0x3a2a1a, x, 10.4, z); }
+      const face = (x, y, z) => q.push(part(box(0.1, 0.1, 0.1), 0x222222, x - 0.17, y, z + 0.45), part(box(0.1, 0.1, 0.1), 0x222222, x + 0.17, y, z + 0.45), part(box(0.28, 0.07, 0.07), 0xd03040, x, y - 0.2, z + 0.47));
+      const COL = [0xe0503a, 0x3a9ae0, 0xe0b030, 0x5ab040, 0xc04ac0, 0x40c0c0, 0xf08040, 0x8a6ae0]; let ci = 0;
+      const sitter = (x, z) => { const c = COL[ci++ % 8]; q.push(part(box(0.9, 0.6, 0.9), 0x5a3a1a, x, 0.7, z), part(box(0.9, 1.0, 0.7), c, x, 1.6, z), part(box(0.35, 0.35, 1.0), 0x3a3a5a, x - 0.2, 1.25, z + 0.7), part(box(0.35, 0.35, 1.0), 0x3a3a5a, x + 0.2, 1.25, z + 0.7), part(new THREE.SphereGeometry(0.5, 8, 6), 0xe8b890, x, 2.6, z)); face(x, 2.65, z); };
+      const stander = (x, z, oy, lamp) => { const c = COL[ci++ % 8], tq = []; tq.push(part(box(0.9, 1.0, 0.7), c, x, 1.0, z), part(box(0.35, 0.9, 0.35), 0x3a3a5a, x - 0.2, 0.45, z), part(box(0.35, 0.9, 0.35), 0x3a3a5a, x + 0.2, 0.45, z), part(new THREE.SphereGeometry(0.5, 8, 6), 0xe8b890, x, 2.0, z)); if (lamp) tq.push(part(box(0.1, 0.9, 0.1), 0x5a3a1a, x + 0.6, 1.5, z + 0.2), part(new THREE.SphereGeometry(0.4, 6, 5), 0xffc050, x + 0.6, 2.1, z + 0.2)); tq.forEach((g) => g.translate(0, oy, 0)); q.push(...tq); face(x, 2.05 + oy, z); };
+      for (const [tx, tz] of [[-9, -8], [9, -8], [-9, -16], [9, -16]]) { B(4, 1.1, 2.4, 0x7a4a2a, tx, 0.95, tz); B(1, 0.35, 0.8, 0xe8d8b8, tx - 0.5, 1.7, tz); q.push(part(new THREE.SphereGeometry(0.4, 6, 5), 0xe05a4a, tx + 0.8, 1.8, tz)); sitter(tx - 1.6, tz - 2); sitter(tx + 1.6, tz - 2); sitter(tx - 1.6, tz + 2.3); sitter(tx + 1.6, tz + 2.3); }
+      for (const [x, z] of [[-3, -5], [3, -6], [0, -12], [-14, -4], [14, -4], [5, -18], [-5, -17]]) stander(x, z, 0.4, ci % 3 === 0);
+      for (const x of [-3.5, 0, 3.5]) stander(x, -21, 1.4, false); q.push(part(new THREE.CylinderGeometry(0.8, 0.65, 1.4, 8), 0xc8503a, 5.6, 2.2, -20));
+      const m = merge(q); m.rotateY(-Math.PI / 2); m.translate(200, 0.1, -75); P.push(m); }
     const pm = new THREE.Mesh(merge(P), basic); pm.frustumCulled = false; scene.add(pm); window.__PROPS = pm; }
   window.__FOLK = { groundTest, camAt, LOOP_MS, KEYS, lanes, items, roofAt, wallNear, clipTest, camTest, counts: FOLK_COUNT, pools: { ground: ground.length, roofs: roofs.length, balconies: balc.length }, total: items.length };
 }
@@ -2491,7 +2510,7 @@ function frame() {
   const phase = phaseAt(u);
   skyMat.uniforms.uPhase.value = phase;
   skyMat.uniforms.uTime.value = t;
-  if (window.__SKYTICK) window.__SKYTICK(ms / 1000);
+  if (window.__SKYTICK) window.__SKYTICK(ms / 1000 * 170600 / LOOP_MS);
   starMat.opacity = THREE.MathUtils.smoothstep(phase, 0.10, 0.6);
   sky.position.copy(camera.position);
 
