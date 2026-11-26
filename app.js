@@ -1843,14 +1843,26 @@ function tickCrowd(t) {
 }
 
 // ---------------- beats / camera (closed seamless loop) ----------------
+// v23q street-level beats: descend through a clear air column, walk a verified-clear lane, climb out again
+const _beat = (title, note, a, b, look0, look1, walk, H = 62) => [
+  { pos: [a[0], H, a[2]], look: look0, hold: 0, fly: 2800, title, note },
+  { pos: a, look: look0, hold: 0, fly: walk, title, note },
+  { pos: b, look: look1, hold: 0, fly: 2800, title, note },
+  { pos: [b[0], H, b[2]], look: look1, hold: 0, fly: 4600, title, note },
+];
 const KEYS = [
   { pos: [-1305.9, 520, -1459.1], look: [22.13, 60, 33.16], hold: 2600, fly: 5000, title: "Dusk Horizon", note: "Amber light dissolves into the first twilight shadows" },
   { pos: [-520, 130, -820], look: [22, 50, 33], hold: 1500, fly: 5200, title: "The High Descent", note: "Sliding down toward the glowing realm" },
   { pos: [-40, 60, 160], look: [22, 45, -60], hold: 1400, fly: 5000, lift: 55, title: "Twin Spire Dive", note: "Diving straight between the matched towers of light" },
   { pos: [30, 30, -350], look: [128, 30, -214], hold: 2200, fly: 4800, title: "Gate of Lanterns", note: "Under the great gate, into the festival" },
   { pos: [128, 66, -62], look: [185, 22, -140], hold: 2000, fly: 5000, lift: 42, title: "Star Market Life", note: "Vendors weave through drifting sky lanterns" },
+  ..._beat("Market Street Walk", "Low and slow, people on both sides", [145, 2.3, -150], [215, 2.3, -150], [175, 4, -150], [245, 4, -150], 9000),
+  ..._beat("Lantern Lane", "Stalls, vendors and lanterns along the lane", [148, 2.3, -184], [148, 2.3, -114], [148, 4, -150], [148, 4, -84], 8000),
   { pos: [-85, 42, 15], look: [-166, 45, 143], hold: 1600, fly: 5000, title: "Pagoda Orbit", note: "Curling around the tiered temple roof" },
+  ..._beat("Balcony Fly-by", "Past the neighbours leaning on their balcony", [-47.5, 8.4, 66], [-78, 8.4, 56.4], [-61.3, 8.2, 56.4], [-61.3, 8.2, 56.4], 6500, 55),
   { pos: [-410, 50, -50], look: [-250, 40, 60], hold: 1600, fly: 5200, title: "Palace Mist", note: "Silhouettes of the hall pierce the low fog" },
+  ..._beat("Rooftop Glide", "Skimming the terrace where the rooftop folk wave", [25.1, 18.1, 209.7], [61.1, 18.1, 209.7], [47.1, 17.4, 209.7], [47.1, 17.4, 209.7], 6500, 62),
+  ..._beat("Giant of the Lanes", "A giant looms over the lane", [210.6, 2.2, 196.7], [198.6, 2.2, 196.7], [188.6, 9, 196.7], [188.6, 10, 196.7], 6500, 62),
   { pos: [-160, 130, 260], look: [740, 14, 450], hold: 1500, fly: 5400, title: "Water Reveal", note: "Rising over the glowing canals for the reveal" },
   { pos: [370, 85, 300], look: [740, 15, 460], hold: 1600, fly: 5200, title: "Magic Harbor", note: "The beacon sweeps across shimmering water" },
   { pos: [350, 120, 150], look: [560, 95, 350], hold: 1500, fly: 5000, title: "Dragon Lanes", note: "A dragon's wake stirs the festival lights" },
@@ -1893,7 +1905,7 @@ function cardsAt(ms) {
   const idx = camAt(ms).keyIdx;
   if (idx !== _curCard) {
     _curCard = idx;
-    const k = KEYS[idx];
+    const k = KEYS[idx]; if (k.title === cardsAt._lt) return; cardsAt._lt = k.title;
     $('cardTitle').textContent = k.title;
     $('cardNote').textContent = k.note;
     $('card').classList.add('show');
