@@ -2234,7 +2234,7 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
   // ---- plan: [race, where, count]
   const _sd = (x, z, a) => { const dx = a[2] - a[0], dz = a[3] - a[1]; const u = Math.max(0, Math.min(1, ((x - a[0]) * dx + (z - a[1]) * dz) / (dx * dx + dz * dz))); return Math.hypot(x - a[0] - dx * u, z - a[1] - dz * u); };
   // v23w: figures the close-up beats look at may sit near the camera route, but never within 3.5 m of the path line
-  const _focusOk = (s) => (Math.hypot(s[0] + 61.3, s[2] - 56.4) < 14 && _sd(s[0], s[2], [-47.5, 66, -78, 56.4]) >= 3.5) || (Math.hypot(s[0] - 47.1, s[2] - 209.7) < 14 && _sd(s[0], s[2], [25.1, 209.7, 61.1, 209.7]) >= 3.5);
+  const _focusOk = (s) => (Math.hypot(s[0] + 61.3, s[2] - 56.4) < 14 && _sd(s[0], s[2], [-47.5, 66, -78, 56.4]) >= 7) || (Math.hypot(s[0] - 47.1, s[2] - 209.7) < 14 && _sd(s[0], s[2], [25.1, 209.7, 61.1, 209.7]) >= 7);
   const PLAN = [['human', 'g', 560], ['human', 'b', 340], ['human', 'r', 340], ['elf', 'r', 150], ['elf', 'b', 130], ['elf', 'g', 100],
     ['dwarf', 'g', 210], ['dwarf', 'b', 45], ['dwarf', 'r', 30], ['giant', 'g', 28]];
   const pools = { g: ground, b: balc, r: roofs }; const cur = { g: 0, b: 0, r: 0 };
