@@ -2250,6 +2250,19 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
       FOLK_COUNT[race]++;
     }
   }
+  // v23u: crowd along the street-level camera lanes (the normal pools skip anything near the camera route, which left these lanes empty)
+  { const LANES = [[145, -150, 215, -150, 30], [148, -184, 148, -114, 30], [210.6, 196.7, 198.6, 196.7, 0], [-47.5, 66, -78, 56.4, 0]];
+    for (const [ax, az, bx, bz, cnt] of LANES) { if (!cnt) continue; const dx = bx - ax, dz = bz - az, L = Math.hypot(dx, dz), ux = dx / L, uz = dz / L, px = -uz, pz = ux;
+      let made = 0, g = 0; while (made < cnt && g++ < 400) { const u = rnd() * L, side = rnd() < 0.5 ? -1 : 1, off = 2.6 + rnd() * 5.5; const x = ax + ux * u + px * off * side, z = az + uz * u + pz * off * side;
+        if (roofAt(x, z) >= 0) continue; const wd = wallNear(x, z)[0]; if (wd < 2.0) continue;
+        if (items.some((o) => Math.hypot(o.x - x, o.z - z) < 1.6)) continue;
+        const rr = rnd(); let mode, yaw;
+        if (rr < 0.4 && wd >= 5.5) { mode = 1; yaw = Math.atan2(ux, uz) + (rnd() < 0.5 ? 0 : Math.PI); }
+        else if (rr < 0.7) { mode = 2; yaw = Math.atan2(-px * side, -pz * side) + (rnd() - 0.5) * 1.2; }
+        else if (rr < 0.9) { mode = 3; yaw = Math.atan2(-px * side, -pz * side) + (rnd() - 0.5) * 0.5; }
+        else { mode = 0; yaw = Math.atan2(ux, uz) + (rnd() - 0.5) * 3; }
+        const q = rnd(), race = q < 0.7 ? 'human' : q < 0.82 ? 'elf' : 'dwarf';
+        items.push({ race, v: (rnd() * 12) | 0, x, y: 0.5, z, yaw, ph: rnd() * 6.28, w: 'g', lx: wd, lz: 0, ly: 0.5, ledgeYaw: yaw, mode }); FOLK_COUNT[race]++; made++; } } }
   // ---- ledges (small balcony slabs)
   const ledgeSpots = items.filter((o) => o.w === 'b');
   const ledgeMat = new THREE.MeshLambertMaterial({ color: 0x6a5a4c, emissive: 0x2a2018, emissiveIntensity: 1.0 }); lamb.push(ledgeMat);
