@@ -2402,6 +2402,7 @@ function tickFolk(t, phase) { if (folkTick) folkTick(t, phase); }
 bar.style.width = '100%';
 clearTimeout(stallTimer);
 
+{ const q = new URLSearchParams(location.search).get('cam'); if (q) window.__CAMOVR = q.split(',').map(Number); }
 const PIN_U = (() => { const p = new URLSearchParams(location.search).get('u'); return p === null ? -1 : parseFloat(p); })();
 let start = null;
 let firstFrame = true;
@@ -2418,6 +2419,7 @@ function frame() {
   const { pos, look } = camAt(ms);
   camera.position.set(pos[0], pos[1], pos[2]);
   camera.lookAt(look[0], look[1], look[2]);
+  if (window.__CAMOVR) { const c = window.__CAMOVR; camera.position.set(c[0], c[1], c[2]); camera.lookAt(c[3], c[4], c[5]); } // QA only
 
   const phase = phaseAt(u);
   skyMat.uniforms.uPhase.value = phase;
