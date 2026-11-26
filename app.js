@@ -2122,7 +2122,7 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
   { const seen = camPts.filter((p) => p[1] < 150); const dnear = (s) => { let d = 1e9; for (const p of seen) { const dx = p[0] - s[0], dz = p[2] - s[2], dy = p[1] - s[1]; const q = dx * dx + dz * dz + dy * dy * 0.3; if (q < d) d = q; } return d; };
     for (const pool of [ground, roofs, balc]) { const a = [], b = []; for (const s of pool) (dnear(s) < 230 * 230 ? a : b).push(s); pool.length = 0; pool.push(...a, ...b); } }
   // ---- plan: [race, where, count]
-  const PLAN = [['human', 'g', 880], ['human', 'b', 330], ['human', 'r', 330], ['elf', 'r', 170], ['elf', 'b', 150], ['elf', 'g', 150],
+  const PLAN = [['human', 'g', 880], ['human', 'b', 520], ['human', 'r', 520], ['elf', 'r', 240], ['elf', 'b', 220], ['elf', 'g', 150],
     ['dwarf', 'g', 330], ['dwarf', 'b', 70], ['dwarf', 'r', 50], ['giant', 'g', 40]];
   const pools = { g: ground, b: balc, r: roofs }; const cur = { g: 0, b: 0, r: 0 };
   const items = []; // {race, v, x,y,z, yaw, ph, kind}
@@ -2156,7 +2156,7 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
     const race = key.replace(/\d+$/, ''), v = +key.slice(race.length);
     const mat = new THREE.MeshLambertMaterial({ vertexColors: true, emissive: 0x3a2a20, emissiveIntensity: 1.0 }); lamb.push(mat);
     const im = new THREE.InstancedMesh(BUILD[race](v), mat, list.length); im.frustumCulled = false;
-    list.forEach((o, i) => { o.im = im; o.i = i; const s = SC[race]; dummy.position.set(o.x, o.y, o.z); dummy.rotation.set(0, o.yaw, 0); dummy.scale.setScalar(s); dummy.updateMatrix(); im.setMatrixAt(i, dummy.matrix); o.s = s; if (o.w === 'g' && race !== 'giant') animated.push(o); });
+    list.forEach((o, i) => { o.im = im; o.i = i; const s = SC[race] * (o.w === 'g' ? 1 : 1.3); dummy.position.set(o.x, o.y, o.z); dummy.rotation.set(0, o.yaw, 0); dummy.scale.setScalar(s); dummy.updateMatrix(); im.setMatrixAt(i, dummy.matrix); o.s = s; if (o.w === 'g' && race !== 'giant') animated.push(o); });
     im.instanceMatrix.needsUpdate = true; scene.add(im);
   }
   ledgeSpots.forEach((o, i) => { dummy.position.set(o.x, o.y - 0.2, o.z); dummy.rotation.set(0, o.yaw, 0); dummy.scale.setScalar(1); dummy.updateMatrix(); ledge.setMatrixAt(i, dummy.matrix); });
