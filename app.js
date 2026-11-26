@@ -24,7 +24,7 @@ async function fetchWithProgress(url, onp) {
 
 const stallTimer = setTimeout(() => $('stall').classList.add('show'), 12000);
 
-const ASSET_V = 'v20x';
+const ASSET_V = 'v20y';
 const manifest = await (await fetch('./manifest.json?' + ASSET_V)).json();
 bar.style.width = '6%';
 const binBuf = await fetchWithProgress('./scene.bin?' + ASSET_V, (f) => { bar.style.width = (6 + f * 84) + '%'; });
@@ -1356,7 +1356,7 @@ function scaleTexture() {
 }
 function makeDragon(colorHex, ph0) {
   const base = new THREE.Color(colorHex);
-  const belly = base.clone().lerp(new THREE.Color(0xfff0cf), 0.65);
+  const belly = base.clone().lerp(new THREE.Color(0xfff0cf), 0.8);
   const fin = base.clone().multiplyScalar(0.5);
   const mane = base.clone().lerp(new THREE.Color(0xffd98a), 0.55); // gold-tinged mane/antler color
   const RINGS = 48, RAD = 8, LEN = 34;
@@ -1421,7 +1421,7 @@ function makeDragon(colorHex, ph0) {
   g.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(vUv), 2));
   g.setIndex(idx);
   const stex = scaleTexture();
-  const bodyMesh = new THREE.Mesh(g, new THREE.MeshPhongMaterial({ vertexColors: true, map: stex, bumpMap: stex, bumpScale: 0.7, shininess: 28, specular: new THREE.Color(0x554422), emissive: new THREE.Color(colorHex), emissiveIntensity: 0.14 }));
+  const bodyMesh = new THREE.Mesh(g, new THREE.MeshPhongMaterial({ vertexColors: true, map: stex, bumpMap: stex, bumpScale: 0.7, shininess: 28, specular: new THREE.Color(0x554422), emissive: new THREE.Color(colorHex), emissiveIntensity: 0.35 }));
 
   // ---- head (static geometry, follows the neck frame) ----
   const headParts = [];
@@ -1457,21 +1457,30 @@ function makeDragon(colorHex, ph0) {
   }
   const eyeMesh = new THREE.Mesh(mergeGeos(eyeGlows), new THREE.MeshBasicMaterial({ vertexColors: true }));
   eyeMesh.material.toneMapped = false;
+  // pearl of wisdom floating before the head (v20y)
+  const pearl = new THREE.Mesh(new THREE.SphereGeometry(0.55, 10, 8), new THREE.MeshBasicMaterial({ color: 0xffe9a8 }));
+  pearl.material.toneMapped = false;
+  pearl.position.set(0, 0.35, 5.4);
+  const pg = new THREE.BufferGeometry();
+  pg.setAttribute('position', new THREE.BufferAttribute(new Float32Array([0, 0.35, 5.4]), 3));
+  const pmat = new THREE.PointsMaterial({ size: 22, map: haloTex, color: 0xffd98a, transparent: true, opacity: 0.8, depthWrite: false, blending: THREE.AdditiveBlending });
+  pmat.toneMapped = false;
+  const pearlHalo = new THREE.Points(pg, pmat);
   const headG = new THREE.Group();
-  headG.add(headMesh, eyeMesh);
-  headG.scale.setScalar(0.8);
+  headG.add(headMesh, eyeMesh, pearl, pearlHalo);
+  headG.scale.setScalar(1.6);
 
   // v20x: no wings - Chinese dragons ride the sky by virtue, not wings
   const L = new THREE.Group(), R = new THREE.Group();
   // halo so the dragon reads at distance
   const hg = new THREE.BufferGeometry();
   hg.setAttribute('position', new THREE.BufferAttribute(new Float32Array([0, 1, 1]), 3));
-  const hm = new THREE.PointsMaterial({ size: 42, map: haloTex, color: colorHex, transparent: true, opacity: 0.34, depthWrite: false, blending: THREE.AdditiveBlending });
+  const hm = new THREE.PointsMaterial({ size: 56, map: haloTex, color: colorHex, transparent: true, opacity: 0.34, depthWrite: false, blending: THREE.AdditiveBlending });
   hm.toneMapped = false;
   const halo = new THREE.Points(hg, hm);
   const grp = new THREE.Group();
   grp.add(bodyMesh, halo, headG);
-  grp.scale.setScalar(6.2);
+  grp.scale.setScalar(8.0);
 
   // ---- per-frame spine update ----
   const waved = basePts.map(p => p.clone());
@@ -1482,8 +1491,8 @@ function makeDragon(colorHex, ph0) {
   function upd(time) {
     for (let i = 0; i < RINGS; i++) {
       const t = i / (RINGS - 1);
-      const sway = Math.sin(t * 9.5 - time * 3.1 + ph0) * 1.7 * (0.25 + t * 0.95);
-      const bob = Math.cos(t * 5.1 - time * 3.1 + ph0) * 0.6 * (0.3 + t * 0.55);
+      const sway = Math.sin(t * 12.0 - time * 3.1 + ph0) * 3.2 * (0.25 + t * 0.95);
+      const bob = Math.cos(t * 5.1 - time * 3.1 + ph0) * 0.9 * (0.3 + t * 0.55);
       waved[i].set(basePts[i].x + sway, basePts[i].y + bob, basePts[i].z);
     }
     for (let i = 0; i < RINGS; i++) {
@@ -1553,7 +1562,7 @@ function tickDragons(t, u) {
     // view on any beat: push it out along the view ray until its angular size fits.
     const cdx = x - camera.position.x, cdy = y - camera.position.y, cdz = z - camera.position.z;
     const cd = Math.sqrt(cdx * cdx + cdy * cdy + cdz * cdz) || 1;
-    const minD = Math.max(130, 85 / Math.tan(8 * Math.PI / 180)); // 130-unit floor + angular cap (~604u)
+    const minD = Math.max(130, 136 / Math.tan(11 * Math.PI / 180)); // v20y: 130-unit floor + 22-degree cap (~700u at scale 8) - Irvan: bigger, instantly readable dragons
     if (cd < minD) {
       const s = minD / cd;
       d.grp.position.set(camera.position.x + cdx * s, camera.position.y + cdy * s, camera.position.z + cdz * s);
@@ -1563,7 +1572,7 @@ function tickDragons(t, u) {
     d.grp.lookAt(nx, y, nz);
     d.upd(TAU * 13 * u + chase * 4);
     const m = d.grp.children[0].material;
-    m.emissiveIntensity = 0.30 + chase * 0.3;
+    m.emissiveIntensity = 0.55 + chase * 0.3;
   }
 }
 
