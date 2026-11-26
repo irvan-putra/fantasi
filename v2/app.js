@@ -24,7 +24,7 @@ async function fetchWithProgress(url, onp) {
 
 const stallTimer = setTimeout(() => $('stall').classList.add('show'), 12000);
 
-const ASSET_V = 'v20o';
+const ASSET_V = 'v20p';
 const manifest = await (await fetch('./manifest.json?' + ASSET_V)).json();
 bar.style.width = '6%';
 const binBuf = await fetchWithProgress('./scene.bin?' + ASSET_V, (f) => { bar.style.width = (6 + f * 84) + '%'; });
@@ -662,7 +662,9 @@ function lmPagoda(PX, PZ, tiers, baseW, baseH) {
     const b = new THREE.BoxGeometry(w, segH, w); b.translate(PX, y + segH / 2, PZ);
     parts.push({ g: b, c: body });
     y += segH;
-    for (const r of lmEaveRoof(w * 1.32, segH * 0.6, 0.06)) { r.g.translate(PX, y + segH * 0.22, PZ); parts.push(r); }
+    const rr = lmEaveRoof(w * 1.32, segH * 0.6, 0.06);
+    rr[0].c = [0.09, 0.24, 0.28]; rr[1].c = [0.15, 0.38, 0.40];
+    for (const r of rr) { r.g.translate(PX, y + segH * 0.22, PZ); parts.push(r); }
     y += segH * 0.42;
     w *= 0.82;
   }
@@ -1776,7 +1778,7 @@ const KEYS = [
   { pos: [-40, 60, 160], look: [22, 45, -60], hold: 1400, fly: 5000, title: "Twin Spire Dive", note: "Diving straight between the matched towers of light" },
   { pos: [30, 30, -350], look: [128, 30, -214], hold: 2200, fly: 4800, title: "Gate of Lanterns", note: "Under the great gate, into the festival" },
   { pos: [128, 66, -62], look: [185, 22, -140], hold: 2000, fly: 5000, title: "Star Market Life", note: "Vendors weave through drifting sky lanterns" },
-  { pos: [-95, 78, 25], look: [-166, 48, 143], hold: 1600, fly: 5000, title: "Pagoda Orbit", note: "Curling around the tiered temple roof" },
+  { pos: [-85, 42, 15], look: [-166, 45, 143], hold: 1600, fly: 5000, title: "Pagoda Orbit", note: "Curling around the tiered temple roof" },
   { pos: [-410, 50, -50], look: [-250, 40, 60], hold: 1600, fly: 5200, title: "Palace Mist", note: "Silhouettes of the hall pierce the low fog" },
   { pos: [-160, 130, 260], look: [740, 14, 450], hold: 1500, fly: 5400, title: "Water Reveal", note: "Rising over the glowing canals for the reveal" },
   { pos: [370, 85, 300], look: [740, 15, 460], hold: 1600, fly: 5200, title: "Magic Harbor", note: "The beacon sweeps across shimmering water" },
