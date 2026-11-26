@@ -1844,11 +1844,11 @@ function tickCrowd(t) {
 
 // ---------------- beats / camera (closed seamless loop) ----------------
 // v23q street-level beats: descend through a clear air column, walk a verified-clear lane, climb out again
-const _beat = (title, note, a, b, look0, look1, walk, H = 62) => [
+const _beat = (title, note, a, b, look0, look1, walk, H = 62, lift = 0) => [
   { pos: [a[0], H, a[2]], look: look0, hold: 0, fly: 2800, title, note },
   { pos: a, look: look0, hold: 0, fly: walk, title, note },
   { pos: b, look: look1, hold: 0, fly: 2800, title, note },
-  { pos: [b[0], H, b[2]], look: look1, hold: 0, fly: 4600, title, note },
+  { pos: [b[0], H, b[2]], look: look1, hold: 0, fly: 4600, lift, title, note },
 ];
 const KEYS = [
   { pos: [-1305.9, 520, -1459.1], look: [22.13, 60, 33.16], hold: 2600, fly: 5000, title: "Dusk Horizon", note: "Amber light dissolves into the first twilight shadows" },
@@ -1857,7 +1857,7 @@ const KEYS = [
   { pos: [30, 30, -350], look: [128, 30, -214], hold: 2200, fly: 4800, title: "Gate of Lanterns", note: "Under the great gate, into the festival" },
   { pos: [128, 66, -62], look: [185, 22, -140], hold: 2000, fly: 5000, lift: 42, title: "Star Market Life", note: "Vendors weave through drifting sky lanterns" },
   ..._beat("Market Street Walk", "Low and slow, people on both sides", [145, 2.3, -150], [215, 2.3, -150], [175, 4, -150], [245, 4, -150], 9000),
-  ..._beat("Lantern Lane", "Stalls, vendors and lanterns along the lane", [148, 2.3, -184], [148, 2.3, -114], [148, 4, -150], [148, 4, -84], 8000),
+  ..._beat("Lantern Lane", "Stalls, vendors and lanterns along the lane", [148, 2.3, -184], [148, 2.3, -114], [148, 4, -150], [148, 4, -84], 8000, 62, 45),
   { pos: [-85, 42, 15], look: [-166, 45, 143], hold: 1600, fly: 5000, title: "Pagoda Orbit", note: "Curling around the tiered temple roof" },
   ..._beat("Balcony Fly-by", "Past the neighbours leaning on their balcony", [-47.5, 8.4, 66], [-78, 8.4, 56.4], [-61.3, 8.2, 56.4], [-61.3, 8.2, 56.4], 6500, 55),
   { pos: [-410, 50, -50], look: [-250, 40, 60], hold: 1600, fly: 5200, title: "Palace Mist", note: "Silhouettes of the hall pierce the low fog" },
