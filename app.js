@@ -2423,6 +2423,7 @@ bar.style.width = '100%';
 clearTimeout(stallTimer);
 
 { const q = new URLSearchParams(location.search).get('cam'); if (q) window.__CAMOVR = q.split(',').map(Number); }
+window.__SC = { scene, camera, THREE };
 const PIN_U = (() => { const p = new URLSearchParams(location.search).get('u'); return p === null ? -1 : parseFloat(p); })();
 let start = null;
 let firstFrame = true;
