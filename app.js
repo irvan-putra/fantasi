@@ -24,7 +24,7 @@ async function fetchWithProgress(url, onp) {
 
 const stallTimer = setTimeout(() => $('stall').classList.add('show'), 12000);
 
-const ASSET_V = 'v20m';
+const ASSET_V = 'v20n';
 const manifest = await (await fetch('./manifest.json?' + ASSET_V)).json();
 bar.style.width = '6%';
 const binBuf = await fetchWithProgress('./scene.bin?' + ASSET_V, (f) => { bar.style.width = (6 + f * 84) + '%'; });
@@ -489,28 +489,84 @@ function lmHaloAt(x, y, z, size, hex, opacity) {
   scene.add(new THREE.Points(g, m));
   return m;
 }
-// hero crystal cluster for Crystal Awakening (v20e)
+// hero crystal cluster for Crystal Awakening (v20n: ignition cascade, orbiting shards, sparkles, light pillar)
 {
-  const CX = -88, CZ = -66;
-  const shards = [];
+  const CX = -88, CZ = -66, CY = 140;
+  let csd = 5; const crnd = () => (csd = (csd * 9301 + 49297) & 65535) / 65535;
   const defs = [[0, 0, 58, 9, 0.3], [-12, 4, 38, 6, 1.4], [11, -6, 44, 7, 2.5], [7, 9, 30, 5, 3.6], [-7, -11, 26, 4.5, 5.0]];
-  const cpal = [[0.45, 0.85, 1.0], [0.62, 0.62, 1.0], [0.9, 0.96, 1.0], [0.5, 0.95, 0.92], [0.78, 0.7, 1.0]];
+  const chues = [0.52, 0.66, 0.58, 0.45, 0.72];
+  const heroGrp = new THREE.Group();
+  heroGrp.position.set(CX, CY, CZ);
+  const shardMats = [];
   for (let di = 0; di < defs.length; di++) {
     const [x, z, h, r, ry] = defs[di];
     const o = new THREE.OctahedronGeometry(r, 0);
     o.scale(1, h / (r * 2), 1); o.rotateY(ry); o.translate(x, h * 0.5, z);
-    shards.push({ g: o, c: cpal[di % cpal.length] });
+    const m = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    m.toneMapped = false;
+    shardMats.push(m);
+    heroGrp.add(new THREE.Mesh(o, m));
   }
-  const cm = new THREE.MeshBasicMaterial({ vertexColors: true });
-  cm.toneMapped = false;
-  const hero = new THREE.Mesh(mergeGeos(shards), cm);
-  hero.position.set(CX, 140, CZ);
-  scene.add(hero);
-  lmHaloAt(CX, 172, CZ, 90, 0x7fd8ff, 0.55);
-  lmHaloAt(CX, 148, CZ, 50, 0xb48aff, 0.4);
+  scene.add(heroGrp);
+  const ringGrp = new THREE.Group();
+  ringGrp.position.set(CX, CY + 26, CZ);
+  const ringMats = [];
+  for (let i = 0; i < 9; i++) {
+    const o = new THREE.OctahedronGeometry(1.1 + (i % 3) * 0.5, 0); o.scale(1, 2.2, 1);
+    const m = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.9 });
+    m.toneMapped = false; ringMats.push(m);
+    const mm = new THREE.Mesh(o, m);
+    const an = i * 0.698, rad = 24 + (i % 3) * 7;
+    mm.position.set(Math.cos(an) * rad, Math.sin(i * 2.1) * 14, Math.sin(an) * rad);
+    mm.rotation.y = an * 2.3;
+    ringGrp.add(mm);
+  }
+  scene.add(ringGrp);
+  const spN = 90, spPos = new Float32Array(spN * 3);
+  for (let i = 0; i < spN; i++) {
+    const an = crnd() * 6.283, rad = 12 + crnd() * 38;
+    spPos[i * 3] = CX + Math.cos(an) * rad;
+    spPos[i * 3 + 1] = CY - 6 + crnd() * 70;
+    spPos[i * 3 + 2] = CZ + Math.sin(an) * rad;
+  }
+  const spGeo = new THREE.BufferGeometry();
+  spGeo.setAttribute('position', new THREE.BufferAttribute(spPos, 3));
+  const spMat = new THREE.PointsMaterial({ size: 5, map: haloTex, color: 0xaee8ff, transparent: true, opacity: 0.3, depthWrite: false, blending: THREE.AdditiveBlending });
+  spMat.toneMapped = false;
+  const sparks = new THREE.Points(spGeo, spMat);
+  scene.add(sparks);
+  const pilGeo = new THREE.CylinderGeometry(2.2, 6, 300, 8, 1, true);
+  const pilMat = new THREE.MeshBasicMaterial({ color: 0x9fe4ff, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
+  pilMat.toneMapped = false;
+  const pillar = new THREE.Mesh(pilGeo, pilMat);
+  pillar.position.set(CX, CY + 120, CZ);
+  scene.add(pillar);
+  const haloA = lmHaloAt(CX, CY + 32, CZ, 110, 0x7fd8ff, 0.55);
+  const haloB = lmHaloAt(CX, CY + 8, CZ, 60, 0xb48aff, 0.4);
   lmTickers.push((t, phase) => {
-    hero.rotation.y = t * 0.12;
-    cm.color.setScalar(0.75 + 0.25 * Math.sin(t * 1.7) + phase * 0.3);
+    const u = (window.__U !== undefined) ? window.__U : 0;
+    // ignition window: facets ignite in cascade as the camera settles into the beat (pure function of u)
+    const r0 = Math.min(Math.max((u - 0.872) / 0.014, 0), 1);
+    const r1 = Math.min(Math.max((0.932 - u) / 0.014, 0), 1);
+    const sm = (v) => v * v * (3 - 2 * v);
+    const ignite = sm(r0) * sm(r1);
+    heroGrp.rotation.y = t * 0.12;
+    for (let i = 0; i < shardMats.length; i++) {
+      const cas = Math.min(Math.max(ignite * 1.8 - i * 0.22, 0), 1);
+      const lum = 0.28 + cas * 0.5 + 0.07 * Math.sin(t * 2.1 + i * 1.7);
+      shardMats[i].color.setHSL((chues[i] + 0.05 * Math.sin(t * 0.6 + i) + 1) % 1, 0.85, Math.min(lum, 0.85));
+    }
+    ringGrp.rotation.y = -t * 0.21;
+    ringGrp.position.y = CY + 26 + Math.sin(t * 0.5) * 4;
+    for (let i = 0; i < ringMats.length; i++) {
+      ringMats[i].opacity = 0.3 + ignite * 0.6;
+      ringMats[i].color.setHSL((chues[i % chues.length] + 0.06 * Math.sin(t * 0.8 + i * 2.0) + 1) % 1, 0.9, 0.5 + ignite * 0.28);
+    }
+    spMat.opacity = 0.10 + ignite * 0.5 + 0.06 * Math.sin(t * 3.1);
+    sparks.rotation.y = t * 0.05;
+    pilMat.opacity = ignite * (0.20 + 0.06 * Math.sin(t * 2.3));
+    haloA.opacity = 0.28 + ignite * 0.45;
+    haloB.opacity = 0.20 + ignite * 0.38;
   });
 }
 // upturned-eave roof: squashed cone + rim ring
@@ -606,11 +662,11 @@ function lmPagoda(PX, PZ, tiers, baseW, baseH) {
     const b = new THREE.BoxGeometry(w, segH, w); b.translate(PX, y + segH / 2, PZ);
     parts.push({ g: b, c: body });
     y += segH;
-    for (const r of lmEaveRoof(w * 0.95, segH * 0.42, 0.05)) { r.g.translate(PX, y + segH * 0.18, PZ); parts.push(r); }
-    y += segH * 0.34;
+    for (const r of lmEaveRoof(w * 1.32, segH * 0.6, 0.06)) { r.g.translate(PX, y + segH * 0.22, PZ); parts.push(r); }
+    y += segH * 0.42;
     w *= 0.82;
   }
-  const fin = new THREE.ConeGeometry(1.6, 9, 6); fin.translate(PX, y + 5, PZ);
+  const fin = new THREE.ConeGeometry(1.8, 13, 6); fin.translate(PX, y + 7, PZ);
   parts.push({ g: fin, c: [1.0, 0.75, 0.3] });
   scene.add(new THREE.Mesh(mergeGeos(parts), mat));
   // glowing window band per tier
@@ -621,11 +677,11 @@ function lmPagoda(PX, PZ, tiers, baseW, baseH) {
     const band = new THREE.BoxGeometry(ww * 0.72, segH * 0.3, ww * 0.72);
     band.translate(PX, wy + segH * 0.55, PZ);
     wins.push({ g: band, c: [1.0, 0.72, 0.3] });
-    wy += segH * 1.34; ww *= 0.82;
+    wy += segH * 1.42; ww *= 0.82;
   }
   const wm = lmBasic(0xffffff);
   scene.add(new THREE.Mesh(mergeGeos(wins), wm));
-  lmHaloAt(PX, wy + 6, PZ, 26, 0xffc46e, 0.65);
+  lmHaloAt(PX, wy + 10, PZ, 30, 0xffc46e, 0.65);
   lmTickers.push((t, phase) => { wm.color.setScalar(0.25 + phase * 0.75); });
   return { top: wy };
 }
@@ -1454,11 +1510,13 @@ function tickDragons(t, u) {
     const z = cz + Math.sin(a) * rr * 0.8;
     const y = d.h + Math.sin(TAU * 6 * u + d.ph) * d.amp * (1 - chase * 0.3);
     d.grp.position.set(x, y, z);
-    // never let a dragon fill or block the camera lens (Irvan 9:41 PM)
+    // screen-space rule (Irvan 8:46 AM): a dragon never fills more than ~16 deg of the
+    // view on any beat: push it out along the view ray until its angular size fits.
     const cdx = x - camera.position.x, cdy = y - camera.position.y, cdz = z - camera.position.z;
-    const cd2 = cdx * cdx + cdy * cdy + cdz * cdz;
-    if (cd2 < 16900) {
-      const s = 130 / (Math.sqrt(cd2) || 1);
+    const cd = Math.sqrt(cdx * cdx + cdy * cdy + cdz * cdz) || 1;
+    const minD = Math.max(130, 85 / Math.tan(8 * Math.PI / 180)); // 130-unit floor + angular cap (~604u)
+    if (cd < minD) {
+      const s = minD / cd;
       d.grp.position.set(camera.position.x + cdx * s, camera.position.y + cdy * s, camera.position.z + cdz * s);
     }
     const na = a + 0.02 * Math.sign(d.loops);
@@ -1683,7 +1741,7 @@ const KEYS = [
   { pos: [-160, 130, 260], look: [740, 14, 450], hold: 1500, fly: 5400, title: "Water Reveal", note: "Rising over the glowing canals for the reveal" },
   { pos: [370, 85, 300], look: [740, 15, 460], hold: 1600, fly: 5200, title: "Magic Harbor", note: "The beacon sweeps across shimmering water" },
   { pos: [350, 120, 150], look: [560, 95, 350], hold: 1500, fly: 5000, title: "Dragon Lanes", note: "A dragon's wake stirs the festival lights" },
-  { pos: [60, 190, -160], look: [-88, 150, -66], hold: 1600, fly: 5200, title: "Crystal Awakening", note: "Facets ignite in cascades of electric light" },
+  { pos: [100, 120, -190], look: [-88, 155, -66], hold: 1600, fly: 5200, title: "Crystal Awakening", note: "Facets ignite in cascades of electric light" },
   { pos: [-820, 330, -760], look: [22, 90, 33], hold: 2000, fly: 6000, title: "Grand Astral Night", note: "The city breathes under a canopy of stars" },
 ];
 const LOOP_MS = KEYS.reduce((a, k) => a + k.fly + k.hold, 0);
