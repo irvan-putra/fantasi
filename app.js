@@ -1863,7 +1863,7 @@ const KEYS = [
   { pos: [30, 30, -350], look: [128, 30, -214], hold: 2200, fly: 4800, title: "Gate of Lanterns", note: "Under the great gate, into the festival" },
   // v23by: Market Street Walk and Lantern Lane merged into one orbit around the market junction (150,-150): comfortable height, natural scattered crowd below
   ...[90, 45, 0, -45, -90, -135, -180].map((d, i) => { const th = d * Math.PI / 180; return { pos: [150 + 70 * Math.cos(th), 76, -150 + 70 * Math.sin(th)], look: i === 6 ? [64, 50, -60] : i === 0 ? [150, 30, -150] : [150, 16, -150], hold: 0, fly: 3000, lift: 0, title: "Market Life Orbit", note: "Circling the market: stalls, lanterns and folk gathering" }; }),
-  { pos: [148, 64, -84], look: [60, 45, -10], hold: 0, fly: 5200, lift: 45, title: "Market Life Orbit", note: "Circling the market: stalls, lanterns and folk gathering" },
+  { pos: [148, 92, -84], look: [60, 50, -10], hold: 0, fly: 5200, lift: 45, title: "Market Life Orbit", note: "Circling the market: stalls, lanterns and folk gathering" },
   { pos: [-85, 42, 15], look: [-166, 45, 143], hold: 1600, fly: 5000, title: "Pagoda Orbit", note: "Curling around the tiered temple roof" },
   { pos: [-410, 50, -50], look: [-250, 62, 60], hold: 1600, fly: 5200, title: "Palace Mist", note: "Silhouettes of the hall pierce the low fog" },
   ..._beat("Giant of the Lanes", "A giant looms over the lane", [166, 17, 184], [166, 17, 210], [188.6, 10.8, 196.7], [188.6, 10.8, 196.7], 6500, 34, 0, 0),
