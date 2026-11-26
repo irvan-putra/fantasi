@@ -2256,7 +2256,8 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
   // route test: sample the whole camera loop; a sample is inside a building when a roof is above it, near a wall when <1.5 m from one
   const camTest = (step = 40) => { const out = { samples: 0, inside: 0, nearWall: 0, bad: [] }; let last = -1e9;
     for (let ms = 0; ms < LOOP_MS; ms += step) { const p = camAt(ms).pos; out.samples++;
-      const r = roofAt(p[0], p[2]); const inside = r >= 0 && p[1] < r + 0.5; const w = p[1] < 120 ? wallNear(p[0], p[2])[0] : 1e9; const near = !inside && w < 1.5 && r >= 0 ? true : false;
+      const r = roofAt(p[0], p[2]); const inside = r >= 0 && p[1] < r + 0.5; let near = false;
+      if (!inside) for (let a = 0; a < 8 && !near; a++) { const rr = roofAt(p[0] + Math.cos(a * 0.785) * 1.8, p[2] + Math.sin(a * 0.785) * 1.8); if (rr >= 0 && p[1] < rr + 0.3) near = true; }
       if (inside) out.inside++; if (near) out.nearWall++;
       if ((inside || near) && ms - last > 400) { out.bad.push([Math.round(ms), +p[0].toFixed(0), +p[1].toFixed(0), +p[2].toFixed(0), inside ? 'inside' : 'wall']); last = ms; } }
     return out; };
