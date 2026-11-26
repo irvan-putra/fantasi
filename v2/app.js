@@ -1846,9 +1846,9 @@ function tickCrowd(t) {
 const KEYS = [
   { pos: [-1305.9, 520, -1459.1], look: [22.13, 60, 33.16], hold: 2600, fly: 5000, title: "Dusk Horizon", note: "Amber light dissolves into the first twilight shadows" },
   { pos: [-520, 130, -820], look: [22, 50, 33], hold: 1500, fly: 5200, title: "The High Descent", note: "Sliding down toward the glowing realm" },
-  { pos: [-40, 60, 160], look: [22, 45, -60], hold: 1400, fly: 5000, title: "Twin Spire Dive", note: "Diving straight between the matched towers of light" },
+  { pos: [-40, 60, 160], look: [22, 45, -60], hold: 1400, fly: 5000, lift: 55, title: "Twin Spire Dive", note: "Diving straight between the matched towers of light" },
   { pos: [30, 30, -350], look: [128, 30, -214], hold: 2200, fly: 4800, title: "Gate of Lanterns", note: "Under the great gate, into the festival" },
-  { pos: [128, 66, -62], look: [185, 22, -140], hold: 2000, fly: 5000, title: "Star Market Life", note: "Vendors weave through drifting sky lanterns" },
+  { pos: [128, 66, -62], look: [185, 22, -140], hold: 2000, fly: 5000, lift: 42, title: "Star Market Life", note: "Vendors weave through drifting sky lanterns" },
   { pos: [-85, 42, 15], look: [-166, 45, 143], hold: 1600, fly: 5000, title: "Pagoda Orbit", note: "Curling around the tiered temple roof" },
   { pos: [-410, 50, -50], look: [-250, 40, 60], hold: 1600, fly: 5200, title: "Palace Mist", note: "Silhouettes of the hall pierce the low fog" },
   { pos: [-160, 130, 260], look: [740, 14, 450], hold: 1500, fly: 5400, title: "Water Reveal", note: "Rising over the glowing canals for the reveal" },
@@ -1871,7 +1871,7 @@ function camAt(ms) {
       // title belongs to what the camera actually shows: keep the current
       // scene's key until the fly is ~70% done, then name the destination
       const raw = (t - fs) / k.fly;
-      return { pos: _mix3(k.pos, nx.pos, f), look: _mix3(k.look, nx.look, f), keyIdx: raw < 0.7 ? i : (i + 1) % N };
+      return { pos: (() => { const p = _mix3(k.pos, nx.pos, f); p[1] += (k.lift || 0) * Math.sin(Math.PI * f); return p; })(), look: _mix3(k.look, nx.look, f), keyIdx: raw < 0.7 ? i : (i + 1) % N };
     }
     if (t >= fs + k.fly && t < fs + k.fly + k.hold) {
       return { pos: nx.pos.slice(), look: nx.look.slice(), keyIdx: (i + 1) % N };
