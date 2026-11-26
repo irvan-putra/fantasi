@@ -1972,7 +1972,7 @@ const Score = (() => {
       if (running) return;
       if (!ensure()) return;
       if (ctx.state === 'suspended') ctx.resume();
-      running = true;
+      running = true; Score.t0 = performance.now();
       playTrack();
       master.gain.cancelScheduledValues(ctx.currentTime);
       master.gain.linearRampToValueAtTime(0.9, ctx.currentTime + 2.0);
@@ -2005,7 +2005,7 @@ const Score = (() => {
 let soundWanted = true;
 $('sound').addEventListener('click', (e) => {
   e.stopPropagation();
-  if (soundWanted && Score.running && Score.debug().state !== 'running') { Score.wake(); return; } // v22m: a tap while the context is still suspended unlocks audio, it does not mute
+  if (soundWanted && Score.running && (Score.debug().state !== 'running' || performance.now() - (Score.t0 || 0) < 1500)) { Score.wake(); return; } // v22m: a tap while the context is still suspended unlocks audio, it does not mute
   soundWanted = !soundWanted;
   if (soundWanted) { Score.start(); Score.wake(); } else Score.stop();
 });
@@ -2055,27 +2055,26 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
   };
   const cone = (r, h, s = 6) => new THREE.ConeGeometry(r, h, s);
   const cyl = (rt, rb, h, s = 6) => new THREE.CylinderGeometry(rt, rb, h, s);
-  const ball = (r) => new THREE.SphereGeometry(r, 6, 4);
+  const ball = (r) => new THREE.SphereGeometry(r, 5, 3);
   const SKIN = [0xf2c7a0, 0xd9a273, 0xb57a4e, 0x8a5a38];
   // units: 1 = about 1.8 m human; the whole thing is scaled up so figures read at festival distances
   const BUILD = {
     human(v) {
       const cloth = [0xd9534f, 0x3a86c8, 0x5aa469, 0xe0a030, 0x8e5cc4][v % 5], skin = SKIN[v % 4];
-      return merge([part(cone(0.34, 1.25, 6), cloth, 0, 0.62), part(ball(0.2), skin, 0, 1.45),
-        part(cyl(0.07, 0.07, 0.8, 4), cloth, -0.32, 0.9, 0, 0, 0.35), part(cyl(0.07, 0.07, 0.8, 4), cloth, 0.32, 0.9, 0, 0, -0.35)]);
+      return merge([part(cone(0.34, 1.25, 6), cloth, 0, 0.62), part(ball(0.2), skin, 0, 1.45)]);
     },
     elf(v) {
       const cloth = [0x2f9e8f, 0x7fc86a, 0xc8d6ff, 0x9b7fe0, 0xe8e0a0][v % 5], skin = [0xf3ddc4, 0xe6c8a8, 0xd8b896][v % 3];
       const hair = [0xf4ecc0, 0xc8c8d8, 0x6b4a2a, 0xf0a0c0][v % 4];
       return merge([part(cone(0.24, 1.7, 6), cloth, 0, 0.85), part(ball(0.17), skin, 0, 1.95),
         part(cone(0.1, 0.55, 4), skin, -0.36, 2.1, 0, 0, 1.2), part(cone(0.1, 0.55, 4), skin, 0.36, 2.1, 0, 0, -1.2),
-        part(cone(0.22, 0.5, 5), hair, 0, 2.12, -0.02), part(cone(0.3, 1.4, 4), cloth, 0, 0.95, -0.22, 0.12)]);
+        part(cone(0.22, 0.5, 4), hair, 0, 2.12, -0.02)]);
     },
     dwarf(v) {
       const cloth = [0x8a4b2a, 0x5a6b7a, 0xa85a2a, 0x6a3a3a][v % 4], beard = [0xc06a2a, 0x8a8a8a, 0x3a2a1a, 0xd8b060][v % 4];
       return merge([part(cyl(0.52, 0.56, 0.62, 6), cloth, 0, 0.31), part(ball(0.3), SKIN[(v + 1) % 4], 0, 0.82),
-        part(cone(0.34, 0.62, 5), beard, 0, 0.5, 0.2, Math.PI), part(new THREE.SphereGeometry(0.34, 6, 3, 0, Math.PI * 2, 0, Math.PI / 2), 0x7a7f88, 0, 0.9),
-        part(cyl(0.09, 0.09, 0.7, 4), 0x6a4a2a, 0.62, 0.55, 0), part(cyl(0.2, 0.2, 0.12, 5), 0x888888, 0.62, 0.95, 0, 0, Math.PI / 2)]);
+        part(cone(0.34, 0.62, 5), beard, 0, 0.5, 0.2, Math.PI), part(new THREE.SphereGeometry(0.34, 5, 2, 0, Math.PI * 2, 0, Math.PI / 2), 0x7a7f88, 0, 0.9),
+        part(cyl(0.09, 0.09, 0.7, 4), 0x6a4a2a, 0.62, 0.55, 0), part(cyl(0.2, 0.2, 0.12, 4), 0x888888, 0.62, 0.95, 0, 0, Math.PI / 2)]);
     },
     giant(v) {
       const cloth = [0x6a5a48, 0x4a6a58, 0x6a4a58][v % 3], skin = [0xb09070, 0x90a080, 0xa08878][v % 3];
@@ -2116,13 +2115,15 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
       const fy = Math.max(3.4, Math.floor(cy / 3.4) * 3.4);
       balc.push([cx + nx * 1.3, fy, cz + nz * 1.3, Math.atan2(nx, nz)]); } }
   const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = (rnd() * (i + 1)) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
-  shuffle(ground); shuffle(roofs); shuffle(balc);
+  // v23d: market crowd clusters from the manifest get real folk too
+  { const cr = manifest.crowd; const extra = []; for (const p of cr) for (let j = 0; j < 3; j++) extra.push([p[0] + (rnd() - 0.5) * 7, 0.5, p[1] + (rnd() - 0.5) * 7]); shuffle(extra); ground.unshift(...extra); }
+  shuffle(roofs); shuffle(balc);
   // v23b: favour spots the camera can actually see (within ~230 m of a low camera key), the rest fill in behind
   { const seen = camPts.filter((p) => p[1] < 150); const dnear = (s) => { let d = 1e9; for (const p of seen) { const dx = p[0] - s[0], dz = p[2] - s[2], dy = p[1] - s[1]; const q = dx * dx + dz * dz + dy * dy * 0.3; if (q < d) d = q; } return d; };
     for (const pool of [ground, roofs, balc]) { const a = [], b = []; for (const s of pool) (dnear(s) < 230 * 230 ? a : b).push(s); pool.length = 0; pool.push(...a, ...b); } }
   // ---- plan: [race, where, count]
-  const PLAN = [['human', 'g', 620], ['human', 'b', 330], ['human', 'r', 330], ['elf', 'r', 170], ['elf', 'b', 150], ['elf', 'g', 100],
-    ['dwarf', 'g', 240], ['dwarf', 'b', 70], ['dwarf', 'r', 50], ['giant', 'g', 40]];
+  const PLAN = [['human', 'g', 880], ['human', 'b', 330], ['human', 'r', 330], ['elf', 'r', 170], ['elf', 'b', 150], ['elf', 'g', 150],
+    ['dwarf', 'g', 330], ['dwarf', 'b', 70], ['dwarf', 'r', 50], ['giant', 'g', 40]];
   const pools = { g: ground, b: balc, r: roofs }; const cur = { g: 0, b: 0, r: 0 };
   const items = []; // {race, v, x,y,z, yaw, ph, kind}
   for (const [race, w, cnt] of PLAN) {
