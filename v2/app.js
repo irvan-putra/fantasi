@@ -2058,7 +2058,7 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
         part(cyl(0.12, 0.2, 2.4, 5), 0x5a3f28, 1.35, 1.3, 0.2, 0, -0.1)]);
     },
   };
-  const SC = { human: 2.1, elf: 2.1, dwarf: 2.1, giant: 3.5 }; // world scale per unit (giants ~ 2.7x humans' height with bulk)
+  const SC = { human: 2.6, elf: 2.6, dwarf: 2.6, giant: 4.5 }; // world scale per unit (giants ~ 2.7x humans' height with bulk)
   const meshes = {}; const lamb = [];
   const caps = { human: [0, 0], elf: [0, 0], dwarf: [0, 0], giant: [0, 0] };
   // ---- spots
@@ -2072,9 +2072,9 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
   { const n = rf.length / 3;
     for (let i = 0; i < n; i++) { const x = rf[i * 3], y = rf[i * 3 + 1], z = rf[i * 3 + 2]; if (Math.abs(x) > LIM || Math.abs(z) > LIM) continue;
       const kk = Math.round(x / RC) + ':' + Math.round(z / RC); let c = rcell.get(kk); if (!c) { c = { sx: 0, sz: 0, n: 0 }; rcell.set(kk, c); } c.sx += x; c.sz += z; c.n++;
-      if (y >= 9 && y <= 95 && rnd() < 0.012) roofs.push([x, y, z]); } }
+      if (y >= 9 && y <= 95 && rnd() < 0.04) roofs.push([x, y, z]); } }
   { const wp = sec('walls_pos'), wi = sec('walls_idx'); const nt = wi.length / 3;
-    for (let t = 0; t < nt && balc.length < 1500; t++) { if (rnd() > 0.02) continue;
+    for (let t = 0; t < nt && balc.length < 3500; t++) { if (rnd() > 0.07) continue;
       const a = wi[t * 3] * 3, b = wi[t * 3 + 1] * 3, c = wi[t * 3 + 2] * 3;
       const cx = (wp[a] + wp[b] + wp[c]) / 3, cy = (wp[a + 1] + wp[b + 1] + wp[c + 1]) / 3, cz = (wp[a + 2] + wp[b + 2] + wp[c + 2]) / 3;
       if (Math.abs(cx) > LIM || Math.abs(cz) > LIM || cy < 7 || cy > 70) continue;
@@ -2091,9 +2091,12 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
       balc.push([cx + nx * 1.3, fy, cz + nz * 1.3, Math.atan2(nx, nz)]); } }
   const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = (rnd() * (i + 1)) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
   shuffle(ground); shuffle(roofs); shuffle(balc);
+  // v23b: favour spots the camera can actually see (within ~230 m of a low camera key), the rest fill in behind
+  { const seen = camPts.filter((p) => p[1] < 150); const dnear = (s) => { let d = 1e9; for (const p of seen) { const dx = p[0] - s[0], dz = p[2] - s[2], dy = p[1] - s[1]; const q = dx * dx + dz * dz + dy * dy * 0.3; if (q < d) d = q; } return d; };
+    for (const pool of [ground, roofs, balc]) { const a = [], b = []; for (const s of pool) (dnear(s) < 230 * 230 ? a : b).push(s); pool.length = 0; pool.push(...a, ...b); } }
   // ---- plan: [race, where, count]
-  const PLAN = [['human', 'g', 680], ['human', 'b', 300], ['human', 'r', 300], ['elf', 'r', 150], ['elf', 'b', 130], ['elf', 'g', 110],
-    ['dwarf', 'g', 260], ['dwarf', 'b', 60], ['dwarf', 'r', 40], ['giant', 'g', 36]];
+  const PLAN = [['human', 'g', 620], ['human', 'b', 330], ['human', 'r', 330], ['elf', 'r', 170], ['elf', 'b', 150], ['elf', 'g', 100],
+    ['dwarf', 'g', 240], ['dwarf', 'b', 70], ['dwarf', 'r', 50], ['giant', 'g', 40]];
   const pools = { g: ground, b: balc, r: roofs }; const cur = { g: 0, b: 0, r: 0 };
   const items = []; // {race, v, x,y,z, yaw, ph, kind}
   for (const [race, w, cnt] of PLAN) {
@@ -2111,7 +2114,7 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
   // ---- ledges (small balcony slabs)
   const ledgeSpots = items.filter((o) => o.w === 'b');
   const ledgeMat = new THREE.MeshLambertMaterial({ color: 0x6a5a4c, emissive: 0x2a2018, emissiveIntensity: 1.0 }); lamb.push(ledgeMat);
-  const ledge = new THREE.InstancedMesh(new THREE.BoxGeometry(3.6, 0.4, 2.8), ledgeMat, Math.max(1, ledgeSpots.length));
+  const ledge = new THREE.InstancedMesh(new THREE.BoxGeometry(4.6, 0.5, 3.4), ledgeMat, Math.max(1, ledgeSpots.length));
   // ---- meshes per race x variant
   const dummy = new THREE.Object3D();
   const slots = {};
