@@ -1859,11 +1859,11 @@ const _beat = (title, note, a0, b0, look0, look1, walk, H = 62, lift = 0, back =
 const KEYS = [
   { pos: [-1305.9, 520, -1459.1], look: [22.13, 60, 33.16], hold: 2600, fly: 5000, title: "Dusk Horizon", note: "Amber light dissolves into the first twilight shadows" },
   { pos: [-520, 130, -820], look: [22, 50, 33], hold: 1500, fly: 5200, title: "The High Descent", note: "Sliding down toward the glowing realm" },
-  { pos: [16, 60, 160], look: [22, 45, -60], hold: 1400, fly: 5000, lift: 36, title: "Twin Spire Dive", note: "Diving straight between the matched towers of light" },
+  { pos: [16, 60, 160], look: [22, 45, -60], hold: 1400, fly: 5000, lift: 26, title: "Twin Spire Dive", note: "Diving straight between the matched towers of light" },
   { pos: [30, 30, -350], look: [128, 30, -214], hold: 2200, fly: 4800, title: "Gate of Lanterns", note: "Under the great gate, into the festival" },
   { pos: [128, 66, -62], look: [185, 22, -140], hold: 2000, fly: 5000, lift: 42, title: "Star Market Life", note: "Vendors weave through drifting sky lanterns" },
   // v23by: Market Street Walk and Lantern Lane merged into one orbit around the market junction (150,-150): comfortable height, natural scattered crowd below
-  ...[90, 45, 0, -45, -90, -135, -180].map((d, i) => { const th = d * Math.PI / 180; return { pos: [150 + 38 * Math.cos(th), 40, -150 + 38 * Math.sin(th)], look: [150, 4, -150], hold: 0, fly: i === 0 ? 4200 : 3000, title: "Market Life Orbit", note: "Circling the market: stalls, lanterns and folk gathering" }; }),
+  ...[90, 45, 0, -45, -90, -135, -180].map((d, i) => { const th = d * Math.PI / 180; return { pos: [150 + 42 * Math.cos(th), 44, -150 + 42 * Math.sin(th)], look: [150, 5, -150], hold: 0, fly: i === 0 ? 4200 : 3000, lift: i === 6 ? 50 : 0, title: "Market Life Orbit", note: "Circling the market: stalls, lanterns and folk gathering" }; }),
   { pos: [-85, 42, 15], look: [-166, 45, 143], hold: 1600, fly: 5000, title: "Pagoda Orbit", note: "Curling around the tiered temple roof" },
   { pos: [-410, 50, -50], look: [-250, 62, 60], hold: 1600, fly: 5200, title: "Palace Mist", note: "Silhouettes of the hall pierce the low fog" },
   ..._beat("Giant of the Lanes", "A giant looms over the lane", [166, 17, 184], [166, 17, 210], [188.6, 10.8, 196.7], [188.6, 10.8, 196.7], 6500, 34, 0, 0),
