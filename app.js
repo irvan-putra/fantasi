@@ -2034,7 +2034,7 @@ window.__SCORE = Score;
 // ---------------- stats chip ----------------
 {
   const c = manifest.counts;
-  $('stats').textContent = `${c.near.toLocaleString('en-US')} enchanted buildings · ${c.lanterns} sky lanterns · 3 dragons · 8 hot air balloons · 1 zeppelin · 1 flying ship · 3 wyvern riders · fireworks · invented, over real streets`;
+  $('stats').textContent = `${c.near.toLocaleString('en-US')} enchanted buildings · ${c.lanterns} sky lanterns · 3 dragons · 8 hot air balloons · 1 zeppelin · 1 flying ship · 3 wyvern riders · fireworks · carts, drum circles, picnics · invented, over real streets`;
 }
 
 // ---------------- folk (v23a): humans, elves, dwarves, giants on streets, balconies, rooftops ----------------
@@ -2435,12 +2435,20 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
         for (let n = 0; n < NP; n++) { const o = (f * NP + n) * 3, d = dirs[n]; fp[o] = c[0] + d[0] * rad; fp[o + 1] = c[1] + d[1] * rad - life * life * 7; fp[o + 2] = c[2] + d[2] * rad; fc[o] = k[0] * fade * 0.7; fc[o + 1] = k[1] * fade * 0.7; fc[o + 2] = k[2] * fade * 0.7; } }
       fg.attributes.position.needsUpdate = true; fg.attributes.color.needsUpdate = true; };
     window.__SKY2 = { sm, wy, fwC }; }
+  // v23aw: ground props - carts, drum circle, picnic blankets with shared food, lantern kids' lamps (static, merged, unlit)
+  { const basic = new THREE.MeshBasicMaterial({ vertexColors: true }), P = [];
+    const cart = (x, z, ry, col) => { const q = []; q.push(part(box(5, 1.4, 3), 0x6a4a2a, 0, 1.9, 0), part(box(5.2, 0.3, 3.2), 0x8a6a3a, 0, 2.7, 0), part(box(5.4, 0.35, 3.4), col, 0, 4.6, 0), part(box(0.25, 1.9, 0.25), 0x5a3a1a, -2.4, 3.6, -1.4), part(box(0.25, 1.9, 0.25), 0x5a3a1a, 2.4, 3.6, 1.4), part(box(0.25, 1.9, 0.25), 0x5a3a1a, -2.4, 3.6, 1.4), part(box(0.25, 1.9, 0.25), 0x5a3a1a, 2.4, 3.6, -1.4)); q.push(part(new THREE.SphereGeometry(0.6, 6, 5), 0xe84a3a, -1, 3.2, 0.5), part(new THREE.SphereGeometry(0.6, 6, 5), 0xf0b030, 0.2, 3.2, -0.4), part(new THREE.SphereGeometry(0.6, 6, 5), 0x8ac040, 1.3, 3.2, 0.6)); for (const [dx, dz] of [[-1.8, 1.7], [1.8, 1.7], [-1.8, -1.7], [1.8, -1.7]]) q.push(part(new THREE.CylinderGeometry(1, 1, 0.3, 10), 0x3a2a1a, dx, 1, dz, Math.PI / 2)); q.push(part(box(2, 0.3, 0.3), 0x5a3a1a, 4.5, 1.2, 0), part(box(1.8, 1.2, 3), 0x9a6a4a, 7, 1.8, 0), part(box(1.4, 0.9, 0.7), 0xe8d8b8, 8.1, 3.2, 0)); const m = merge(q); m.rotateY(ry); m.translate(x, 0.2, z); P.push(m); };
+    const drums = (x, z) => { const q = []; for (let i = 0; i < 5; i++) { const a = i / 5 * TAUx, px = Math.cos(a) * 3.2, pz = Math.sin(a) * 3.2; q.push(part(new THREE.CylinderGeometry(0.8, 0.65, 1.5, 8), [0xc8503a, 0x3a7ac8, 0xe0a030, 0x5ab040, 0xa04ac0][i], px, 1.0, pz), part(new THREE.CylinderGeometry(0.8, 0.8, 0.15, 8), 0xf0e0c0, px, 1.8, pz), part(box(1, 1.1, 0.8), [0x3a8a6a, 0xc84a7a, 0x4a5ac8, 0xc89a3a, 0x7a4ac8][i], px * 1.6, 1.0, pz * 1.6), part(new THREE.SphereGeometry(0.55, 8, 6), 0xe8b890, px * 1.6, 2.1, pz * 1.6)); } q.push(part(new THREE.CylinderGeometry(0.6, 0.9, 0.5, 8), 0xffa030, 0, 0.5, 0), part(new THREE.SphereGeometry(0.7, 6, 5), 0xffd060, 0, 1.1, 0)); const m = merge(q); m.translate(x, 0.1, z); P.push(m); };
+    const picnic = (x, z, ry) => { const q = [part(box(7, 0.12, 5), 0xd04a4a, 0, 0.2, 0), part(box(1.6, 0.12, 5), 0xf0e0c0, 0, 0.3, 0), part(new THREE.SphereGeometry(0.5, 6, 5), 0xf0c030, -1, 0.7, 0.5), part(new THREE.SphereGeometry(0.5, 6, 5), 0x8ac040, 1, 0.7, -0.6), part(box(0.9, 0.5, 0.9), 0xc8803a, 0, 0.6, 0)]; for (const [dx, dz, c] of [[-2.2, -1.6, 0x4a6ac8], [2.2, -1.2, 0xc86a9a], [-2.0, 1.8, 0x3aa87a], [2.4, 1.6, 0xe0a030]]) q.push(part(box(1, 1.1, 0.8), c, dx, 0.9, dz), part(new THREE.SphereGeometry(0.55, 8, 6), 0xe8b890, dx, 1.95, dz)); const m = merge(q); m.rotateY(ry); m.translate(x, 0.1, z); P.push(m); };
+    const TAUx = 6.2832; cart(238, -146, 0, 0xd04a4a); cart(300, -154, Math.PI, 0x3a8ac8); cart(150, -96, Math.PI / 2, 0xe0a030); cart(-170, 150, 0.5, 0x8a4ac8);
+    drums(262, -150); drums(150, -75); picnic(280, -141, 0.3); picnic(130, -108, 0.8); picnic(-150, 140, 0.2);
+    const pm = new THREE.Mesh(merge(P), basic); pm.frustumCulled = false; scene.add(pm); window.__PROPS = pm; }
   window.__FOLK = { groundTest, camAt, LOOP_MS, KEYS, lanes, items, roofAt, wallNear, clipTest, camTest, counts: FOLK_COUNT, pools: { ground: ground.length, roofs: roofs.length, balconies: balc.length }, total: items.length };
 }
 function tickFolk(t, phase) { if (folkTick) folkTick(t, phase); }
 {
   const c = FOLK_COUNT; const tot = c.human + c.elf + c.dwarf + c.giant;
-  $('stats').textContent = `${manifest.counts.near.toLocaleString('en-US')} enchanted buildings · ${tot.toLocaleString('en-US')} folk (humans, elves, dwarves, giants) · ${manifest.counts.lanterns} sky lanterns · 3 dragons · 8 hot air balloons · 1 zeppelin · 1 flying ship · 3 wyvern riders · fireworks · invented, over real streets`;
+  $('stats').textContent = `${manifest.counts.near.toLocaleString('en-US')} enchanted buildings · ${tot.toLocaleString('en-US')} folk (humans, elves, dwarves, giants) · ${manifest.counts.lanterns} sky lanterns · 3 dragons · 8 hot air balloons · 1 zeppelin · 1 flying ship · 3 wyvern riders · fireworks · carts, drum circles, picnics · invented, over real streets`;
 }
 
 // ---------------- run ----------------
