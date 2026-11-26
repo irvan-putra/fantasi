@@ -1915,8 +1915,10 @@ const Score = (() => {
     if (!AC) return false;
     ctx = new AC();
     master = ctx.createGain(); master.gain.value = 0.0; master.connect(ctx.destination);
-    const filt = ctx.createBiquadFilter(); filt.type = 'lowpass'; filt.frequency.value = 320; filt.Q.value = 0.4; filt.connect(master);
-    for (const [f, g] of [[110, 0.05], [130.81, 0.035], [164.81, 0.03]]) {
+    const filt = ctx.createBiquadFilter(); filt.type = 'lowpass'; filt.frequency.value = 700; filt.Q.value = 0.4; filt.connect(master);
+    // v22m: phone speakers cannot reproduce 110-165 Hz, so the old pad was inaudible on a Galaxy A24;
+    // add a 220-440 Hz layer and lift the pad gains (Irvan 2:05 PM: "i can't hear the sounds")
+    for (const [f, g] of [[110, 0.08], [130.81, 0.06], [164.81, 0.05], [220, 0.07], [329.63, 0.05], [440, 0.03]]) {
       const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = f;
       o.detune.value = (Math.random() * 8) - 4;
       const og = ctx.createGain(); og.gain.value = g;
@@ -1935,7 +1937,7 @@ const Score = (() => {
     const g = ctx.createGain();
     const t = ctx.currentTime;
     g.gain.setValueAtTime(0.0, t);
-    g.gain.linearRampToValueAtTime(0.05 + brightness * 0.03, t + 0.06);
+    g.gain.linearRampToValueAtTime(0.16 + brightness * 0.06, t + 0.06);
     g.gain.exponentialRampToValueAtTime(0.0001, t + 2.2);
     o.connect(g); g.connect(master); o.start(t); o.stop(t + 2.4);
     chimeTimer = setTimeout(chime, 2200 + Math.random() * 2200 - brightness * 700);
@@ -1948,7 +1950,7 @@ const Score = (() => {
       if (ctx.state === 'suspended') ctx.resume();
       running = true;
       master.gain.cancelScheduledValues(ctx.currentTime);
-      master.gain.linearRampToValueAtTime(0.5, ctx.currentTime + 2.5);
+      master.gain.linearRampToValueAtTime(0.9, ctx.currentTime + 2.0);
       chime();
       document.getElementById('sound').textContent = '\u{1F50A}';
     },
@@ -1961,24 +1963,34 @@ const Score = (() => {
     },
     nightfall(frac) {
       brightness = Math.max(0, Math.min(1, frac));
-      if (this._filt) this._filt.frequency.setTargetAtTime(320 + brightness * 900, ctx ? ctx.currentTime : 0, 1.5);
+      if (this._filt) this._filt.frequency.setTargetAtTime(700 + brightness * 900, ctx ? ctx.currentTime : 0, 1.5);
     },
     duck(f) {
       if (!running || !ctx || !master) return;
-      master.gain.setTargetAtTime(0.5 * Math.max(0, Math.min(1, f)), ctx.currentTime, 0.35);
+      master.gain.setTargetAtTime(0.9 * Math.max(0, Math.min(1, f)), ctx.currentTime, 0.35);
     },
     get running() { return running; },
+    // v22m: Chrome on Android only counts pointerup/touchend/click as an audio-unlocking gesture
+    // (pointerdown with touch does not), so the context stayed suspended while the icon said on.
+    wake() { if (ctx && ctx.state !== 'running') ctx.resume(); },
+    debug() { return { state: ctx ? ctx.state : 'none', running, gain: master ? +master.gain.value.toFixed(3) : null, t: ctx ? +ctx.currentTime.toFixed(2) : null }; },
   };
 })();
 let soundWanted = true;
 $('sound').addEventListener('click', (e) => {
   e.stopPropagation();
+  if (soundWanted && Score.running && Score.debug().state !== 'running') { Score.wake(); return; } // v22m: a tap while the context is still suspended unlocks audio, it does not mute
   soundWanted = !soundWanted;
-  if (soundWanted) Score.start(); else Score.stop();
+  if (soundWanted) { Score.start(); Score.wake(); } else Score.stop();
 });
 const unlock = () => { if (soundWanted && !Score.running) Score.start(); };
 addEventListener('pointerdown', unlock, { once: true });
 addEventListener('keydown', unlock, { once: true });
+// v22m: every real gesture re-tries resume(); the first pointerdown on touch cannot unlock audio
+for (const ev of ['pointerup', 'touchend', 'click', 'keydown']) {
+  addEventListener(ev, () => { if (soundWanted) { if (!Score.running) Score.start(); Score.wake(); } }, { passive: true });
+}
+window.__SCORE = Score;
 
 // ---------------- stats chip ----------------
 {
