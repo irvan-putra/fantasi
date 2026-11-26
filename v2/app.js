@@ -24,7 +24,7 @@ async function fetchWithProgress(url, onp) {
 
 const stallTimer = setTimeout(() => $('stall').classList.add('show'), 12000);
 
-const ASSET_V = 'v20p';
+const ASSET_V = 'v20q';
 const manifest = await (await fetch('./manifest.json?' + ASSET_V)).json();
 bar.style.width = '6%';
 const binBuf = await fetchWithProgress('./scene.bin?' + ASSET_V, (f) => { bar.style.width = (6 + f * 84) + '%'; });
@@ -546,8 +546,8 @@ function lmHaloAt(x, y, z, size, hex, opacity) {
   lmTickers.push((t, phase) => {
     const u = (window.__U !== undefined) ? window.__U : 0;
     // ignition window: facets ignite in cascade as the camera settles into the beat (pure function of u)
-    const r0 = Math.min(Math.max((u - 0.872) / 0.014, 0), 1);
-    const r1 = Math.min(Math.max((0.932 - u) / 0.014, 0), 1);
+    const r0 = Math.min(Math.max((u - 0.795) / 0.02, 0), 1);
+    const r1 = Math.min(Math.max((0.865 - u) / 0.02, 0), 1);
     const sm = (v) => v * v * (3 - 2 * v);
     const ignite = sm(r0) * sm(r1);
     heroGrp.rotation.y = t * 0.12;
@@ -757,9 +757,9 @@ lmPagoda(-320, -260, 5, 22, 8.5);
   aurTex.wrapS = THREE.RepeatWrapping;
   const auroras = [];
   const adefs = [
-    [0x77ffd9, -300, 72, 40, 260, 95, 0.34, 0.5],
-    [0x9a6bff, -225, 92, 95, 220, 85, 0.30, -0.35],
-    [0x64ff9a, -275, 62, -15, 300, 105, 0.26, 0.95],
+    [0x77ffd9, -300, 88, 40, 260, 110, 0.50, 0.5],
+    [0x9a6bff, -225, 108, 95, 220, 100, 0.44, -0.35],
+    [0x64ff9a, -275, 78, -15, 300, 120, 0.40, 0.95],
   ];
   for (const [col, x, y, z, w, h, op, ry] of adefs) {
     const m = new THREE.MeshBasicMaterial({ map: aurTex, color: col, transparent: true, opacity: op, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
@@ -798,13 +798,20 @@ lmPagoda(-320, -260, 5, 22, 8.5);
   const top = new THREE.ConeGeometry(6, 12, 8); top.translate(LX, y + 6, LZ);
   parts.push({ g: top, c: [0.12, 0.26, 0.3] });
   scene.add(new THREE.Mesh(mergeGeos(parts), mat));
-  const beamGeoI = new THREE.ConeGeometry(5, 280, 10, 1, true);
+  // v20q: long soft tapered beams - narrow 24-seg cones + length-fade gradient (Irvan: beams were short white cones / giant blade)
+  const bcv = document.createElement('canvas'); bcv.width = 2; bcv.height = 64;
+  const bcx = bcv.getContext('2d');
+  const bgr = bcx.createLinearGradient(0, 0, 0, 64);
+  bgr.addColorStop(0, 'rgba(255,255,255,1)'); bgr.addColorStop(0.35, 'rgba(255,255,255,0.5)'); bgr.addColorStop(1, 'rgba(255,255,255,0)');
+  bcx.fillStyle = bgr; bcx.fillRect(0, 0, 2, 64);
+  const beamFadeTex = new THREE.CanvasTexture(bcv);
+  const beamGeoI = new THREE.ConeGeometry(3.2, 280, 24, 1, true);
   beamGeoI.translate(0, -140, 0); beamGeoI.rotateX(-Math.PI / 2);
-  const beamGeoO = new THREE.ConeGeometry(14, 280, 10, 1, true);
+  const beamGeoO = new THREE.ConeGeometry(8, 280, 24, 1, true);
   beamGeoO.translate(0, -140, 0); beamGeoO.rotateX(-Math.PI / 2);
-  const beamMatB = new THREE.MeshBasicMaterial({ color: 0xffe9b0, transparent: true, opacity: 0.13, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, depthWrite: false });
+  const beamMatB = new THREE.MeshBasicMaterial({ color: 0xffe9b0, map: beamFadeTex, transparent: true, opacity: 0.34, blending: THREE.AdditiveBlending, side: THREE.FrontSide, depthWrite: false });
   beamMatB.toneMapped = false;
-  const beamMatO = new THREE.MeshBasicMaterial({ color: 0xffe9b0, transparent: true, opacity: 0.05, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, depthWrite: false });
+  const beamMatO = new THREE.MeshBasicMaterial({ color: 0xffe9b0, map: beamFadeTex, transparent: true, opacity: 0.13, blending: THREE.AdditiveBlending, side: THREE.FrontSide, depthWrite: false });
   beamMatO.toneMapped = false;
   const beamMesh = new THREE.Mesh(beamGeoI, beamMatB);
   beamMesh.position.set(LX, y + 3, LZ);
@@ -1534,14 +1541,14 @@ function tickDragons(t, u) {
   // speed and flapping pick up, bellies glow brighter. Pure function of u.
   const cw = Math.min(Math.max((u - 0.55) / 0.13, 0), 1);
   const chase = cw > 0 && cw < 1 ? Math.sin(cw * Math.PI) ** 2 : 0;
-  const cw2 = Math.min(Math.max((u - 0.70) / 0.09, 0), 1);
-  const cw3 = Math.min(Math.max((0.88 - u) / 0.05, 0), 1);
-  const gather = Math.sin(cw2 * Math.PI / 2) ** 2 * Math.sin(cw3 * Math.PI / 2) ** 2; // rise 0.70-0.79, hold through Dragon Lanes, release by 0.88
+  const cw2 = Math.min(Math.max((u - 0.70) / 0.04, 0), 1);
+  const cw3 = Math.min(Math.max((0.825 - u) / 0.04, 0), 1);
+  const gather = Math.sin(cw2 * Math.PI / 2) ** 2 * Math.sin(cw3 * Math.PI / 2) ** 2; // rise 0.70-0.74, full through Dragon Lanes hold (0.744-0.762), release by 0.825
   const TAU = Math.PI * 2;
   for (const d of dragons) {
     const isLead = d.ph === 0.0;
     // route is a pure function of loop phase u: identical path every loop (Irvan 8:38 AM)
-    const a = TAU * d.loops * u + 2.95 + d.ph * (1 - gather * 0.93) + chase * (isLead ? 0.5 : 0.2);
+    const a = TAU * d.loops * u + 2.95 + d.ph * (1 - gather * 0.96) + chase * (isLead ? 0.5 : 0.2);
     // non-leaders pull toward the lead orbit center during the chase
     const pull = chase * (isLead ? 0 : 0.55);
     const pull2 = gather;
