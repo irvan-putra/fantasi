@@ -1862,8 +1862,8 @@ const KEYS = [
   { pos: [16, 60, 160], look: [22, 45, -60], hold: 1400, fly: 5000, lift: 36, title: "Twin Spire Dive", note: "Diving straight between the matched towers of light" },
   { pos: [30, 30, -350], look: [128, 30, -214], hold: 2200, fly: 4800, title: "Gate of Lanterns", note: "Under the great gate, into the festival" },
   { pos: [128, 66, -62], look: [185, 22, -140], hold: 2000, fly: 5000, lift: 42, title: "Star Market Life", note: "Vendors weave through drifting sky lanterns" },
-  ..._beat("Market Street Walk", "Low and slow, people on both sides", [145, 2.3, -150], [215, 2.3, -150], [175, 4, -150], [236, 4, -150], 9000),
-  ..._beat("Lantern Lane", "Stalls, vendors and lanterns along the lane", [148, 2.3, -184], [148, 2.3, -114], [148, 4, -150], [148, 4, -84], 8000, 62, 45),
+  // v23by: Market Street Walk and Lantern Lane merged into one orbit around the market junction (150,-150): comfortable height, natural scattered crowd below
+  ...[90, 45, 0, -45, -90, -135, -180].map((d, i) => { const th = d * Math.PI / 180; return { pos: [150 + 38 * Math.cos(th), 40, -150 + 38 * Math.sin(th)], look: [150, 4, -150], hold: 0, fly: i === 0 ? 4200 : 3000, title: "Market Life Orbit", note: "Circling the market: stalls, lanterns and folk gathering" }; }),
   { pos: [-85, 42, 15], look: [-166, 45, 143], hold: 1600, fly: 5000, title: "Pagoda Orbit", note: "Curling around the tiered temple roof" },
   { pos: [-410, 50, -50], look: [-250, 62, 60], hold: 1600, fly: 5200, title: "Palace Mist", note: "Silhouettes of the hall pierce the low fog" },
   ..._beat("Giant of the Lanes", "A giant looms over the lane", [166, 17, 184], [166, 17, 210], [188.6, 10.8, 196.7], [188.6, 10.8, 196.7], 6500, 34, 0, 0),
