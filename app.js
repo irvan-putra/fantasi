@@ -2480,13 +2480,13 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
       const armGeo = COL.map((c, i) => merge([part(box(0.28, 1.05, 0.28), c, 0, -0.52, 0), part(new THREE.SphereGeometry(0.2, 6, 5), SKN[i % 4], 0, -1.12, 0)]));
       const dancers = [];
       const mk = (i, x, y, z, ry, mode, ph, extra) => { const g = new THREE.Group(); g.add(new THREE.Mesh(bodyGeo[i % 8], basic)); const Lm = new THREE.Mesh(armGeo[i % 8], basic), Rm = new THREE.Mesh(armGeo[i % 8], basic); Lm.position.set(-0.62, 2.0, 0); Rm.position.set(0.62, 2.0, 0); g.add(Lm, Rm); g.position.set(x, y, z); g.rotation.y = ry; g.scale.setScalar(0.95); hallG.add(g); dancers.push(Object.assign({ g, L: Lm, R: Rm, mode, ph, x, y, z, ry }, extra || {})); };
-      let di = 0; for (const [cx, cz, dir] of [[-8, -11, 1], [8, -11, -1]]) for (let k = 0; k < 6; k++) mk(di++, 0, 0.4, 0, 0, 'c', k * 1.1, { cx, cz, R: 3.6, th0: k / 6 * 6.2832, dir });
+      let di = 0; for (const [cx, cz, dir] of [[-8, -11, 1], [8, -11, -1]]) for (let k = 0; k < 6; k++) mk(di++, 0, 0.4, 0, 0, 'c', k * 1.1, { cx, cz, Rad: 3.6, th0: k / 6 * 6.2832, dir });
       for (let k = 0; k < 6; k++) mk(di++, -15 + k * 6, 0.4, -4.5, 0, 'j', k * 0.9);
       for (const x of [-4, 0, 4]) mk(di++, x, 1.4, -21, 0, 's', x);
       q.push(part(new THREE.CylinderGeometry(0.8, 0.65, 1.4, 8), 0xc8503a, 7, 2.2, -20), part(new THREE.CylinderGeometry(0.8, 0.65, 1.4, 8), 0x3a7ac8, -7, 2.2, -20));
       { const prev2 = window.__SKYTICK, W = 6.2832 / 170.6, bw = W * 100, aw = W * 50, ow = W * 6;
         window.__SKYTICK = (t) => { prev2(t); for (const d of dancers) { const s = Math.sin(bw * t + d.ph), a = Math.sin(aw * t + d.ph * 1.7);
-          if (d.mode === 'c') { const th = d.th0 + d.dir * ow * t; d.g.position.set(d.cx + Math.cos(th) * d.R, d.y + Math.abs(s) * 0.45, d.cz + Math.sin(th) * d.R); d.g.rotation.y = Math.atan2(-Math.cos(th), -Math.sin(th)); }
+          if (d.mode === 'c') { const th = d.th0 + d.dir * ow * t; d.g.position.set(d.cx + Math.cos(th) * d.Rad, d.y + Math.abs(s) * 0.45, d.cz + Math.sin(th) * d.Rad); d.g.rotation.y = Math.atan2(-Math.cos(th), -Math.sin(th)); }
           else if (d.mode === 'j') { d.g.position.y = d.y + Math.abs(s) * 0.8; d.g.rotation.y = d.ry + Math.sin(aw * t * 0.5 + d.ph) * 0.35; }
           else d.g.position.y = d.y + Math.abs(s) * 0.15;
           const up = d.mode === 's' ? 1.0 : 2.5; d.L.rotation.z = -(up + 0.55 * a); d.R.rotation.z = up - 0.55 * a; } }; window.__HALLD = dancers; }
