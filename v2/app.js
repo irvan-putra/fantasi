@@ -2244,7 +2244,7 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
     for (const o of items) { let bad = false;
       if (o.w === 'g') { const w = wallNear(o.x, o.z)[0]; bad = roofAt(o.x, o.z) >= 0 || w < (o.race === 'giant' ? 5.5 : o.race === 'dwarf' ? 2.0 : 1.6); if (bad) r.ground++; }
       else if (o.w === 'r') { bad = Math.abs(roofAt(o.x, o.z) - o.y) > 0.35; if (bad) r.roof++; }
-      else { bad = roofAt(o.x, o.z) > o.y - 0.5 || wallNear(o.x, o.z)[0] < 1.0; if (bad) r.balcony++; }
+      else { const wd = wallNear(o.x, o.z)[0], ra = roofAt(o.x, o.z); bad = ra > o.y - 0.5 || wd < 1.0; if (bad) { r.balcony++; (r.dbg = r.dbg || []).length < 5 && r.dbg.push([+wd.toFixed(2), +ra.toFixed(1), +o.y.toFixed(1)]); } }
       if (bad) { r.bad++; if (o.race === 'giant') r.badGiant++; } }
     return r; };
   window.__FOLK = { clipTest, counts: FOLK_COUNT, pools: { ground: ground.length, roofs: roofs.length, balconies: balc.length }, total: items.length };
