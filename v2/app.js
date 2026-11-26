@@ -1998,6 +1998,158 @@ window.__SCORE = Score;
   $('stats').textContent = `${c.near.toLocaleString('en-US')} enchanted buildings · ${c.lanterns} sky lanterns · 3 dragons · invented, over real streets`;
 }
 
+// ---------------- folk (v23a): humans, elves, dwarves, giants on streets, balconies, rooftops ----------------
+// Instanced, capped, original silhouettes. Kept clear of the camera path.
+let folkTick = null;
+const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
+{
+  const rs = (seed) => { let s = seed; return () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296; };
+  const rnd = rs(2301);
+  const col = (hex) => new THREE.Color(hex);
+  // part builders return non-indexed geometry with vertex colors baked in
+  const part = (geo, hex, x = 0, y = 0, z = 0, rx = 0, rz = 0, sx = 1, sy = 1, sz = 1) => {
+    let g = geo.index ? geo.toNonIndexed() : geo;
+    g.scale(sx, sy, sz); g.rotateX(rx); g.rotateZ(rz); g.translate(x, y, z);
+    const c = col(hex), n = g.attributes.position.count, a = new Float32Array(n * 3);
+    for (let i = 0; i < n; i++) { a[i * 3] = c.r; a[i * 3 + 1] = c.g; a[i * 3 + 2] = c.b; }
+    g.setAttribute('color', new THREE.BufferAttribute(a, 3));
+    g.deleteAttribute('uv');
+    return g;
+  };
+  const merge = (gs) => {
+    const out = new THREE.BufferGeometry();
+    for (const name of ['position', 'color']) {
+      let len = 0; for (const g of gs) len += g.attributes[name].array.length;
+      const arr = new Float32Array(len); let o = 0;
+      for (const g of gs) { arr.set(g.attributes[name].array, o); o += g.attributes[name].array.length; }
+      out.setAttribute(name, new THREE.BufferAttribute(arr, 3));
+    }
+    out.computeVertexNormals();
+    return out;
+  };
+  const cone = (r, h, s = 6) => new THREE.ConeGeometry(r, h, s);
+  const cyl = (rt, rb, h, s = 6) => new THREE.CylinderGeometry(rt, rb, h, s);
+  const ball = (r) => new THREE.SphereGeometry(r, 6, 4);
+  const SKIN = [0xf2c7a0, 0xd9a273, 0xb57a4e, 0x8a5a38];
+  // units: 1 = about 1.8 m human; the whole thing is scaled up so figures read at festival distances
+  const BUILD = {
+    human(v) {
+      const cloth = [0xd9534f, 0x3a86c8, 0x5aa469, 0xe0a030, 0x8e5cc4][v % 5], skin = SKIN[v % 4];
+      return merge([part(cone(0.34, 1.25, 6), cloth, 0, 0.62), part(ball(0.2), skin, 0, 1.45),
+        part(cyl(0.07, 0.07, 0.8, 4), cloth, -0.32, 0.9, 0, 0, 0.35), part(cyl(0.07, 0.07, 0.8, 4), cloth, 0.32, 0.9, 0, 0, -0.35)]);
+    },
+    elf(v) {
+      const cloth = [0x2f9e8f, 0x7fc86a, 0xc8d6ff, 0x9b7fe0, 0xe8e0a0][v % 5], skin = [0xf3ddc4, 0xe6c8a8, 0xd8b896][v % 3];
+      const hair = [0xf4ecc0, 0xc8c8d8, 0x6b4a2a, 0xf0a0c0][v % 4];
+      return merge([part(cone(0.24, 1.7, 6), cloth, 0, 0.85), part(ball(0.17), skin, 0, 1.95),
+        part(cone(0.1, 0.55, 4), skin, -0.36, 2.1, 0, 0, 1.2), part(cone(0.1, 0.55, 4), skin, 0.36, 2.1, 0, 0, -1.2),
+        part(cone(0.22, 0.5, 5), hair, 0, 2.12, -0.02), part(cone(0.3, 1.4, 4), cloth, 0, 0.95, -0.22, 0.12)]);
+    },
+    dwarf(v) {
+      const cloth = [0x8a4b2a, 0x5a6b7a, 0xa85a2a, 0x6a3a3a][v % 4], beard = [0xc06a2a, 0x8a8a8a, 0x3a2a1a, 0xd8b060][v % 4];
+      return merge([part(cyl(0.52, 0.56, 0.62, 6), cloth, 0, 0.31), part(ball(0.3), SKIN[(v + 1) % 4], 0, 0.82),
+        part(cone(0.34, 0.62, 5), beard, 0, 0.5, 0.2, Math.PI), part(new THREE.SphereGeometry(0.34, 6, 3, 0, Math.PI * 2, 0, Math.PI / 2), 0x7a7f88, 0, 0.9),
+        part(cyl(0.09, 0.09, 0.7, 4), 0x6a4a2a, 0.62, 0.55, 0), part(cyl(0.2, 0.2, 0.12, 5), 0x888888, 0.62, 0.95, 0, 0, Math.PI / 2)]);
+    },
+    giant(v) {
+      const cloth = [0x6a5a48, 0x4a6a58, 0x6a4a58][v % 3], skin = [0xb09070, 0x90a080, 0xa08878][v % 3];
+      return merge([part(cyl(0.6, 0.85, 1.5, 6), cloth, 0, 0.75), part(cyl(0.9, 0.6, 0.9, 6), cloth, 0, 1.75), part(ball(0.5), skin, 0, 2.55),
+        part(cyl(0.22, 0.18, 1.4, 5), skin, -1.0, 1.55, 0, 0, 0.25), part(cyl(0.22, 0.18, 1.4, 5), skin, 1.0, 1.55, 0, 0, -0.25),
+        part(cyl(0.12, 0.2, 2.4, 5), 0x5a3f28, 1.35, 1.3, 0.2, 0, -0.1)]);
+    },
+  };
+  const SC = { human: 2.1, elf: 2.1, dwarf: 2.1, giant: 3.5 }; // world scale per unit (giants ~ 2.7x humans' height with bulk)
+  const meshes = {}; const lamb = [];
+  const caps = { human: [0, 0], elf: [0, 0], dwarf: [0, 0], giant: [0, 0] };
+  // ---- spots
+  const camPts = []; { for (let i = 0; i < 160; i++) camPts.push(camAt(i * LOOP_MS / 160).pos); }
+  const nearCam = (x, y, z, r) => { for (const p of camPts) { const dx = p[0] - x, dy = p[1] - y, dz = p[2] - z; if (dx * dx + dy * dy + dz * dz < r * r) return true; } return false; };
+  const LIM = 820;
+  const ground = [], roofs = [], balc = [];
+  { const rp = sec('roads_pos'); const n = rp.length / 3;
+    for (let k = 0; k < 9000; k++) { const i = (rnd() * n) | 0; const x = rp[i * 3] + (rnd() - 0.5) * 5, z = rp[i * 3 + 2] + (rnd() - 0.5) * 5; if (Math.abs(x) < LIM && Math.abs(z) < LIM) ground.push([x, 0.5, z]); if (ground.length > 2600) break; } }
+  const rf = sec('roofs_pos'); const RC = 14, rcell = new Map();
+  { const n = rf.length / 3;
+    for (let i = 0; i < n; i++) { const x = rf[i * 3], y = rf[i * 3 + 1], z = rf[i * 3 + 2]; if (Math.abs(x) > LIM || Math.abs(z) > LIM) continue;
+      const kk = Math.round(x / RC) + ':' + Math.round(z / RC); let c = rcell.get(kk); if (!c) { c = { sx: 0, sz: 0, n: 0 }; rcell.set(kk, c); } c.sx += x; c.sz += z; c.n++;
+      if (y >= 9 && y <= 95 && rnd() < 0.012) roofs.push([x, y, z]); } }
+  { const wp = sec('walls_pos'), wi = sec('walls_idx'); const nt = wi.length / 3;
+    for (let t = 0; t < nt && balc.length < 1500; t++) { if (rnd() > 0.02) continue;
+      const a = wi[t * 3] * 3, b = wi[t * 3 + 1] * 3, c = wi[t * 3 + 2] * 3;
+      const cx = (wp[a] + wp[b] + wp[c]) / 3, cy = (wp[a + 1] + wp[b + 1] + wp[c + 1]) / 3, cz = (wp[a + 2] + wp[b + 2] + wp[c + 2]) / 3;
+      if (Math.abs(cx) > LIM || Math.abs(cz) > LIM || cy < 7 || cy > 70) continue;
+      const ux = wp[b] - wp[a], uy = wp[b + 1] - wp[a + 1], uz = wp[b + 2] - wp[a + 2], vx = wp[c] - wp[a], vy = wp[c + 1] - wp[a + 1], vz = wp[c + 2] - wp[a + 2];
+      let nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx; const ln = Math.hypot(nx, ny, nz); if (ln < 1e-4) continue; nx /= ln; ny /= ln; nz /= ln;
+      if (Math.abs(ny) > 0.12) continue;
+      // outward = away from the roof mass nearby
+      let sx = 0, sz = 0, sn = 0;
+      for (let dx = -1; dx <= 1; dx++) for (let dz = -1; dz <= 1; dz++) { const cc = rcell.get((Math.round(cx / RC) + dx) + ':' + (Math.round(cz / RC) + dz)); if (cc) { sx += cc.sx; sz += cc.sz; sn += cc.n; } }
+      if (sn < 6) continue;
+      const dd = nx * (sx / sn - cx) + nz * (sz / sn - cz); if (Math.abs(dd) < 1.5) continue;
+      if (dd > 0) { nx = -nx; nz = -nz; }
+      const fy = Math.max(3.4, Math.floor(cy / 3.4) * 3.4);
+      balc.push([cx + nx * 1.3, fy, cz + nz * 1.3, Math.atan2(nx, nz)]); } }
+  const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = (rnd() * (i + 1)) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  shuffle(ground); shuffle(roofs); shuffle(balc);
+  // ---- plan: [race, where, count]
+  const PLAN = [['human', 'g', 680], ['human', 'b', 300], ['human', 'r', 300], ['elf', 'r', 150], ['elf', 'b', 130], ['elf', 'g', 110],
+    ['dwarf', 'g', 260], ['dwarf', 'b', 60], ['dwarf', 'r', 40], ['giant', 'g', 36]];
+  const pools = { g: ground, b: balc, r: roofs }; const cur = { g: 0, b: 0, r: 0 };
+  const items = []; // {race, v, x,y,z, yaw, ph, kind}
+  for (const [race, w, cnt] of PLAN) {
+    let made = 0, guard = 0; const pool = pools[w];
+    while (made < cnt && cur[w] < pool.length && guard++ < 20000) {
+      const s = pool[cur[w]++]; const clear = race === 'giant' ? 70 : 16;
+      if (nearCam(s[0], s[1] + 3, s[2], clear)) continue;
+      const yaw = w === 'b' ? s[3] + (rnd() - 0.5) * 0.5 : rnd() * 6.283;
+      let x = s[0], z = s[2];
+      if (w === 'b') { x += (rnd() - 0.5) * 1.4 * Math.cos(s[3]); z -= (rnd() - 0.5) * 1.4 * Math.sin(s[3]); }
+      items.push({ race, v: (rnd() * 12) | 0, x, y: s[1], z, yaw, ph: rnd() * 6.28, w }); made++;
+      FOLK_COUNT[race]++;
+    }
+  }
+  // ---- ledges (small balcony slabs)
+  const ledgeSpots = items.filter((o) => o.w === 'b');
+  const ledgeMat = new THREE.MeshLambertMaterial({ color: 0x6a5a4c, emissive: 0x2a2018, emissiveIntensity: 1.0 }); lamb.push(ledgeMat);
+  const ledge = new THREE.InstancedMesh(new THREE.BoxGeometry(3.6, 0.4, 2.8), ledgeMat, Math.max(1, ledgeSpots.length));
+  // ---- meshes per race x variant
+  const dummy = new THREE.Object3D();
+  const slots = {};
+  for (const race of ['human', 'elf', 'dwarf', 'giant']) {
+    const nv = race === 'giant' ? 3 : race === 'elf' ? 4 : 5;
+    for (let v = 0; v < nv; v++) { slots[race + v] = []; }
+  }
+  for (const o of items) { const nv = o.race === 'giant' ? 3 : o.race === 'elf' ? 4 : 5; o.vi = o.v % nv; slots[o.race + o.vi].push(o); }
+  const animated = [];
+  for (const key in slots) {
+    const list = slots[key]; if (!list.length) continue;
+    const race = key.replace(/\d+$/, ''), v = +key.slice(race.length);
+    const mat = new THREE.MeshLambertMaterial({ vertexColors: true, emissive: 0x3a2a20, emissiveIntensity: 1.0 }); lamb.push(mat);
+    const im = new THREE.InstancedMesh(BUILD[race](v), mat, list.length); im.frustumCulled = false;
+    list.forEach((o, i) => { o.im = im; o.i = i; const s = SC[race]; dummy.position.set(o.x, o.y, o.z); dummy.rotation.set(0, o.yaw, 0); dummy.scale.setScalar(s); dummy.updateMatrix(); im.setMatrixAt(i, dummy.matrix); o.s = s; if (o.w === 'g' && race !== 'giant') animated.push(o); });
+    im.instanceMatrix.needsUpdate = true; scene.add(im);
+  }
+  ledgeSpots.forEach((o, i) => { dummy.position.set(o.x, o.y - 0.2, o.z); dummy.rotation.set(0, o.yaw, 0); dummy.scale.setScalar(1); dummy.updateMatrix(); ledge.setMatrixAt(i, dummy.matrix); });
+  ledge.count = ledgeSpots.length; ledge.instanceMatrix.needsUpdate = true; ledge.frustumCulled = false; scene.add(ledge);
+  const touched = new Set(); let cursor = 0;
+  folkTick = (t, phase) => {
+    for (const m of lamb) m.emissiveIntensity = 0.55 + phase * 0.9;
+    // sway a rotating slice of street folk each frame (cheap)
+    const n = animated.length, step = Math.min(n, 160); touched.clear();
+    for (let k = 0; k < step; k++) { const o = animated[(cursor + k) % n];
+      dummy.position.set(o.x, o.y + Math.abs(Math.sin(t * 2.0 + o.ph)) * 0.22, o.z); dummy.rotation.set(0, o.yaw + Math.sin(t * 0.7 + o.ph) * 0.5, 0); dummy.scale.setScalar(o.s); dummy.updateMatrix();
+      o.im.setMatrixAt(o.i, dummy.matrix); touched.add(o.im); }
+    cursor = (cursor + step) % Math.max(1, n);
+    for (const im of touched) im.instanceMatrix.needsUpdate = true;
+  };
+  window.__FOLK = { counts: FOLK_COUNT, pools: { ground: ground.length, roofs: roofs.length, balconies: balc.length }, total: items.length };
+}
+function tickFolk(t, phase) { if (folkTick) folkTick(t, phase); }
+{
+  const c = FOLK_COUNT; const tot = c.human + c.elf + c.dwarf + c.giant;
+  $('stats').textContent = `${manifest.counts.near.toLocaleString('en-US')} enchanted buildings · ${tot.toLocaleString('en-US')} folk (humans, elves, dwarves, giants) · ${manifest.counts.lanterns} sky lanterns · 3 dragons · invented, over real streets`;
+}
+
 // ---------------- run ----------------
 bar.style.width = '100%';
 clearTimeout(stallTimer);
@@ -2046,6 +2198,7 @@ function frame() {
   tickAtmosphere(t, phase);
   tickLandmarks(t, phase);
   tickCrowd(t);
+  tickFolk(t, phase);
   tickFantasy(u, phase);
   tickLaunch(u, t);
   tickFireworks(u);
