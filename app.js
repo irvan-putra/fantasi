@@ -2086,8 +2086,9 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
       part(box(0.52, 0.66, 0.28), o.cloth, 0, 1.15, 0),
       T(3, part(box(0.13, 0.66, 0.15), o.cloth, -0.34, 1.12, 0, 0, 0.14)), T(4, part(box(0.13, 0.66, 0.15), o.cloth, 0.34, 1.12, 0, 0, -0.14)),
       T(5, part(ball(0.19), o.skin, 0, 1.68)),
-      T(5, part(box(0.07, 0.08, 0.05), 0x15110e, -0.075, 1.7, 0.19)), T(5, part(box(0.07, 0.08, 0.05), 0x15110e, 0.075, 1.7, 0.19)),
-      T(5, part(box(0.12, 0.03, 0.05), 0x4a1414, 0, 1.61, 0.19)), T(5, part(box(0.03, 0.04, 0.05), 0x4a1414, -0.075, 1.63, 0.19)), T(5, part(box(0.03, 0.04, 0.05), 0x4a1414, 0.075, 1.63, 0.19)), ...(extra || [])];
+      T(5, part(box(0.08, 0.09, 0.05), 0xfaf6ee, -0.075, 1.7, 0.19)), T(5, part(box(0.08, 0.09, 0.05), 0xfaf6ee, 0.075, 1.7, 0.19)),
+      T(5, part(box(0.04, 0.05, 0.06), 0x0c0a08, -0.075, 1.69, 0.2)), T(5, part(box(0.04, 0.05, 0.06), 0x0c0a08, 0.075, 1.69, 0.2)),
+      T(5, part(box(0.13, 0.03, 0.05), 0xfff4e8, 0, 1.61, 0.19)), T(5, part(box(0.03, 0.04, 0.05), 0xfff4e8, -0.08, 1.63, 0.19)), T(5, part(box(0.03, 0.04, 0.05), 0xfff4e8, 0.08, 1.63, 0.19)), ...(extra || [])];
     const g = merge(gs);
     if (o.sx !== 1 || o.sy !== 1) { g.scale(o.sx, o.sy, o.sx); g.computeVertexNormals(); }
     return g;
@@ -2173,7 +2174,7 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
     else if (md < 3.5) { armL = -0.9 + 0.35 * sin(tm * 3.0 + ph); armR = -0.9 + 0.35 * sin(tm * 3.0 + ph + 1.6); lean = 0.16 + 0.04 * sin(tm * 1.5 + ph); hy = 0.45 * sin(tm * 0.8 + ph); }
     else if (md < 4.5) { armR = -2.6 + 0.35 * sin(tm * 6.0 + ph); armL = 0.05; hy = 0.85 * sin(tm * 0.6 + ph); }
     else if (md < 5.5) { lean = 0.38; armL = -0.75 + 0.1 * sin(tm + ph); armR = -0.75 + 0.1 * sin(tm * 1.2 + ph); hy = 0.9 * sin(tm * 0.45 + ph); }
-    else { legA = (md < 6.5) ? -1.5 : -0.2; armL = -0.45 + 0.1 * sin(tm * 0.8 + ph); armR = (ph > 4.6) ? (-2.5 + 0.4 * sin(tm * 5.0 + ph)) : (-0.55 + 0.45 * sin(tm * 1.7 + ph * 2.0)); hy = 0.7 * sin(tm * 0.5 + ph); lean = 0.04 * sin(tm + ph); sitDrop = (md < 6.5) ? 0.93 : 0.5; }
+    else { legA = (md < 6.5) ? -1.5 : -0.2; armL = -0.45 + 0.1 * sin(tm * 0.8 + ph); armR = (ph > 4.6) ? (-2.5 + 0.4 * sin(tm * 5.0 + ph)) : (-0.55 + 0.45 * sin(tm * 1.7 + ph * 2.0)); hy = 0.3 * sin(tm * 0.5 + ph); lean = 0.04 * sin(tm + ph); sitDrop = (md < 6.5) ? 0.93 : 0.5; }
     float legB = (md < 5.5) ? -legA : legA;
     vec2 hp = vec2(uPiv.x, 0.0), sp = vec2(uPiv.y, 0.0);
     if (aPart > 0.5 && aPart < 2.5 && md > 6.5) transformed.y = uPiv.x + (transformed.y - uPiv.x) * 0.5;
