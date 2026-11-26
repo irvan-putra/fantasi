@@ -2171,9 +2171,10 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
     else if (md < 3.5) { armL = -0.9 + 0.35 * sin(tm * 3.0 + ph); armR = -0.9 + 0.35 * sin(tm * 3.0 + ph + 1.6); lean = 0.16 + 0.04 * sin(tm * 1.5 + ph); hy = 0.45 * sin(tm * 0.8 + ph); }
     else if (md < 4.5) { armR = -2.6 + 0.35 * sin(tm * 6.0 + ph); armL = 0.05; hy = 0.85 * sin(tm * 0.6 + ph); }
     else if (md < 5.5) { lean = 0.38; armL = -0.75 + 0.1 * sin(tm + ph); armR = -0.75 + 0.1 * sin(tm * 1.2 + ph); hy = 0.9 * sin(tm * 0.45 + ph); }
-    else { legA = -1.5; armL = -0.45 + 0.1 * sin(tm * 0.8 + ph); armR = -0.55 + 0.45 * sin(tm * 1.7 + ph * 2.0); hy = 0.7 * sin(tm * 0.5 + ph); lean = 0.04 * sin(tm + ph); sitDrop = (md < 6.5) ? 0.93 : 0.5; }
+    else { legA = (md < 6.5) ? -1.5 : -0.2; armL = -0.45 + 0.1 * sin(tm * 0.8 + ph); armR = (ph > 4.6) ? (-2.5 + 0.4 * sin(tm * 5.0 + ph)) : (-0.55 + 0.45 * sin(tm * 1.7 + ph * 2.0)); hy = 0.7 * sin(tm * 0.5 + ph); lean = 0.04 * sin(tm + ph); sitDrop = (md < 6.5) ? 0.93 : 0.5; }
     float legB = (md < 5.5) ? -legA : legA;
     vec2 hp = vec2(uPiv.x, 0.0), sp = vec2(uPiv.y, 0.0);
+    if (aPart > 0.5 && aPart < 2.5 && md > 6.5) transformed.y = uPiv.x + (transformed.y - uPiv.x) * 0.5;
     if (aPart > 0.5 && aPart < 1.5) transformed.yz = hp + rot2(transformed.yz - hp, legA);
     else if (aPart > 1.5 && aPart < 2.5) transformed.yz = hp + rot2(transformed.yz - hp, legB);
     else if (aPart > 2.5 && aPart < 3.5) transformed.yz = sp + rot2(transformed.yz - sp, armL);
@@ -2248,8 +2249,9 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
       const bs = [[1 / 3, 1 / 3, 1 / 3], [0.5, 0.25, 0.25], [0.25, 0.5, 0.25], [0.25, 0.25, 0.5]];
       const [b0, b1, b2] = bs[(rnd() * 4) | 0]; const x = b0 * T[0] + b1 * T[3] + b2 * T[6], z = b0 * T[2] + b1 * T[5] + b2 * T[8];
       if (wallNear(x, z)[0] < 3.0) continue;
-      const cm = cornerMax(x, z, 1.7); if (!cm || cm[0] - cm[1] > 1.1) continue;
-      roofs.push([x, cm[0] + 0.1, z, rnd() * 6.283]); } }
+      const cm = cornerMax(x, z, 3.8); if (!cm || cm[0] - cm[1] > 0.35) continue;
+      if (roofs.some((q) => Math.hypot(q[0] - x, q[2] - z) < 9)) continue;
+      roofs.push([x, cm[0] + 0.03, z, rnd() * 6.283]); } }
   // balcony ledges: flush to a wall face, outward side open (no roof overhead, no other wall within 1.5 m)
   { const nt = wi.length / 3;
     for (let t = 0; t < nt && balc.length < 3500; t++) { if (rnd() > 0.2) continue;
@@ -2291,7 +2293,7 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
       const yaw = s[3] + (rnd() - 0.5) * (w === 'g' ? 0.5 : 0.7);
       const rr = rnd(); let mode = 0;
       if (w === 'g') mode = race === 'giant' ? 0 : (s[4] >= 5.5 && rr < 0.35) ? 1 : rr < 0.6 ? 2 : rr < 0.8 ? 3 : 0;
-      else if (w === 'r') mode = rr < 0.72 ? 6 : rr < 0.86 ? 4 : 0; else mode = rr < 0.8 ? 7 : 5;
+      else if (w === 'r') mode = 6; else mode = 7;
       items.push({ race, v: (rnd() * 12) | 0, x: s[0], y: s[1], z: s[2], yaw, ph: rnd() * 6.28, w, lx: s[4], lz: s[5], ly: s[1], ledgeYaw: s[3], mode }); made++;
       FOLK_COUNT[race]++;
     }
@@ -2332,7 +2334,7 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
     im.instanceMatrix.needsUpdate = true; scene.add(im);
   }
   ledgeSpots.forEach((o, i) => { dummy.position.set(o.lx, o.y - 0.25, o.lz); dummy.rotation.set(0, o.ledgeYaw, 0); dummy.scale.setScalar(1); dummy.updateMatrix(); ledge.setMatrixAt(i, dummy.matrix); });
-  const terr = items.filter((o) => o.w === 'r');
+  const terr = []; // v23ag: no terrace slabs; sitters rest on flat roof tiles directly
   const terrMat = new THREE.MeshLambertMaterial({ color: 0x5a4c40, emissive: 0x2a2018, emissiveIntensity: 1.0 }); lamb.push(terrMat);
   const terrI = new THREE.InstancedMesh(new THREE.BoxGeometry(3.4, 1.3, 3.4), terrMat, Math.max(1, terr.length));
   terr.forEach((o, i) => { dummy.position.set(o.x, o.y - 0.65, o.z); dummy.rotation.set(0, 0, 0); dummy.scale.setScalar(1); dummy.updateMatrix(); terrI.setMatrixAt(i, dummy.matrix); });
@@ -2397,7 +2399,8 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
       for (const o of g) { const rx = o.x - x, rz = o.z - z, al = rx * dx + rz * dz, la = -rx * dz + rz * dx; if (al > 0 && al < len && Math.abs(la) < 9) { sc++; if (la > 0) L++; else Rr++; } }
       if (L >= 2 && Rr >= 2) res.push({ x, z, a: +a.toFixed(2), sc, L, R: Rr }); }
     return res.sort((p, q) => q.sc - p.sc).slice(0, 12); };
-  window.__FOLK = { camAt, LOOP_MS, KEYS, lanes, items, roofAt, wallNear, clipTest, camTest, counts: FOLK_COUNT, pools: { ground: ground.length, roofs: roofs.length, balconies: balc.length }, total: items.length };
+  const groundTest = () => { const r = { roofSitters: 0, maxGapRoof: 0, balcSitters: 0, standingRoofBalc: 0 }; for (const o of items) { if (o.w === 'r') { r.roofSitters++; if (o.mode < 6) r.standingRoofBalc++; for (const [a, b] of [[0, 0], [-2.5, -2], [2.5, -2], [-2.5, 3.5], [2.5, 3.5]]) { const c = Math.cos(o.yaw), sn = Math.sin(o.yaw); const px = o.x + a * c + b * sn, pz = o.z - a * sn + b * c; const g = roofAt(px, pz); r.maxGapRoof = Math.max(r.maxGapRoof, Math.abs(o.y - g)); } } else if (o.w === 'b') { r.balcSitters++; if (o.mode < 6) r.standingRoofBalc++; } } return r; };
+  window.__FOLK = { groundTest, camAt, LOOP_MS, KEYS, lanes, items, roofAt, wallNear, clipTest, camTest, counts: FOLK_COUNT, pools: { ground: ground.length, roofs: roofs.length, balconies: balc.length }, total: items.length };
 }
 function tickFolk(t, phase) { if (folkTick) folkTick(t, phase); }
 {
