@@ -351,13 +351,16 @@ function mergeGeos(items) {
 }
 {
   const pts = manifest.trees;
+  // v23t: keep trees off the street-level camera lanes
+  const _lane = [[145, -150, 215, -150], [148, -184, 148, -114], [210.6, 196.7, 198.6, 196.7], [-47.5, 66, -78, 56.4]];
+  const _nearLane = (x, z) => _lane.some(([ax, az, bx, bz]) => { const dx = bx - ax, dz = bz - az; const u = Math.max(0, Math.min(1, ((x - ax) * dx + (z - az) * dz) / (dx * dx + dz * dz))); return Math.hypot(x - ax - dx * u, z - az - dz * u) < 7; });
   const inst = new THREE.InstancedMesh(treeGeometry(), new THREE.MeshLambertMaterial({ vertexColors: true }), pts.length);
   const M = new THREE.Matrix4(), Q = new THREE.Quaternion(), S = new THREE.Vector3(), P = new THREE.Vector3();
   const up = new THREE.Vector3(0, 1, 0);
   for (let i = 0; i < pts.length; i++) {
     const s = 0.8 + ((i * 37) % 100) / 140;
     Q.setFromAxisAngle(up, (i * 2.399) % 6.28);
-    S.setScalar(s); P.set(pts[i][0], 0.4, pts[i][1]);
+    S.setScalar(_nearLane(pts[i][0], pts[i][1]) ? 0.0001 : s); P.set(pts[i][0], 0.4, pts[i][1]);
     M.compose(P, Q, S);
     inst.setMatrixAt(i, M);
   }
