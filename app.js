@@ -2034,7 +2034,7 @@ window.__SCORE = Score;
 // ---------------- stats chip ----------------
 {
   const c = manifest.counts;
-  $('stats').textContent = `${c.near.toLocaleString('en-US')} enchanted buildings · ${c.lanterns} sky lanterns · 3 dragons · invented, over real streets`;
+  $('stats').textContent = `${c.near.toLocaleString('en-US')} enchanted buildings · ${c.lanterns} sky lanterns · 3 dragons · 8 hot air balloons · 1 zeppelin · invented, over real streets`;
 }
 
 // ---------------- folk (v23a): humans, elves, dwarves, giants on streets, balconies, rooftops ----------------
@@ -2424,7 +2424,7 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
 function tickFolk(t, phase) { if (folkTick) folkTick(t, phase); }
 {
   const c = FOLK_COUNT; const tot = c.human + c.elf + c.dwarf + c.giant;
-  $('stats').textContent = `${manifest.counts.near.toLocaleString('en-US')} enchanted buildings · ${tot.toLocaleString('en-US')} folk (humans, elves, dwarves, giants) · ${manifest.counts.lanterns} sky lanterns · 3 dragons · invented, over real streets`;
+  $('stats').textContent = `${manifest.counts.near.toLocaleString('en-US')} enchanted buildings · ${tot.toLocaleString('en-US')} folk (humans, elves, dwarves, giants) · ${manifest.counts.lanterns} sky lanterns · 3 dragons · 8 hot air balloons · 1 zeppelin · invented, over real streets`;
 }
 
 // ---------------- run ----------------
