@@ -2251,7 +2251,7 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
       const bs = [[1 / 3, 1 / 3, 1 / 3], [0.5, 0.25, 0.25], [0.25, 0.5, 0.25], [0.25, 0.25, 0.5]];
       const [b0, b1, b2] = bs[(rnd() * 4) | 0]; const x = b0 * T[0] + b1 * T[3] + b2 * T[6], z = b0 * T[2] + b1 * T[5] + b2 * T[8];
       if (wallNear(x, z)[0] < 3.0) continue;
-      const cm = cornerMax(x, z, 1.9); if (!cm || cm[0] - cm[1] > 1.0) continue;
+      const cm = cornerMax(x, z, 1.9); const c2 = cm && cornerMax(x, z, 1.7); if (!cm || !c2) continue; cm[0] = Math.max(cm[0], c2[0]); cm[1] = Math.min(cm[1], c2[1]); if (cm[0] - cm[1] > 1.0) continue;
       if (roofs.some((q) => Math.hypot(q[0] - x, q[2] - z) < 6)) continue;
       const dd = cm[0] - cm[1]; roofs.push([x, cm[0] + (dd > 0.3 ? 0.1 : 0.03), z, rnd() * 6.283, dd > 0.3 ? dd + 0.6 : 0]); } }
   // balcony ledges: flush to a wall face, outward side open (no roof overhead, no other wall within 1.5 m)
@@ -2389,7 +2389,7 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
   const clipTest = () => { const r = { ground: 0, roof: 0, balcony: 0, checked: items.length, bad: 0, badGiant: 0 };
     for (const o of items) { let bad = false;
       if (o.w === 'g') { const w = wallNear(o.x, o.z)[0]; bad = roofAt(o.x, o.z) >= 0 || w < (o.race === 'giant' ? 5.5 : o.race === 'dwarf' ? 2.0 : 1.6); if (bad) r.ground++; }
-      else if (o.w === 'r') { const cm = cornerMax(o.x, o.z, 1.7); bad = !cm || cm[0] > o.y + 0.02 || o.y - cm[1] > 1.3; if (bad) r.roof++; }
+      else if (o.w === 'r') { const cm = cornerMax(o.x, o.z, 1.7); bad = !cm || cm[0] > o.y + 0.02 || o.y - cm[1] > Math.max(1.3, o.lx); if (bad) r.roof++; }
       else { const wd = wallNear(o.x, o.z)[0], ra = roofAt(o.x, o.z); bad = ra > o.y - 0.5 || wd < 1.0; if (bad) { r.balcony++; (r.dbg = r.dbg || []).length < 5 && r.dbg.push([+wd.toFixed(2), +ra.toFixed(1), +o.y.toFixed(1)]); } }
       if (bad) { r.bad++; if (o.race === 'giant') r.badGiant++; } }
     return r; };
