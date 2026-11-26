@@ -68,6 +68,8 @@ scene.add(hemi);
 const dir = new THREE.DirectionalLight(0xffd9a0, 0.72);
 dir.position.set(-0.4, 0.8, 0.35);
 scene.add(dir);
+const _gl = new THREE.PointLight(0xffc27a, 60, 45, 1.6); _gl.position.set(196, 7, 192); scene.add(_gl); // v23z: lantern glow so the giant beat is not black
+const _bl = new THREE.PointLight(0xffc27a, 40, 40, 1.6); _bl.position.set(-62, 12, 62); scene.add(_bl);
 
 // ---------------- sky dome (v3: sun disc, bands, clouds, moon) ----------------
 const skyMat = new THREE.ShaderMaterial({
@@ -1862,10 +1864,10 @@ const KEYS = [
   ..._beat("Market Street Walk", "Low and slow, people on both sides", [145, 2.3, -150], [215, 2.3, -150], [175, 4, -150], [245, 4, -150], 9000),
   ..._beat("Lantern Lane", "Stalls, vendors and lanterns along the lane", [148, 2.3, -184], [148, 2.3, -114], [148, 4, -150], [148, 4, -84], 8000, 62, 45),
   { pos: [-85, 42, 15], look: [-166, 45, 143], hold: 1600, fly: 5000, title: "Pagoda Orbit", note: "Curling around the tiered temple roof" },
-  ..._beat("Balcony Fly-by", "Past the neighbours leaning on their balcony", [-47.5, 15, 66], [-78, 15, 56.4], [-61.3, 8.2, 56.4], [-61.3, 8.2, 56.4], 6500, 55),
+  ..._beat("Balcony Fly-by", "Past the neighbours leaning on their balcony", [-47.5, 11, 72], [-78, 11, 72], [-61.3, 8.2, 56.4], [-61.3, 8.2, 56.4], 6500, 55),
   { pos: [-410, 50, -50], look: [-250, 40, 60], hold: 1600, fly: 5200, title: "Palace Mist", note: "Silhouettes of the hall pierce the low fog" },
   ..._beat("Rooftop Glide", "Skimming the terrace where the rooftop folk wave", [25.1, 27, 209.7], [61.1, 27, 209.7], [47.1, 17.5, 209.7], [47.1, 17.5, 209.7], 6500, 62),
-  ..._beat("Giant of the Lanes", "A giant looms over the lane", [210.6, 2.2, 196.7], [198.6, 2.2, 196.7], [188.6, 9, 196.7], [188.6, 10, 196.7], 6500, 62),
+  ..._beat("Giant of the Lanes", "A giant looms over the lane", [210.6, 3.5, 196.7], [198.6, 3.5, 196.7], [188.6, 5, 196.7], [188.6, 5, 196.7], 6500, 62),
   { pos: [-160, 130, 260], look: [740, 14, 450], hold: 1500, fly: 5400, title: "Water Reveal", note: "Rising over the glowing canals for the reveal" },
   { pos: [370, 85, 300], look: [740, 15, 460], hold: 1600, fly: 5200, title: "Magic Harbor", note: "The beacon sweeps across shimmering water" },
   { pos: [350, 120, 150], look: [560, 95, 350], hold: 1500, fly: 5000, title: "Dragon Lanes", note: "A dragon's wake stirs the festival lights" },
