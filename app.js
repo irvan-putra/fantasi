@@ -2326,6 +2326,16 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
         const q = rnd(), race = q < 0.7 ? 'human' : q < 0.82 ? 'elf' : 'dwarf';
         items.push({ race, v: (rnd() * 12) | 0, x, y: 0.5, z, yaw, ph: rnd() * 6.28, w: 'g', lx: wd, lz: 0, ly: 0.5, ledgeYaw: yaw, mode }); FOLK_COUNT[race]++; made++; } } }
   items.push({ race: 'giant', v: 4, x: 188.6, y: 0.5, z: 196.7, yaw: Math.PI / 2, ph: 1.3, w: 'g', lx: 10, lz: 0, ly: 0.5, ledgeYaw: Math.PI / 2, mode: 0 }); FOLK_COUNT.giant++; // v23w: the giant of the Giant of the Lanes beat
+  // v23bq: a lively crowd ringed around the giant (never at its crotch: keep-out below), kids and lantern folk looking up
+  { let sg = 41; const rg = () => (sg = (sg * 9301 + 49297) & 65535) / 65535; let made2 = 0;
+    for (let t = 0; t < 900 && made2 < 34; t++) {
+      const a = rg() * 6.2832, r = 5.5 + rg() * 13, x = 188.6 + Math.cos(a) * r, z = 196.7 + Math.sin(a) * r;
+      if (roofAt(x, z) >= 0 || wallNear(x, z)[0] < 1.6) continue;
+      if (items.some((o) => Math.hypot(o.x - x, o.z - z) < 1.7)) continue;
+      const q = rg(), race = q < 0.62 ? 'human' : q < 0.8 ? 'elf' : 'dwarf', mode = rg() < 0.5 ? 3 : (rg() < 0.5 ? 2 : 1);
+      const yaw = rg() < 0.6 ? Math.atan2(188.6 - x, 196.7 - z) + (rg() - 0.5) * 0.5 : rg() * 6.28;
+      items.push({ race, v: (rg() * 12) | 0, x, y: 0.5, z, yaw, ph: rg() * 6.28, w: 'g', lx: 6, lz: 0, ly: 0.5, ledgeYaw: yaw, mode }); FOLK_COUNT[race]++; made2++; }
+    window.__GIANTRING = made2; }
   // v23bg: keep ground folk out of the Festival Hall and the ground props (carts, drums, picnics, smith, mules, kids, procession)
   { const Z = [[212, -75, 22, 20], [224, -146, 9], [295, -163, 9], [150, -96, 9], [-173, 148, 9], [262, -172, 6], [150, -75, 6], [273, -129, 6], [146, -108, 6], [-150, 104, 6], [190, -170, 7], [151, -130, 11], [200, 170, 5], [-120, 106, 5], [162, -62, 15], [188.6, 196.7, 2.5]];
     const inZ = (x, z) => Z.some((q) => q.length === 4 ? (Math.abs(x - q[0]) < q[2] + 2 && Math.abs(z - q[1]) < q[3] + 2) : Math.hypot(x - q[0], z - q[1]) < q[2] + 1.5);
