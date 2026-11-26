@@ -24,7 +24,7 @@ async function fetchWithProgress(url, onp) {
 
 const stallTimer = setTimeout(() => $('stall').classList.add('show'), 12000);
 
-const ASSET_V = 'v20w';
+const ASSET_V = 'v20x';
 const manifest = await (await fetch('./manifest.json?' + ASSET_V)).json();
 bar.style.width = '6%';
 const binBuf = await fetchWithProgress('./scene.bin?' + ASSET_V, (f) => { bar.style.width = (6 + f * 84) + '%'; });
@@ -1317,8 +1317,9 @@ function tickFireworks(u) {
 window.__FY = { rock: _fRockMesh, bld: _fBldMesh, wf: _fWfPts, launchInst: _launch.inst, launchHalo: _launch.hm, fw: _fw.pts, glow: _fGlowMat };
 
 // ---------------- dragons (hero scale, close passes) ----------------
-// Serpentine dragons: one tube body deformed along a traveling-wave spine,
-// proper head (snout, jaw, horns, whiskers, glowing eyes), bat wings.
+// Chinese dragons: one long thin tube body deformed along a traveling-wave spine,
+// head with snout, jaw, branched antlers, long whiskers, mane fan, glowing eyes. No wings -
+// they ride the sky. (v20x, Irvan 09:54: "maybe a Chinese dragon instead?")
 // Runtime-generated scale texture (canvas): scalloped scales on the back,
 // broad plates on the belly band. No download cost.
 let _scaleTex = null;
@@ -1357,10 +1358,11 @@ function makeDragon(colorHex, ph0) {
   const base = new THREE.Color(colorHex);
   const belly = base.clone().lerp(new THREE.Color(0xfff0cf), 0.65);
   const fin = base.clone().multiplyScalar(0.5);
-  const RINGS = 36, RAD = 8, LEN = 26;
+  const mane = base.clone().lerp(new THREE.Color(0xffd98a), 0.55); // gold-tinged mane/antler color
+  const RINGS = 48, RAD = 8, LEN = 34;
   const radiusAt = t => {
     // tail tip -> chest -> neck
-    const prof = [[0, 0.28], [0.12, 0.85], [0.35, 1.55], [0.55, 1.95], [0.68, 1.75], [0.82, 1.2], [0.93, 0.95], [1, 0.7]];
+    const prof = [[0, 0.2], [0.12, 0.55], [0.35, 0.95], [0.55, 1.15], [0.68, 1.05], [0.82, 0.8], [0.93, 0.68], [1, 0.55]];
     for (let i = 1; i < prof.length; i++) {
       if (t <= prof[i][0]) {
         const [t0, r0] = prof[i - 1], [t1, r1] = prof[i];
@@ -1394,20 +1396,20 @@ function makeDragon(colorHex, ph0) {
     idx.push(a, c2, b, b, c2, d);
   }
   // dorsal spikes: small cones riding the spine, leaning back
-  const spikeAt = [0.16, 0.28, 0.40, 0.52, 0.63, 0.74, 0.84, 0.92];
+  const spikeAt = [0.10, 0.16, 0.22, 0.28, 0.34, 0.40, 0.46, 0.52, 0.58, 0.63, 0.68, 0.74, 0.79, 0.84, 0.88, 0.92, 0.95];
   for (const t of spikeAt) {
     const i = Math.round(t * (RINGS - 1)), r = radiusAt(t);
-    const h = 1.15 * (1 - Math.abs(t - 0.55) * 0.9), w = 0.34;
+    const h = 1.5 * (1 - Math.abs(t - 0.55) * 0.7), w = 0.3;
     const ringOf = Math.max(0, i - 1);
     // 4 base verts + tip, as two triangles (front/back) + sides
     const baseV = [[-w, 0, w * 0.6], [w, 0, w * 0.6], [w, 0, -w * 0.6], [-w, 0, -w * 0.6]];
     const start = vRing.length;
     for (const bv of baseV) {
       vRing.push(ringOf); vOff.push(bv[0], r + 0.05, bv[2]); vNrm.push(0, 0.8, -0.6);
-      vCol.push(fin.r, fin.g, fin.b); vUv.push(0.12, 0.05);
+      vCol.push(mane.r, mane.g, mane.b); vUv.push(0.12, 0.05);
     }
     vRing.push(ringOf); vOff.push(0, r + 0.05 + h, -h * 0.55); vNrm.push(0, 0.8, -0.6);
-    vCol.push(fin.r, fin.g, fin.b); vUv.push(0.2, 0.12);
+    vCol.push(mane.r, mane.g, mane.b); vUv.push(0.2, 0.12);
     idx.push(start, start + 1, start + 4, start + 1, start + 2, start + 4, start + 2, start + 3, start + 4, start + 3, start + 0, start + 4);
   }
   const nv = vRing.length;
@@ -1429,14 +1431,22 @@ function makeDragon(colorHex, ph0) {
     const snout = new THREE.BoxGeometry(1.5, 0.9, 3.0); snout.translate(0, 0.12, 2.6); addH(snout, base);
     const nose = new THREE.BoxGeometry(1.05, 0.6, 0.9); nose.translate(0, 0.3, 4.25); addH(nose, base);
     const jaw = new THREE.BoxGeometry(1.25, 0.38, 2.7); jaw.rotateX(0.10); jaw.translate(0, -0.62, 2.4); addH(jaw, belly);
-    for (const sx of [-0.85, 0.85]) { // swept-back horns
-      const h = new THREE.ConeGeometry(0.34, 3.0, 5); h.rotateX(-2.05); h.rotateZ(sx * 0.28); h.translate(sx, 1.35, -0.5); addH(h, fin);
+    for (const sx of [-0.8, 0.8]) { // branched antlers, swept up and back
+      const beam = new THREE.CylinderGeometry(0.10, 0.16, 2.6, 5); beam.rotateX(-1.9); beam.rotateZ(sx * 0.35); beam.translate(sx, 1.7, -0.7); addH(beam, mane);
+      const t1 = new THREE.ConeGeometry(0.08, 1.1, 4); t1.rotateX(-1.2); t1.rotateZ(sx * 0.9); t1.translate(sx * 1.45, 2.3, -1.0); addH(t1, mane);
+      const t2 = new THREE.ConeGeometry(0.07, 0.9, 4); t2.rotateX(-2.3); t2.rotateZ(sx * 0.2); t2.translate(sx * 1.1, 2.6, -1.6); addH(t2, mane);
+    }
+    for (let mi = -3; mi <= 3; mi++) { // mane fan behind the head
+      const mgeo = new THREE.ConeGeometry(0.26, 1.7, 4);
+      mgeo.rotateX(-0.9); mgeo.rotateZ(mi * 0.3);
+      mgeo.translate(mi * 0.45, 1.15 - Math.abs(mi) * 0.05, -0.6);
+      addH(mgeo, mane);
     }
     for (const sx of [-0.95, 0.95]) { // cheek spikes
       const h = new THREE.ConeGeometry(0.22, 1.3, 4); h.rotateZ(sx * 1.9); h.translate(sx * 1.15, 0.1, 0.9); addH(h, fin);
     }
     for (const sx of [-0.5, 0.5]) { // whiskers flowing back
-      const h = new THREE.ConeGeometry(0.07, 5.0, 3); h.rotateX(Math.PI / 2 + 0.35); h.rotateY(sx * 0.5); h.translate(sx * 1.6, -0.1, 2.2); addH(h, belly);
+      const h = new THREE.ConeGeometry(0.06, 7.5, 3); h.rotateX(Math.PI / 2 + 0.35); h.rotateY(sx * 0.5); h.translate(sx * 1.6, -0.1, 2.2); addH(h, belly);
     }
   }
   const headMesh = new THREE.Mesh(mergeGeos(headParts), bodyMesh.material);
@@ -1451,38 +1461,8 @@ function makeDragon(colorHex, ph0) {
   headG.add(headMesh, eyeMesh);
   headG.scale.setScalar(0.8);
 
-  // ---- bat wings: scalloped membrane + finger bones ----
-  function wing(sign) {
-    const pivot = new THREE.Group();
-    pivot.position.set(0.9 * sign, 1.4, 3.2);
-    const A = [0, 0, 0], B = [2.8 * sign, 1.9, -0.7], C = [5.8 * sign, 2.8, -2.6],
-      D = [4.2 * sign, 0.5, -4.6], E = [2.1 * sign, -0.5, -4.8], F = [0.5 * sign, -1.0, -2.8];
-    const tris = [[A, B, F], [B, E, F], [B, D, E], [B, C, D]];
-    const v = [], col = [];
-    const membrane = fin.clone().lerp(base, 0.45);
-    const shadeOf = p => { const d = Math.min(1, (Math.abs(p[0]) + Math.abs(p[2])) / 8); return 1.05 - d * 0.55; };
-    for (const t of tris) for (const p of t) { v.push(p[0], p[1], p[2]); const sh = shadeOf(p); col.push(membrane.r * sh, membrane.g * sh, membrane.b * sh); }
-    const wg = new THREE.BufferGeometry();
-    wg.setAttribute('position', new THREE.BufferAttribute(new Float32Array(v), 3));
-    wg.setAttribute('color', new THREE.BufferAttribute(new Float32Array(col), 3));
-    wg.computeVertexNormals();
-    const parts = [{ g: wg, c: [membrane.r, membrane.g, membrane.b] }];
-    for (const tip of [C, D, E]) { // finger bones
-      const from = new THREE.Vector3(...A).lerp(new THREE.Vector3(...B), 0.5);
-      const to = new THREE.Vector3(...tip);
-      const len = from.distanceTo(to);
-      const bg = new THREE.CylinderGeometry(0.09, 0.16, len, 4);
-      bg.translate(0, len / 2, 0);
-      const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), to.clone().sub(from).normalize());
-      bg.applyQuaternion(q); bg.translate(from.x, from.y, from.z);
-      parts.push({ g: bg, c: [fin.r, fin.g, fin.b] });
-    }
-    const merged = mergeGeos(parts);
-    const m = new THREE.Mesh(merged, new THREE.MeshPhongMaterial({ vertexColors: true, side: THREE.DoubleSide, shininess: 18, specular: new THREE.Color(0x332a18), emissive: new THREE.Color(colorHex), emissiveIntensity: 0.2 }));
-    pivot.add(m);
-    return pivot;
-  }
-  const L = wing(1), R = wing(-1);
+  // v20x: no wings - Chinese dragons ride the sky by virtue, not wings
+  const L = new THREE.Group(), R = new THREE.Group();
   // halo so the dragon reads at distance
   const hg = new THREE.BufferGeometry();
   hg.setAttribute('position', new THREE.BufferAttribute(new Float32Array([0, 1, 1]), 3));
@@ -1490,7 +1470,7 @@ function makeDragon(colorHex, ph0) {
   hm.toneMapped = false;
   const halo = new THREE.Points(hg, hm);
   const grp = new THREE.Group();
-  grp.add(bodyMesh, L, R, halo, headG);
+  grp.add(bodyMesh, halo, headG);
   grp.scale.setScalar(6.2);
 
   // ---- per-frame spine update ----
@@ -1502,8 +1482,8 @@ function makeDragon(colorHex, ph0) {
   function upd(time) {
     for (let i = 0; i < RINGS; i++) {
       const t = i / (RINGS - 1);
-      const sway = Math.sin(t * 7.2 - time * 3.1 + ph0) * 1.15 * (0.25 + t * 0.95);
-      const bob = Math.cos(t * 5.1 - time * 3.1 + ph0) * 0.42 * (0.3 + t * 0.55);
+      const sway = Math.sin(t * 9.5 - time * 3.1 + ph0) * 1.7 * (0.25 + t * 0.95);
+      const bob = Math.cos(t * 5.1 - time * 3.1 + ph0) * 0.6 * (0.3 + t * 0.55);
       waved[i].set(basePts[i].x + sway, basePts[i].y + bob, basePts[i].z);
     }
     for (let i = 0; i < RINGS; i++) {
@@ -1582,9 +1562,6 @@ function tickDragons(t, u) {
     const nx = cx + Math.cos(na) * rr, nz = cz + Math.sin(na) * rr * 0.8;
     d.grp.lookAt(nx, y, nz);
     d.upd(TAU * 13 * u + chase * 4);
-    const f = Math.sin(TAU * 56 * u + d.ph + chase * 8) * (0.6 + chase * 0.3);
-    d.L.rotation.z = 0.2 + f; d.R.rotation.z = -0.2 - f;
-    d.L.rotation.y = -0.15 + f * 0.25; d.R.rotation.y = 0.15 - f * 0.25;
     const m = d.grp.children[0].material;
     m.emissiveIntensity = 0.30 + chase * 0.3;
   }
