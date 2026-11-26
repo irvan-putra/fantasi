@@ -1869,6 +1869,7 @@ const KEYS = [
   { pos: [-410, 50, -50], look: [-250, 40, 60], hold: 1600, fly: 5200, title: "Palace Mist", note: "Silhouettes of the hall pierce the low fog" },
   ..._beat("Rooftop Glide", "Skimming the terrace where the rooftop folk wave", [22, 25, 210], [58, 25, 210], [37, 16.8, 194.5], [37, 16.8, 194.5], 6500, 62, 0, 14),
   ..._beat("Giant of the Lanes", "A giant looms over the lane", [238, 20, 196.7], [226, 20, 196.7], [188.6, 10.8, 196.7], [188.6, 10.8, 196.7], 6500, 40, 0, 0),
+  { pos: [214, 30, 70], look: [200, 12, -30], hold: 0, fly: 3200, title: "Festival Hall", note: "Through the open front into the hall, folk at tables and on their feet" },
   { pos: [158, 15, -75], look: [200, 6, -75], hold: 0, fly: 3500, title: "Festival Hall", note: "Through the open front into the hall, folk at tables and on their feet" },
   { pos: [190, 8, -75], look: [216, 5, -75], hold: 0, fly: 3500, title: "Festival Hall", note: "Through the open front into the hall, folk at tables and on their feet" },
   { pos: [206, 7.5, -83], look: [215, 3.5, -72], hold: 600, fly: 4500, title: "Festival Hall", note: "Through the open front into the hall, folk at tables and on their feet" },
