@@ -1581,7 +1581,7 @@ function _dragonWorld() {
   // glowing ribbon rivers in the sky along each lane
   const rmat = (hex) => new THREE.ShaderMaterial({ transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, uniforms: { uT: ribbonUniform, uC: { value: new THREE.Color(hex) } },
     vertexShader: 'varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
-    fragmentShader: 'uniform float uT; uniform vec3 uC; varying vec2 vUv; void main(){ float e=1.0-abs(vUv.y*2.0-1.0); float a=pow(e,1.6); float f=0.65+0.35*sin(vUv.x*180.0-uT*1.4); gl_FragColor=vec4(uC*(0.5+1.4*a)*f, a*0.85);}' });
+    fragmentShader: 'uniform float uT; uniform vec3 uC; varying vec2 vUv; void main(){ float e=1.0-abs(vUv.y*2.0-1.0); float a=pow(e,1.6); float f=0.88+0.12*sin(vUv.x*180.0-uT*1.4); gl_FragColor=vec4(uC*(0.5+1.4*a)*f, a*0.85);}' });
   const N = 260, HW = 15;
   lanes.forEach((L, i) => { const pos = [], uv = [], idx = [];
     for (let k = 0; k <= N; k++) { const uu = L.ts[0] + k / N, a = crpos(L, uu), b = crpos(L, uu + 0.002); let tx = b[0] - a[0], tz = b[2] - a[2]; const ln = Math.hypot(tx, tz) || 1; tx /= ln; tz /= ln; const nx = -tz * HW, nz = tx * HW;
@@ -1617,7 +1617,7 @@ function tickDragons(t, u) {
     d.grp.lookAt(p2[0], p2[1], p2[2]);
     d.grp.rotateZ(Math.sin(TAU * 3 * u + d.ph) * 0.25);
     d.upd(TAU * 13 * u + chase * 4);
-    d.grp.scale.setScalar(1.0);
+    d.grp.scale.setScalar(1.9);
     d.grp.children[0].material.emissiveIntensity = 0.55 + chase * 0.3;
     W.ribbonUniform.value = t;
   }
