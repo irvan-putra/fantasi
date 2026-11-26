@@ -2111,10 +2111,25 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
         T(4, part(box(0.07, 0.8, 0.07), 0x6a4a2a, 0.5, 0.95, 0.1)), T(4, part(box(0.3, 0.2, 0.06), 0x9a9aa4, 0.5, 1.45, 0.1))]); // axe
     },
     giant(v) {
-      const cloth = [0x6a5a48, 0x4a6a58, 0x6a4a58][v % 3], skin = [0xb09070, 0x90a080, 0xa08878][v % 3];
-      return man({ cloth, pants: 0x4a4038, skin, boots: 0x2a2018, sx: 1.25, sy: 1 }, [
-        T(4, part(box(0.14, 2.2, 0.14), 0x5a3f28, 0.62, 1.3, 0.15)), T(4, part(box(0.34, 0.5, 0.34), 0x5a3f28, 0.62, 2.45, 0.15)), // huge club
-        part(box(0.6, 0.12, 0.34), 0x2a2018, 0, 0.9, 0)]);
+      // v23ad: three distinct giants: fur-cloaked redbeard, horned stone-blue brute, ochre drummer with topknot
+      const k = v % 3;
+      const skin = [0xc89a78, 0x7f95b8, 0xd8a050][k], cloth = [0xb03a3a, 0x2f7f86, 0xe0b030][k], pants = [0x3a4a6a, 0x4a3a58, 0x6a3a2a][k], hair = [0xd0561e, 0xe8e8f0, 0x1a1a1a][k], trim = [0xf0c040, 0xd8f0ff, 0xd04040][k];
+      const fur = [0x5a4030, 0x8a8a96, 0x6a4a28][k];
+      const ex = [
+        part(box(0.6, 0.12, 0.34), 0x2a1c14, 0, 0.9, 0), part(box(0.14, 0.14, 0.04), trim, 0, 0.9, 0.18), // belt + bright buckle
+        part(box(0.56, 0.2, 0.3), trim, 0, 1.36, 0), // bright chest band
+        part(box(0.5, 0.34, 0.06), cloth, 0, 0.66, 0.15), part(box(0.5, 0.34, 0.06), cloth, 0, 0.66, -0.15), // tabard flaps
+        T(3, part(ball(0.17), fur, -0.38, 1.46, 0)), T(4, part(ball(0.17), fur, 0.38, 1.46, 0)), // fur pauldrons
+        T(3, part(box(0.16, 0.1, 0.18), trim, -0.34, 0.9, 0)), T(4, part(box(0.16, 0.1, 0.18), trim, 0.34, 0.9, 0)), // arm bands
+        T(5, part(box(0.06, 0.08, 0.07), skin, 0, 1.66, 0.19, 0, 0, 1, 1, 1)), // nose
+        T(5, part(box(0.3, 0.05, 0.05), 0x1a1210, 0, 1.73, 0.15)), // heavy brow
+        T(5, part(box(0.3, 0.2, 0.14), hair, 0, 1.52, 0.14)), // beard
+        part(box(0.6, 0.26, 0.1), fur, 0, 1.3, -0.2) // back cloak
+      ];
+      if (k === 0) { ex.push(T(5, part(new THREE.SphereGeometry(0.23, 5, 2, 0, Math.PI * 2, 0, Math.PI / 2), hair, 0, 1.72)), T(4, part(box(0.14, 2.0, 0.14), 0x5a3f28, 0.62, 1.3, 0.15)), T(4, part(box(0.34, 0.5, 0.34), 0x5a3f28, 0.62, 2.35, 0.15)), T(4, part(cone(0.08, 0.25, 4), 0xc0c0c8, 0.62, 2.7, 0.15))); }
+      if (k === 1) { ex.push(T(5, part(new THREE.SphereGeometry(0.23, 5, 2, 0, Math.PI * 2, 0, Math.PI / 2), 0x8a8a96, 0, 1.72)), T(5, part(cone(0.07, 0.4, 4), 0xf0e8d0, -0.24, 1.9, 0, 0, 0.9)), T(5, part(cone(0.07, 0.4, 4), 0xf0e8d0, 0.24, 1.9, 0, 0, -0.9)), T(4, part(box(0.05, 0.5, 0.05), 0x4a3a2a, 0.62, 0.9, 0.15)), T(4, part(box(0.26, 0.3, 0.26), 0xffd070, 0.62, 0.55, 0.15)), T(4, part(box(0.12, 2.6, 0.12), 0x4a4038, -0.6, 1.4, 0.15))); }
+      if (k === 2) { ex.push(T(5, part(ball(0.1), hair, 0, 1.95)), T(5, part(box(0.3, 0.1, 0.3), hair, 0, 1.82)), T(4, part(box(0.4, 0.3, 0.4), 0xa04a28, 0.55, 0.78, 0.2)), T(4, part(box(0.44, 0.06, 0.44), 0xf0d8a0, 0.55, 0.95, 0.2))); }
+      return man({ cloth, pants, skin, boots: 0x2a2018, sx: 1.25, sy: 1 }, ex);
     },
   };
   const SC = { human: 2.6, elf: 2.6, dwarf: 2.6, giant: 6.0 }; // world scale per unit (giants ~ 2.7x humans' height with bulk)
@@ -2268,7 +2283,7 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
         else { mode = 0; yaw = Math.atan2(ux, uz) + (rnd() - 0.5) * 3; }
         const q = rnd(), race = q < 0.7 ? 'human' : q < 0.82 ? 'elf' : 'dwarf';
         items.push({ race, v: (rnd() * 12) | 0, x, y: 0.5, z, yaw, ph: rnd() * 6.28, w: 'g', lx: wd, lz: 0, ly: 0.5, ledgeYaw: yaw, mode }); FOLK_COUNT[race]++; made++; } } }
-  items.push({ race: 'giant', v: 3, x: 188.6, y: 0.5, z: 196.7, yaw: Math.PI / 2, ph: 1.3, w: 'g', lx: 10, lz: 0, ly: 0.5, ledgeYaw: Math.PI / 2, mode: 0 }); FOLK_COUNT.giant++; // v23w: the giant of the Giant of the Lanes beat
+  items.push({ race: 'giant', v: 4, x: 188.6, y: 0.5, z: 196.7, yaw: Math.PI / 2, ph: 1.3, w: 'g', lx: 10, lz: 0, ly: 0.5, ledgeYaw: Math.PI / 2, mode: 0 }); FOLK_COUNT.giant++; // v23w: the giant of the Giant of the Lanes beat
   // ---- ledges (small balcony slabs)
   const ledgeSpots = items.filter((o) => o.w === 'b');
   const ledgeMat = new THREE.MeshLambertMaterial({ color: 0x6a5a4c, emissive: 0x2a2018, emissiveIntensity: 1.0 }); lamb.push(ledgeMat);
