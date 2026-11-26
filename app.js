@@ -2101,39 +2101,92 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
   const SC = { human: 2.6, elf: 2.6, dwarf: 2.6, giant: 6.0 }; // world scale per unit (giants ~ 2.7x humans' height with bulk)
   const meshes = {}; const lamb = [];
   const caps = { human: [0, 0], elf: [0, 0], dwarf: [0, 0], giant: [0, 0] };
-  // ---- spots
+  // ---- spots (v23i): real surfaces only. Ground off walls and not under roofs, roofs flat with measured height, ledges flush to a wall.
   const camPts = []; { for (let i = 0; i < 160; i++) camPts.push(camAt(i * LOOP_MS / 160).pos); }
   const nearCam = (x, y, z, r) => { for (const p of camPts) { const dx = p[0] - x, dy = p[1] - y, dz = p[2] - z; if (dx * dx + dy * dy + dz * dz < r * r) return true; } return false; };
-  const LIM = 820;
+  const LIM = 820, CELL = 12;
+  const ck = (x, z) => (Math.floor(x / CELL) + 300) * 1000 + (Math.floor(z / CELL) + 300);
+  const wp = sec('walls_pos'), wi = sec('walls_idx'), rf = sec('roofs_pos'), ri = sec('roofs_idx');
+  const segs = [], segCell = new Map();
+  { const nt = wi.length / 3;
+    for (let t = 0; t < nt; t++) {
+      const v = [wi[t * 3] * 3, wi[t * 3 + 1] * 3, wi[t * 3 + 2] * 3];
+      const cx = (wp[v[0]] + wp[v[1]] + wp[v[2]]) / 3, cz = (wp[v[0] + 2] + wp[v[1] + 2] + wp[v[2] + 2]) / 3;
+      if (Math.abs(cx) > LIM || Math.abs(cz) > LIM) continue;
+      let bi = 0, bj = 1, bd = -1;
+      for (const [i, j] of [[0, 1], [0, 2], [1, 2]]) { const d = Math.hypot(wp[v[i]] - wp[v[j]], wp[v[i] + 2] - wp[v[j] + 2]); if (d > bd) { bd = d; bi = i; bj = j; } }
+      if (bd < 0.5) continue;
+      const s = segs.length; segs.push([wp[v[bi]], wp[v[bi] + 2], wp[v[bj]], wp[v[bj] + 2]]);
+      const n = Math.max(1, Math.ceil(bd / (CELL / 2))), seen = new Set();
+      for (let k = 0; k <= n; k++) { const x = segs[s][0] + (segs[s][2] - segs[s][0]) * k / n, z = segs[s][1] + (segs[s][3] - segs[s][1]) * k / n; const key = ck(x, z); if (seen.has(key)) continue; seen.add(key); let a = segCell.get(key); if (!a) { a = []; segCell.set(key, a); } a.push(s); }
+    } }
+  const rtris = [], rtCell = new Map();
+  { const nt = ri.length / 3;
+    for (let t = 0; t < nt; t++) {
+      const v = [ri[t * 3] * 3, ri[t * 3 + 1] * 3, ri[t * 3 + 2] * 3];
+      const cx = (rf[v[0]] + rf[v[1]] + rf[v[2]]) / 3, cz = (rf[v[0] + 2] + rf[v[1] + 2] + rf[v[2] + 2]) / 3;
+      if (Math.abs(cx) > LIM || Math.abs(cz) > LIM) continue;
+      const tri = [rf[v[0]], rf[v[0] + 1], rf[v[0] + 2], rf[v[1]], rf[v[1] + 1], rf[v[1] + 2], rf[v[2]], rf[v[2] + 1], rf[v[2] + 2]];
+      const id = rtris.length; rtris.push(tri);
+      const x0 = Math.min(tri[0], tri[3], tri[6]), x1 = Math.max(tri[0], tri[3], tri[6]), z0 = Math.min(tri[2], tri[5], tri[8]), z1 = Math.max(tri[2], tri[5], tri[8]);
+      for (let gx = Math.floor(x0 / CELL); gx <= Math.floor(x1 / CELL); gx++) for (let gz = Math.floor(z0 / CELL); gz <= Math.floor(z1 / CELL); gz++) { const key = (gx + 300) * 1000 + (gz + 300); let a = rtCell.get(key); if (!a) { a = []; rtCell.set(key, a); } a.push(id); }
+    } }
+  // highest roof surface above (x,z), or -1; interpolates sloped roofs
+  const roofAt = (x, z) => {
+    const a = rtCell.get(ck(x, z)); if (!a) return -1; let best = -1;
+    for (const id of a) { const T = rtris[id];
+      const d = (T[5] - T[8]) * (T[0] - T[6]) + (T[6] - T[3]) * (T[2] - T[8]); if (Math.abs(d) < 1e-6) continue;
+      const l1 = ((T[5] - T[8]) * (x - T[6]) + (T[6] - T[3]) * (z - T[8])) / d, l2 = ((T[8] - T[2]) * (x - T[6]) + (T[0] - T[6]) * (z - T[8])) / d, l3 = 1 - l1 - l2;
+      if (l1 < -0.001 || l2 < -0.001 || l3 < -0.001) continue;
+      const y = l1 * T[1] + l2 * T[4] + l3 * T[7]; if (y > best) best = y; }
+    return best;
+  };
+  // nearest wall segment: distance and direction
+  const wallNear = (x, z) => {
+    let bd = 1e9, bx = 1, bz = 0; const gx = Math.floor(x / CELL), gz = Math.floor(z / CELL);
+    for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) { const a = segCell.get((gx + i + 300) * 1000 + (gz + j + 300)); if (!a) continue;
+      for (const s of a) { const S = segs[s], dx = S[2] - S[0], dz = S[3] - S[1], l2 = dx * dx + dz * dz; let u = l2 > 0 ? ((x - S[0]) * dx + (z - S[1]) * dz) / l2 : 0; u = Math.max(0, Math.min(1, u));
+        const d = Math.hypot(x - S[0] - dx * u, z - S[1] - dz * u); if (d < bd) { bd = d; const l = Math.sqrt(l2) || 1; bx = dx / l; bz = dz / l; } } }
+    return [bd, bx, bz];
+  };
   const ground = [], roofs = [], balc = [];
   { const rp = sec('roads_pos'); const n = rp.length / 3;
-    for (let k = 0; k < 9000; k++) { const i = (rnd() * n) | 0; const x = rp[i * 3] + (rnd() - 0.5) * 5, z = rp[i * 3 + 2] + (rnd() - 0.5) * 5; if (Math.abs(x) < LIM && Math.abs(z) < LIM) ground.push([x, 0.5, z]); if (ground.length > 2600) break; } }
-  const rf = sec('roofs_pos'); const RC = 14, rcell = new Map();
-  { const n = rf.length / 3;
-    for (let i = 0; i < n; i++) { const x = rf[i * 3], y = rf[i * 3 + 1], z = rf[i * 3 + 2]; if (Math.abs(x) > LIM || Math.abs(z) > LIM) continue;
-      const kk = Math.round(x / RC) + ':' + Math.round(z / RC); let c = rcell.get(kk); if (!c) { c = { sx: 0, sz: 0, n: 0 }; rcell.set(kk, c); } c.sx += x; c.sz += z; c.n++;
-      if (y >= 9 && y <= 95 && rnd() < 0.04) roofs.push([x, y, z]); } }
-  { const wp = sec('walls_pos'), wi = sec('walls_idx'); const nt = wi.length / 3;
-    for (let t = 0; t < nt && balc.length < 3500; t++) { if (rnd() > 0.07) continue;
+    for (let k = 0; k < 16000 && ground.length < 2600; k++) { const i = (rnd() * n) | 0; const x = rp[i * 3] + (rnd() - 0.5) * 5, z = rp[i * 3 + 2] + (rnd() - 0.5) * 5; if (Math.abs(x) > LIM || Math.abs(z) > LIM) continue;
+      if (roofAt(x, z) >= 0) continue; const w = wallNear(x, z); if (w[0] < 2.4) continue;
+      ground.push([x, 0.5, z, Math.atan2(w[1], w[2]) + (rnd() < 0.5 ? 0 : Math.PI), w[0]]); } }
+  // flat roof areas: centroid-ish points at least 2.4 m inside every edge, nothing higher above them
+  { for (const T of rtris) {
+      const ux = T[3] - T[0], uy = T[4] - T[1], uz = T[5] - T[2], vx = T[6] - T[0], vy = T[7] - T[1], vz = T[8] - T[2];
+      const nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx, ln = Math.hypot(nx, ny, nz); if (ln < 1e-3 || Math.abs(ny) / ln < 0.985) continue;
+      if (Math.max(T[1], T[4], T[7]) - Math.min(T[1], T[4], T[7]) > 0.2 || T[1] < 6 || T[1] > 95) continue;
+      if (rnd() > 0.5) continue;
+      const bs = [[1 / 3, 1 / 3, 1 / 3], [0.5, 0.25, 0.25], [0.25, 0.5, 0.25], [0.25, 0.25, 0.5]];
+      const [b0, b1, b2] = bs[(rnd() * 4) | 0]; const x = b0 * T[0] + b1 * T[3] + b2 * T[6], z = b0 * T[2] + b1 * T[5] + b2 * T[8], y = T[1];
+      let ok = true; for (let e = 0; e < 3 && ok; e++) { const ax = T[e * 3], az = T[e * 3 + 2], bx = T[((e + 1) % 3) * 3], bz = T[((e + 1) % 3) * 3 + 2]; const dx = bx - ax, dz = bz - az, l = Math.hypot(dx, dz) || 1; if (Math.abs((x - ax) * dz - (z - az) * dx) / l < 2.4) ok = false; }
+      if (!ok || Math.abs(roofAt(x, z) - y) > 0.3) continue;
+      roofs.push([x, y, z, rnd() * 6.283]); } }
+  // balcony ledges: flush to a wall face, outward side open (no roof overhead, no other wall within 1.5 m)
+  { const nt = wi.length / 3;
+    for (let t = 0; t < nt && balc.length < 3500; t++) { if (rnd() > 0.05) continue;
       const a = wi[t * 3] * 3, b = wi[t * 3 + 1] * 3, c = wi[t * 3 + 2] * 3;
       const cx = (wp[a] + wp[b] + wp[c]) / 3, cy = (wp[a + 1] + wp[b + 1] + wp[c + 1]) / 3, cz = (wp[a + 2] + wp[b + 2] + wp[c + 2]) / 3;
       if (Math.abs(cx) > LIM || Math.abs(cz) > LIM || cy < 7 || cy > 70) continue;
       const ux = wp[b] - wp[a], uy = wp[b + 1] - wp[a + 1], uz = wp[b + 2] - wp[a + 2], vx = wp[c] - wp[a], vy = wp[c + 1] - wp[a + 1], vz = wp[c + 2] - wp[a + 2];
       let nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx; const ln = Math.hypot(nx, ny, nz); if (ln < 1e-4) continue; nx /= ln; ny /= ln; nz /= ln;
-      if (Math.abs(ny) > 0.12) continue;
-      // outward = away from the roof mass nearby
-      let sx = 0, sz = 0, sn = 0;
-      for (let dx = -1; dx <= 1; dx++) for (let dz = -1; dz <= 1; dz++) { const cc = rcell.get((Math.round(cx / RC) + dx) + ':' + (Math.round(cz / RC) + dz)); if (cc) { sx += cc.sx; sz += cc.sz; sn += cc.n; } }
-      if (sn < 6) continue;
-      const dd = nx * (sx / sn - cx) + nz * (sz / sn - cz); if (Math.abs(dd) < 1.5) continue;
-      if (dd > 0) { nx = -nx; nz = -nz; }
-      const fy = Math.max(3.4, Math.floor(cy / 3.4) * 3.4);
-      balc.push([cx + nx * 1.3, fy, cz + nz * 1.3, Math.atan2(nx, nz)]); } }
+      if (Math.abs(ny) > 0.08) continue;
+      const hn = Math.hypot(nx, nz); nx /= hn; nz /= hn;
+      const cA = roofAt(cx + nx * 1.3, cz + nz * 1.3) > cy + 1, cB = roofAt(cx - nx * 1.3, cz - nz * 1.3) > cy + 1;
+      if (cA === cB) continue; if (cA) { nx = -nx; nz = -nz; }
+      const fy = Math.round(cy / 3.4) * 3.4; if (Math.abs(fy - cy) > 1.2 || fy < 3.4) continue;
+      const tx = -nz, tz = nx; let ok = true;
+      for (const [o, s] of [[1.7, 0], [3.2, 2.1], [3.2, -2.1], [3.2, 0]]) { const px = cx + nx * o + tx * s, pz = cz + nz * o + tz * s; if (roofAt(px, pz) > fy - 0.5) { ok = false; break; } if (o > 3 && wallNear(px, pz)[0] < 1.5) { ok = false; break; } }
+      if (!ok) continue;
+      const lx = cx + nx * 1.75, lz = cz + nz * 1.75, sgn = rnd() < 0.5 ? -1 : 1;
+      balc.push([lx + tx * 0.8 * sgn, fy, lz + tz * 0.8 * sgn, Math.atan2(nx, nz), lx, lz]); } }
   const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = (rnd() * (i + 1)) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
-  // v23d: market crowd clusters from the manifest get real folk too
-  { const cr = manifest.crowd; const extra = []; for (const p of cr) for (let j = 0; j < 1; j++) extra.push([p[0] + (rnd() - 0.5) * 16, 0.5, p[1] + (rnd() - 0.5) * 16]); shuffle(extra); ground.unshift(...extra); }
+  // v23d/i: market clusters from the manifest get folk too, facing the cluster centre; only on valid ground
+  { const cr = manifest.crowd; const extra = []; for (const p of cr) { const x = p[0] + (rnd() - 0.5) * 16, z = p[1] + (rnd() - 0.5) * 16; if (roofAt(x, z) >= 0) continue; const w = wallNear(x, z); if (w[0] < 2.4) continue; extra.push([x, 0.5, z, Math.atan2(p[0] - x, p[1] - z), w[0]]); } shuffle(extra); ground.unshift(...extra); }
   shuffle(roofs); shuffle(balc);
-  // v23b: favour spots the camera can actually see (within ~230 m of a low camera key), the rest fill in behind
   { const seen = camPts.filter((p) => p[1] < 150); const dnear = (s) => { let d = 1e9; for (const p of seen) { const dx = p[0] - s[0], dz = p[2] - s[2], dy = p[1] - s[1]; const q = dx * dx + dz * dz + dy * dy * 0.3; if (q < d) d = q; } return d; };
     for (const pool of [ground, roofs, balc]) { const a = [], b = []; for (const s of pool) (dnear(s) < 230 * 230 ? a : b).push(s); pool.length = 0; pool.push(...a, ...b); } }
   // ---- plan: [race, where, count]
@@ -2145,11 +2198,10 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
     let made = 0, guard = 0; const pool = pools[w];
     while (made < cnt && cur[w] < pool.length && guard++ < 20000) {
       const s = pool[cur[w]++]; const clear = race === 'giant' ? 70 : 16;
+      if (race === 'giant' && w === 'g' && s[4] < 6) continue;
       if (nearCam(s[0], s[1] + 3, s[2], clear)) continue;
-      const yaw = w === 'b' ? s[3] + (rnd() - 0.5) * 0.5 : rnd() * 6.283;
-      let x = s[0], z = s[2];
-      if (w === 'b') { x += (rnd() - 0.5) * 1.4 * Math.cos(s[3]); z -= (rnd() - 0.5) * 1.4 * Math.sin(s[3]); }
-      items.push({ race, v: (rnd() * 12) | 0, x, y: s[1], z, yaw, ph: rnd() * 6.28, w }); made++;
+      const yaw = s[3] + (rnd() - 0.5) * (w === 'g' ? 0.5 : 0.7);
+      items.push({ race, v: (rnd() * 12) | 0, x: s[0], y: s[1], z: s[2], yaw, ph: rnd() * 6.28, w, lx: s[4], lz: s[5], ly: s[1], ledgeYaw: s[3] }); made++;
       FOLK_COUNT[race]++;
     }
   }
@@ -2174,7 +2226,7 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
     list.forEach((o, i) => { o.im = im; o.i = i; const s = SC[race] * (o.w === 'g' ? 1 : 1.3); dummy.position.set(o.x, o.y, o.z); dummy.rotation.set(0, o.yaw, 0); dummy.scale.setScalar(s); dummy.updateMatrix(); im.setMatrixAt(i, dummy.matrix); o.s = s; if (o.w === 'g' && race !== 'giant') animated.push(o); });
     im.instanceMatrix.needsUpdate = true; scene.add(im);
   }
-  ledgeSpots.forEach((o, i) => { dummy.position.set(o.x, o.y - 0.2, o.z); dummy.rotation.set(0, o.yaw, 0); dummy.scale.setScalar(1); dummy.updateMatrix(); ledge.setMatrixAt(i, dummy.matrix); });
+  ledgeSpots.forEach((o, i) => { dummy.position.set(o.lx, o.y - 0.25, o.lz); dummy.rotation.set(0, o.ledgeYaw, 0); dummy.scale.setScalar(1); dummy.updateMatrix(); ledge.setMatrixAt(i, dummy.matrix); });
   ledge.count = ledgeSpots.length; ledge.instanceMatrix.needsUpdate = true; ledge.frustumCulled = false; scene.add(ledge);
   const touched = new Set(); let cursor = 0;
   folkTick = (t, phase) => {
@@ -2182,12 +2234,20 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
     // sway a rotating slice of street folk each frame (cheap)
     const n = animated.length, step = Math.min(n, 160); touched.clear();
     for (let k = 0; k < step; k++) { const o = animated[(cursor + k) % n];
-      dummy.position.set(o.x, o.y + Math.abs(Math.sin(t * 2.0 + o.ph)) * 0.22, o.z); dummy.rotation.set(0, o.yaw + Math.sin(t * 0.7 + o.ph) * 0.5, 0); dummy.scale.setScalar(o.s); dummy.updateMatrix();
+      dummy.position.set(o.x, o.y, o.z); dummy.rotation.set(0, o.yaw + Math.sin(t * 0.5 + o.ph) * 0.12, 0); dummy.scale.setScalar(o.s); dummy.updateMatrix();
       o.im.setMatrixAt(o.i, dummy.matrix); touched.add(o.im); }
     cursor = (cursor + step) % Math.max(1, n);
     for (const im of touched) im.instanceMatrix.needsUpdate = true;
   };
-  window.__FOLK = { counts: FOLK_COUNT, pools: { ground: ground.length, roofs: roofs.length, balconies: balc.length }, total: items.length };
+  // scripted clip test: every figure re-checked against the roof and wall data (same data the placement used, so it catches logic slips, not data errors)
+  const clipTest = () => { const r = { ground: 0, roof: 0, balcony: 0, checked: items.length, bad: 0, badGiant: 0 };
+    for (const o of items) { let bad = false;
+      if (o.w === 'g') { const w = wallNear(o.x, o.z)[0]; bad = roofAt(o.x, o.z) >= 0 || w < (o.race === 'giant' ? 5.5 : o.race === 'dwarf' ? 2.0 : 1.6); if (bad) r.ground++; }
+      else if (o.w === 'r') { bad = Math.abs(roofAt(o.x, o.z) - o.y) > 0.35; if (bad) r.roof++; }
+      else { bad = roofAt(o.x, o.z) > o.y - 0.5 || wallNear(o.x, o.z)[0] < 1.0; if (bad) r.balcony++; }
+      if (bad) { r.bad++; if (o.race === 'giant') r.badGiant++; } }
+    return r; };
+  window.__FOLK = { clipTest, counts: FOLK_COUNT, pools: { ground: ground.length, roofs: roofs.length, balconies: balc.length }, total: items.length };
 }
 function tickFolk(t, phase) { if (folkTick) folkTick(t, phase); }
 {
