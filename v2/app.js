@@ -1572,7 +1572,7 @@ function tickDragons(t, u) {
     const az = (i - 1) * 8 + Math.sin(TAU * u + d.ph) * 2.0;              // [-10,-6] / [-2,2] / [6,10]
     const el = (i === 1 ? 19 : (i === 0 ? 16 : 18)) + Math.sin(TAU * 2 * u + d.ph * 1.7) * 2.0;
     let ew = pitch + el;                                    // world elevation of the anchor
-    let dist = 640 + i * 80;
+    let dist = 520 + i * 70;
     if (ew > topEdge - 1) ew = topEdge - 1;
     if (ew < 12.5) {
       if (topEdge - 1 >= 12.5) ew = 12.5;                    // lift into the relaxed band
@@ -1632,7 +1632,7 @@ function tickDragons(t, u) {
     d.upd(TAU * 13 * u + chase * 4);
     // v22d: half size on escort beats (the ribbon is ~360u long - full size covered
     // a third of the screen), full size for the gather flypast where it reads well
-    d.grp.scale.setScalar(0.5 + gather * 0.5);
+    d.grp.scale.setScalar(0.65 + gather * 0.35);
     const m = d.grp.children[0].material;
     m.emissiveIntensity = 0.55 + chase * 0.3;
   }
