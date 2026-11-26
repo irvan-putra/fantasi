@@ -1859,7 +1859,7 @@ const _beat = (title, note, a0, b0, look0, look1, walk, H = 62, lift = 0, back =
 const KEYS = [
   { pos: [-1305.9, 520, -1459.1], look: [22.13, 60, 33.16], hold: 2600, fly: 5000, title: "Dusk Horizon", note: "Amber light dissolves into the first twilight shadows" },
   { pos: [-520, 130, -820], look: [22, 50, 33], hold: 1500, fly: 5200, title: "The High Descent", note: "Sliding down toward the glowing realm" },
-  { pos: [16, 60, 160], look: [22, 45, -60], hold: 1400, fly: 5000, lift: 55, title: "Twin Spire Dive", note: "Diving straight between the matched towers of light" },
+  { pos: [16, 60, 160], look: [22, 45, -60], hold: 1400, fly: 5000, lift: 18, title: "Twin Spire Dive", note: "Diving straight between the matched towers of light" },
   { pos: [30, 30, -350], look: [128, 30, -214], hold: 2200, fly: 4800, title: "Gate of Lanterns", note: "Under the great gate, into the festival" },
   { pos: [128, 66, -62], look: [185, 22, -140], hold: 2000, fly: 5000, lift: 42, title: "Star Market Life", note: "Vendors weave through drifting sky lanterns" },
   ..._beat("Market Street Walk", "Low and slow, people on both sides", [145, 2.3, -150], [215, 2.3, -150], [175, 4, -150], [236, 4, -150], 9000),
