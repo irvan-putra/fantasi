@@ -2034,7 +2034,7 @@ window.__SCORE = Score;
 // ---------------- stats chip ----------------
 {
   const c = manifest.counts;
-  $('stats').textContent = `${c.near.toLocaleString('en-US')} enchanted buildings · ${c.lanterns} sky lanterns · 3 dragons · 8 hot air balloons · 1 zeppelin · invented, over real streets`;
+  $('stats').textContent = `${c.near.toLocaleString('en-US')} enchanted buildings · ${c.lanterns} sky lanterns · 3 dragons · 8 hot air balloons · 1 zeppelin · 1 flying ship · 3 wyvern riders · fireworks · invented, over real streets`;
 }
 
 // ---------------- folk (v23a): humans, elves, dwarves, giants on streets, balconies, rooftops ----------------
@@ -2419,12 +2419,28 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
     window.__SKYTICK = (t) => { for (const f of fl) { const a = f.ph + t * f.w; f.m.position.set(f.cx + Math.cos(a) * f.r, f.y + Math.sin(t * 0.2946 + f.ph) * 2, f.cz + Math.sin(a) * f.r); f.m.rotation.y = -a; }
       const za = t * 0.03682; zm.position.set(60 + Math.cos(za) * 260, 150 + Math.sin(t * 0.0737) * 3, 80 + Math.sin(za) * 260); zm.rotation.y = -za - Math.PI / 2; };
     window.__SKY = { fl, zm, G: skyG }; }
+  // v23av: more sky life - fireworks, a flying ship, wyvern riders (all loop-clock driven, camera-checked)
+  { const prev = window.__SKYTICK, basic = new THREE.MeshBasicMaterial({ vertexColors: true }), g2 = new THREE.Group(); scene.add(g2); const TAU = 6.2832, LP = 170.6;
+    const ship = merge([part(box(26, 5, 8), 0x6a4a34, 0, 0, 0), part(box(8, 4, 8), 0x7a5a3a, -14, 3, 0), part(box(2, 24, 2), 0x4a3a2a, 0, 14, 0), part(box(0.6, 15, 18), 0xf0e0b8, 1.5, 15, 0), part(box(0.6, 9, 11), 0xf0c878, 1.5, 28, 0), part(box(10, 1.2, 0.6), 0xffd070, 0, 1.5, 4.2), part(box(10, 1.2, 0.6), 0xffd070, 0, 1.5, -4.2), part(new THREE.SphereGeometry(5, 8, 6), 0xd8503a, 0, 22, 0, 0, 0, 1.4, 0.6, 3)]);
+    const sm = new THREE.Mesh(ship, basic); sm.frustumCulled = false; g2.add(sm);
+    const wy = []; for (let k = 0; k < 3; k++) { const geo = merge([part(box(1.2, 1.2, 4), 0x5a7a4a, 0, 0, 0), part(box(0.7, 0.7, 1.6), 0x4a6a3a, 0, 0.4, 2.6), part(box(0.4, 0.4, 3), 0x4a6a3a, 0, 0, -3.4), part(box(5, 0.15, 2), 0x8aaa6a, 3.2, 0.3, 0.4), part(box(5, 0.15, 2), 0x8aaa6a, -3.2, 0.3, 0.4), part(box(0.6, 1.2, 0.6), [0xe0503a, 0x3a9ae0, 0xe0b030][k], 0, 1.2, 0.3), part(new THREE.SphereGeometry(0.4, 6, 5), 0xf0c8a0, 0, 2.1, 0.3)]); const m = new THREE.Mesh(geo, basic); m.frustumCulled = false; g2.add(m); wy.push(m); }
+    const NF = 6, NP = 90, fp = new Float32Array(NF * NP * 3), fc = new Float32Array(NF * NP * 3), fg = new THREE.BufferGeometry(); fg.setAttribute('position', new THREE.BufferAttribute(fp, 3)); fg.setAttribute('color', new THREE.BufferAttribute(fc, 3));
+    const dirs = []; for (let n = 0; n < NP; n++) { const a = Math.acos(1 - 2 * (n + 0.5) / NP), b = n * 2.39996; dirs.push([Math.sin(a) * Math.cos(b), Math.cos(a), Math.sin(a) * Math.sin(b)]); }
+    const fwC = [[720, 215, 430], [640, 200, 330], [90, 190, 120], [-60, 185, 60], [320, 205, -40], [-250, 195, 200]], fwK = [[1, .4, .3], [.3, .8, 1], [1, .85, .3], [.4, 1, .5], [1, .4, .9], [.6, .5, 1]];
+    const fm = new THREE.Points(fg, new THREE.PointsMaterial({ size: 3.2, vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })); fm.frustumCulled = false; g2.add(fm);
+    window.__SKYTICK = (t) => { prev(t); const sa = t * 0.03682 + 1;
+      sm.position.set(40 + Math.cos(sa) * 300, 140 + Math.sin(t * 0.1474) * 3, 20 + Math.sin(sa) * 300); sm.rotation.y = -sa - Math.PI; sm.rotation.z = Math.sin(t * 0.2946) * 0.05;
+      wy.forEach((m, k) => { const a = t * 0.03682 * 3 + k * 2.1, r = 110 + k * 35; m.position.set(-20 + Math.cos(a) * r, 105 + k * 8 + Math.sin(t * 0.2946 * 2 + k) * 4, 60 + Math.sin(a) * r); m.rotation.y = -a - Math.PI; m.rotation.z = Math.sin(t * 2.9 + k) * 0.12; });
+      for (let f = 0; f < NF; f++) { const ph = ((t / 14 + f / NF * 2.3) % 1), life = Math.min(1, ph * 3.2), on = ph < 0.32, rad = 26 * (1 - Math.pow(1 - life, 2)), fade = on ? 1 - life * life : 0, c = fwC[f], k = fwK[f];
+        for (let n = 0; n < NP; n++) { const o = (f * NP + n) * 3, d = dirs[n]; fp[o] = c[0] + d[0] * rad; fp[o + 1] = c[1] + d[1] * rad - life * life * 7; fp[o + 2] = c[2] + d[2] * rad; fc[o] = k[0] * fade; fc[o + 1] = k[1] * fade; fc[o + 2] = k[2] * fade; } }
+      fg.attributes.position.needsUpdate = true; fg.attributes.color.needsUpdate = true; };
+    window.__SKY2 = { sm, wy, fwC }; }
   window.__FOLK = { groundTest, camAt, LOOP_MS, KEYS, lanes, items, roofAt, wallNear, clipTest, camTest, counts: FOLK_COUNT, pools: { ground: ground.length, roofs: roofs.length, balconies: balc.length }, total: items.length };
 }
 function tickFolk(t, phase) { if (folkTick) folkTick(t, phase); }
 {
   const c = FOLK_COUNT; const tot = c.human + c.elf + c.dwarf + c.giant;
-  $('stats').textContent = `${manifest.counts.near.toLocaleString('en-US')} enchanted buildings · ${tot.toLocaleString('en-US')} folk (humans, elves, dwarves, giants) · ${manifest.counts.lanterns} sky lanterns · 3 dragons · 8 hot air balloons · 1 zeppelin · invented, over real streets`;
+  $('stats').textContent = `${manifest.counts.near.toLocaleString('en-US')} enchanted buildings · ${tot.toLocaleString('en-US')} folk (humans, elves, dwarves, giants) · ${manifest.counts.lanterns} sky lanterns · 3 dragons · 8 hot air balloons · 1 zeppelin · 1 flying ship · 3 wyvern riders · fireworks · invented, over real streets`;
 }
 
 // ---------------- run ----------------
