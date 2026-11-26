@@ -1866,7 +1866,7 @@ const KEYS = [
   ..._beat("Lantern Lane", "Stalls, vendors and lanterns along the lane", [148, 2.3, -184], [148, 2.3, -114], [148, 4, -150], [148, 4, -84], 8000, 62, 45),
   { pos: [-85, 42, 15], look: [-166, 45, 143], hold: 1600, fly: 5000, title: "Pagoda Orbit", note: "Curling around the tiered temple roof" },
   { pos: [-410, 50, -50], look: [-250, 40, 60], hold: 1600, fly: 5200, title: "Palace Mist", note: "Silhouettes of the hall pierce the low fog" },
-  ..._beat("Giant of the Lanes", "A giant looms over the lane", [238, 20, 196.7], [226, 20, 196.7], [188.6, 10.8, 196.7], [188.6, 10.8, 196.7], 6500, 40, 0, 0),
+  ..._beat("Giant of the Lanes", "A giant looms over the lane", [166, 17, 184], [166, 17, 210], [188.6, 10.8, 196.7], [188.6, 10.8, 196.7], 6500, 34, 0, 0),
   { pos: [214, 30, 70], look: [200, 12, -30], hold: 0, fly: 3200, title: "Festival Hall", note: "Through the open front into the hall, folk at tables and on their feet" },
   { pos: [158, 15, -75], look: [200, 6, -75], hold: 0, fly: 3500, title: "Festival Hall", note: "Through the open front into the hall, folk at tables and on their feet" },
   { pos: [190, 8, -79.5], look: [216, 5, -79.5], hold: 0, fly: 3500, title: "Festival Hall", note: "Through the open front into the hall, folk at tables and on their feet" },
@@ -2327,7 +2327,7 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
         items.push({ race, v: (rnd() * 12) | 0, x, y: 0.5, z, yaw, ph: rnd() * 6.28, w: 'g', lx: wd, lz: 0, ly: 0.5, ledgeYaw: yaw, mode }); FOLK_COUNT[race]++; made++; } } }
   items.push({ race: 'giant', v: 4, x: 188.6, y: 0.5, z: 196.7, yaw: Math.PI / 2, ph: 1.3, w: 'g', lx: 10, lz: 0, ly: 0.5, ledgeYaw: Math.PI / 2, mode: 0 }); FOLK_COUNT.giant++; // v23w: the giant of the Giant of the Lanes beat
   // v23bg: keep ground folk out of the Festival Hall and the ground props (carts, drums, picnics, smith, mules, kids, procession)
-  { const Z = [[212, -75, 22, 20], [224, -146, 9], [295, -163, 9], [150, -96, 9], [-173, 148, 9], [262, -172, 6], [150, -75, 6], [273, -129, 6], [146, -108, 6], [-150, 104, 6], [190, -170, 7], [151, -130, 11], [200, 170, 5], [-120, 106, 5], [162, -62, 15]];
+  { const Z = [[212, -75, 22, 20], [224, -146, 9], [295, -163, 9], [150, -96, 9], [-173, 148, 9], [262, -172, 6], [150, -75, 6], [273, -129, 6], [146, -108, 6], [-150, 104, 6], [190, -170, 7], [151, -130, 11], [200, 170, 5], [-120, 106, 5], [162, -62, 15], [188.6, 196.7, 6]];
     const inZ = (x, z) => Z.some((q) => q.length === 4 ? (Math.abs(x - q[0]) < q[2] + 2 && Math.abs(z - q[1]) < q[3] + 2) : Math.hypot(x - q[0], z - q[1]) < q[2] + 1.5);
     let rm = 0; for (let i = items.length - 1; i >= 0; i--) { const o = items[i]; if (o.w === 'g' && o.race !== 'giant' || (o.w === 'g' && !(o.x === 188.6 && o.z === 196.7))) { if (inZ(o.x, o.z)) { FOLK_COUNT[o.race]--; items.splice(i, 1); rm++; } } } window.__PROPCLEAR = rm; }
   // ---- ledges (small balcony slabs)
@@ -2471,13 +2471,25 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
       for (const x of [-18, -9, 0, 9, 18]) B(1.2, 11, 1.2, 0xc8503a, x, 5.5, -0.4);
       B(6, 0.12, 24, 0xd04a4a, 0, 0.45, -12); B(14, 1, 5, 0xb08040, 0, 0.9, -21); B(11, 5, 0.3, 0xd03a3a, 0, 6.5, -23.5); B(8, 0.9, 0.35, 0xf0c030, 0, 6.5, -23.4);
       for (const x of [-13, -4.5, 4.5, 13]) for (const z of [-5, -13, -19]) { q.push(part(new THREE.SphereGeometry(0.8, 8, 6), 0xffcc66, x, 8.6, z)); B(0.08, 3, 0.08, 0x3a2a1a, x, 10.4, z); }
-      const face = (x, y, z) => q.push(part(box(0.1, 0.1, 0.1), 0x222222, x - 0.17, y, z + 0.45), part(box(0.1, 0.1, 0.1), 0x222222, x + 0.17, y, z + 0.45), part(box(0.28, 0.07, 0.07), 0xd03040, x, y - 0.2, z + 0.47));
-      const COL = [0xe0503a, 0x3a9ae0, 0xe0b030, 0x5ab040, 0xc04ac0, 0x40c0c0, 0xf08040, 0x8a6ae0]; let ci = 0;
-      const sitter = (x, z) => { const c = COL[ci++ % 8]; q.push(part(box(0.9, 0.6, 0.9), 0x5a3a1a, x, 0.7, z), part(box(0.9, 1.0, 0.7), c, x, 1.6, z), part(box(0.35, 0.35, 1.0), 0x3a3a5a, x - 0.2, 1.25, z + 0.7), part(box(0.35, 0.35, 1.0), 0x3a3a5a, x + 0.2, 1.25, z + 0.7), part(new THREE.SphereGeometry(0.5, 8, 6), 0xe8b890, x, 2.6, z)); face(x, 2.65, z); };
-      const stander = (x, z, oy, lamp) => { const c = COL[ci++ % 8], tq = []; tq.push(part(box(0.9, 1.0, 0.7), c, x, 1.0, z), part(box(0.35, 0.9, 0.35), 0x3a3a5a, x - 0.2, 0.45, z), part(box(0.35, 0.9, 0.35), 0x3a3a5a, x + 0.2, 0.45, z), part(new THREE.SphereGeometry(0.5, 8, 6), 0xe8b890, x, 2.0, z)); if (lamp) tq.push(part(box(0.1, 0.9, 0.1), 0x5a3a1a, x + 0.6, 1.5, z + 0.2), part(new THREE.SphereGeometry(0.4, 6, 5), 0xffc050, x + 0.6, 2.1, z + 0.2)); tq.forEach((g) => g.translate(0, oy, 0)); q.push(...tq); face(x, 2.05 + oy, z); };
-      for (const [tx, tz] of [[-9, -8], [9, -8], [-9, -16], [9, -16]]) { B(4, 1.1, 2.4, 0x7a4a2a, tx, 0.95, tz); B(1, 0.35, 0.8, 0xe8d8b8, tx - 0.5, 1.7, tz); q.push(part(new THREE.SphereGeometry(0.4, 6, 5), 0xe05a4a, tx + 0.8, 1.8, tz)); sitter(tx - 1.6, tz - 2); sitter(tx + 1.6, tz - 2); sitter(tx - 1.6, tz + 2.3); sitter(tx + 1.6, tz + 2.3); }
-      for (const [x, z] of [[-3, -5], [3, -6], [0, -12], [-14, -4], [14, -4], [5, -18], [-5, -17]]) stander(x, z, 0.4, ci % 3 === 0);
-      for (const x of [-3.5, 0, 3.5]) stander(x, -21, 1.4, false); q.push(part(new THREE.CylinderGeometry(0.8, 0.65, 1.4, 8), 0xc8503a, 5.6, 2.2, -20));
+      // v23bi: dancing, smiling folk (animated meshes on the loop clock) instead of seated figures
+      const hallG = new THREE.Group(); hallG.rotation.y = -Math.PI / 2; hallG.position.set(200, 0.1, -75); scene.add(hallG);
+      const SKN = [0xe8b890, 0xd8a070, 0xf0c8a0, 0xb88058], HAIR = [0x2a1a10, 0x6a3a1a, 0xd0a040, 0x1a1a2a], COL = [0xe0503a, 0x3a9ae0, 0xe0b030, 0x5ab040, 0xc04ac0, 0x40c0c0, 0xf08040, 0x8a6ae0];
+      const bodyGeo = COL.map((c, i) => merge([part(box(0.4, 0.95, 0.4), 0x2a2a4a, -0.25, 0.47, 0), part(box(0.4, 0.95, 0.4), 0x2a2a4a, 0.25, 0.47, 0), part(box(1.0, 1.3, 0.6), c, 0, 1.55, 0), part(new THREE.SphereGeometry(0.52, 8, 6), SKN[i % 4], 0, 2.6, 0), part(box(1.0, 0.35, 0.7), HAIR[i % 4], 0, 2.95, -0.05),
+        part(box(0.2, 0.2, 0.08), 0xffffff, -0.2, 2.7, 0.47), part(box(0.2, 0.2, 0.08), 0xffffff, 0.2, 2.7, 0.47), part(box(0.1, 0.12, 0.06), 0x222222, -0.2, 2.7, 0.51), part(box(0.1, 0.12, 0.06), 0x222222, 0.2, 2.7, 0.51),
+        part(box(0.42, 0.09, 0.06), 0xd8203a, 0, 2.36, 0.5), part(box(0.09, 0.12, 0.06), 0xd8203a, -0.25, 2.42, 0.5), part(box(0.09, 0.12, 0.06), 0xd8203a, 0.25, 2.42, 0.5), part(box(0.14, 0.08, 0.05), 0xf08080, -0.34, 2.52, 0.46), part(box(0.14, 0.08, 0.05), 0xf08080, 0.34, 2.52, 0.46)]));
+      const armGeo = COL.map((c, i) => merge([part(box(0.28, 1.05, 0.28), c, 0, -0.52, 0), part(new THREE.SphereGeometry(0.2, 6, 5), SKN[i % 4], 0, -1.12, 0)]));
+      const dancers = [];
+      const mk = (i, x, y, z, ry, mode, ph, extra) => { const g = new THREE.Group(); g.add(new THREE.Mesh(bodyGeo[i % 8], basic)); const Lm = new THREE.Mesh(armGeo[i % 8], basic), Rm = new THREE.Mesh(armGeo[i % 8], basic); Lm.position.set(-0.62, 2.0, 0); Rm.position.set(0.62, 2.0, 0); g.add(Lm, Rm); g.position.set(x, y, z); g.rotation.y = ry; g.scale.setScalar(0.95); hallG.add(g); dancers.push(Object.assign({ g, L: Lm, R: Rm, mode, ph, x, y, z, ry }, extra || {})); };
+      let di = 0; for (const [cx, cz, dir] of [[-8, -11, 1], [8, -11, -1]]) for (let k = 0; k < 6; k++) mk(di++, 0, 0.4, 0, 0, 'c', k * 1.1, { cx, cz, R: 3.6, th0: k / 6 * 6.2832, dir });
+      for (let k = 0; k < 6; k++) mk(di++, -15 + k * 6, 0.4, -4.5, 0, 'j', k * 0.9);
+      for (const x of [-4, 0, 4]) mk(di++, x, 1.4, -21, 0, 's', x);
+      q.push(part(new THREE.CylinderGeometry(0.8, 0.65, 1.4, 8), 0xc8503a, 7, 2.2, -20), part(new THREE.CylinderGeometry(0.8, 0.65, 1.4, 8), 0x3a7ac8, -7, 2.2, -20));
+      { const prev2 = window.__SKYTICK, W = 6.2832 / 170.6, bw = W * 100, aw = W * 50, ow = W * 6;
+        window.__SKYTICK = (t) => { prev2(t); for (const d of dancers) { const s = Math.sin(bw * t + d.ph), a = Math.sin(aw * t + d.ph * 1.7);
+          if (d.mode === 'c') { const th = d.th0 + d.dir * ow * t; d.g.position.set(d.cx + Math.cos(th) * d.R, d.y + Math.abs(s) * 0.45, d.cz + Math.sin(th) * d.R); d.g.rotation.y = Math.atan2(-Math.cos(th), -Math.sin(th)); }
+          else if (d.mode === 'j') { d.g.position.y = d.y + Math.abs(s) * 0.8; d.g.rotation.y = d.ry + Math.sin(aw * t * 0.5 + d.ph) * 0.35; }
+          else d.g.position.y = d.y + Math.abs(s) * 0.15;
+          const up = d.mode === 's' ? 1.0 : 2.5; d.L.rotation.z = -(up + 0.55 * a); d.R.rotation.z = up - 0.55 * a; } }; window.__HALLD = dancers; }
       const m = merge(q); m.rotateY(-Math.PI / 2); m.translate(200, 0.1, -75); P.push(m); }
     const pm = new THREE.Mesh(merge(P), basic); pm.frustumCulled = false; scene.add(pm); window.__PROPS = pm; }
   // v23bd: drone rule tests over the whole loop. wallTest: clearance to every roof/wall (2.5 m and 4 m rings). hallTest: the Festival Hall shell (front pillars, lintel, side walls, back wall, roof).

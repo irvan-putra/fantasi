@@ -8,8 +8,9 @@
 <meta name="description" content="Pramuka Astral — Pasar Lampion. An invented fantasy realm over the real street layout of Green Pramuka City, Jakarta. A directed dusk-to-night flythrough.">
 <title>Pramuka Astral — Pasar Lampion</title>
 <style>
-  #pause{position:fixed;left:50%;top:14%;transform:translateX(-50%);z-index:30;padding:10px 20px;border-radius:999px;background:rgba(10,12,28,.72);color:#fff;font:600 16px/1.2 system-ui,sans-serif;display:flex;gap:10px;align-items:center;pointer-events:none;opacity:0;transition:opacity .25s;border:1px solid rgba(255,220,160,.55);box-shadow:0 0 18px rgba(255,200,120,.35)}
-  #pause .ps{font-weight:400;font-size:13px;opacity:.8}
+  #pause{position:fixed;left:50%;bottom:11%;transform:translateX(-50%);z-index:30;padding:9px 18px;border-radius:999px;background:rgba(10,12,28,.78);color:#fff;font:600 15px/1.1 system-ui,sans-serif;display:flex;flex-wrap:nowrap;white-space:nowrap;gap:8px;align-items:center;pointer-events:none;opacity:0;transition:opacity .25s;border:1px solid rgba(255,220,160,.55);box-shadow:0 0 18px rgba(255,200,120,.35)}
+  #pause span{white-space:nowrap}
+  #pause .ps{font-weight:400;font-size:12.5px;opacity:.8}
   #pause.on{opacity:1}
   #pause.flash{opacity:1}
   #pause.flash .pt{display:none}#pause.flash .ps{display:none}#pause.flash .pi{font-size:0}#pause.flash .pi::after{content:"\25B6  Resumed";font-size:16px}
@@ -73,7 +74,7 @@
   <div id="stall">Slow connection — the realm is loading piece by piece…</div>
 </div>
 <script type="importmap">{"imports":{"three":"./lib/three.module.min.js"}}</script>
-<script type="module" src="./app.js?v=108u"></script>
+<script type="module" src="./app.js?v=109u"></script>
 <div style="position:fixed;right:6px;bottom:4px;font:10px system-ui;color:#fff9;pointer-events:none;text-shadow:0 0 3px #000">Map data: OpenStreetMap contributors (ODbL), Microsoft building footprints (ODbL)</div>
 </body>
 </html>
