@@ -1870,8 +1870,8 @@ const KEYS = [
   { pos: [214, 30, 70], look: [200, 12, -30], hold: 0, fly: 3200, title: "Festival Hall", note: "Through the open front into the hall, folk at tables and on their feet" },
   { pos: [158, 15, -75], look: [200, 6, -75], hold: 0, fly: 3500, title: "Festival Hall", note: "Through the open front into the hall, folk at tables and on their feet" },
   { pos: [190, 8, -79.5], look: [216, 5, -79.5], hold: 0, fly: 3500, title: "Festival Hall", note: "Through the open front into the hall, folk at tables and on their feet" },
-  { pos: [201.8, 11, -79.5], look: [213, 1.5, -74], hold: 600, fly: 4500, title: "Festival Hall", note: "Through the open front into the hall, folk at tables and on their feet" },
-  { pos: [201.8, 11, -70.5], look: [213, 1.5, -76], hold: 600, fly: 3000, title: "Festival Hall", note: "Through the open front into the hall, folk at tables and on their feet" },
+  { pos: [201.8, 9.2, -79.5], look: [213, 1.5, -74], hold: 600, fly: 4500, title: "Festival Hall", note: "Through the open front into the hall, folk at tables and on their feet" },
+  { pos: [201.8, 9.2, -70.5], look: [213, 1.5, -76], hold: 600, fly: 3000, title: "Festival Hall", note: "Through the open front into the hall, folk at tables and on their feet" },
   { pos: [190, 8, -70.5], look: [216, 5, -70.5], hold: 0, fly: 3000, title: "Festival Hall", note: "Through the open front into the hall, folk at tables and on their feet" },
   { pos: [160, 16, -75], look: [200, 6, -75], hold: 0, fly: 3200, lift: 0, title: "Festival Hall", note: "Through the open front into the hall, folk at tables and on their feet" },
   { pos: [150, 55, -60], look: [40, 40, 60], hold: 0, fly: 4000, title: "Festival Hall", note: "Up and over the rooftops" },
@@ -2479,7 +2479,7 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
         part(box(0.42, 0.09, 0.06), 0xd8203a, 0, 2.36, 0.5), part(box(0.09, 0.12, 0.06), 0xd8203a, -0.25, 2.42, 0.5), part(box(0.09, 0.12, 0.06), 0xd8203a, 0.25, 2.42, 0.5), part(box(0.14, 0.08, 0.05), 0xf08080, -0.34, 2.52, 0.46), part(box(0.14, 0.08, 0.05), 0xf08080, 0.34, 2.52, 0.46)]));
       const armGeo = COL.map((c, i) => merge([part(box(0.28, 1.05, 0.28), c, 0, -0.52, 0), part(new THREE.SphereGeometry(0.2, 6, 5), SKN[i % 4], 0, -1.12, 0)]));
       const dancers = [];
-      const mk = (i, x, y, z, ry, mode, ph, extra) => { const g = new THREE.Group(); g.add(new THREE.Mesh(bodyGeo[i % 8], basic)); const Lm = new THREE.Mesh(armGeo[i % 8], basic), Rm = new THREE.Mesh(armGeo[i % 8], basic); Lm.position.set(-0.62, 2.0, 0); Rm.position.set(0.62, 2.0, 0); g.add(Lm, Rm); g.position.set(x, y, z); g.rotation.y = ry; g.scale.setScalar(0.95); hallG.add(g); dancers.push(Object.assign({ g, L: Lm, R: Rm, mode, ph, x, y, z, ry }, extra || {})); };
+      const mk = (i, x, y, z, ry, mode, ph, extra) => { const g = new THREE.Group(); g.add(new THREE.Mesh(bodyGeo[i % 8], basic)); const Lm = new THREE.Mesh(armGeo[i % 8], basic), Rm = new THREE.Mesh(armGeo[i % 8], basic); Lm.position.set(-0.62, 2.0, 0); Rm.position.set(0.62, 2.0, 0); g.add(Lm, Rm); g.position.set(x, y, z); g.rotation.y = ry; g.scale.setScalar(0.62); hallG.add(g); dancers.push(Object.assign({ g, L: Lm, R: Rm, mode, ph, x, y, z, ry }, extra || {})); };
       let di = 0; for (const [cx, cz, dir] of [[-8, -11, 1], [8, -11, -1]]) for (let k = 0; k < 6; k++) mk(di++, 0, 0.4, 0, 0, 'c', k * 1.1, { cx, cz, Rad: 3.6, th0: k / 6 * 6.2832, dir });
       for (let k = 0; k < 6; k++) mk(di++, -15 + k * 6, 0.4, -4.5, 0, 'j', k * 0.9);
       for (const x of [-4, 0, 4]) mk(di++, x, 1.4, -21, 0, 's', x);
