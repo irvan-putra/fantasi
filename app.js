@@ -24,7 +24,7 @@ async function fetchWithProgress(url, onp) {
 
 const stallTimer = setTimeout(() => $('stall').classList.add('show'), 12000);
 
-const ASSET_V = 'v20y';
+const ASSET_V = 'v20z';
 const manifest = await (await fetch('./manifest.json?' + ASSET_V)).json();
 bar.style.width = '6%';
 const binBuf = await fetchWithProgress('./scene.bin?' + ASSET_V, (f) => { bar.style.width = (6 + f * 84) + '%'; });
@@ -1362,7 +1362,7 @@ function makeDragon(colorHex, ph0) {
   const RINGS = 48, RAD = 8, LEN = 34;
   const radiusAt = t => {
     // tail tip -> chest -> neck
-    const prof = [[0, 0.2], [0.12, 0.55], [0.35, 0.95], [0.55, 1.15], [0.68, 1.05], [0.82, 0.8], [0.93, 0.68], [1, 0.55]];
+    const prof = [[0, 0.3], [0.12, 0.8], [0.35, 1.45], [0.55, 1.75], [0.68, 1.6], [0.82, 1.2], [0.93, 1.0], [1, 0.8]];
     for (let i = 1; i < prof.length; i++) {
       if (t <= prof[i][0]) {
         const [t0, r0] = prof[i - 1], [t1, r1] = prof[i];
@@ -1480,7 +1480,7 @@ function makeDragon(colorHex, ph0) {
   const halo = new THREE.Points(hg, hm);
   const grp = new THREE.Group();
   grp.add(bodyMesh, halo, headG);
-  grp.scale.setScalar(8.0);
+  grp.scale.setScalar(6.8);
 
   // ---- per-frame spine update ----
   const waved = basePts.map(p => p.clone());
@@ -1562,7 +1562,7 @@ function tickDragons(t, u) {
     // view on any beat: push it out along the view ray until its angular size fits.
     const cdx = x - camera.position.x, cdy = y - camera.position.y, cdz = z - camera.position.z;
     const cd = Math.sqrt(cdx * cdx + cdy * cdy + cdz * cdz) || 1;
-    const minD = Math.max(130, 136 / Math.tan(11 * Math.PI / 180)); // v20y: 130-unit floor + 22-degree cap (~700u at scale 8) - Irvan: bigger, instantly readable dragons
+    const minD = Math.max(130, 116 / Math.tan(8 * Math.PI / 180)); // v20z: 130-unit floor + original 16-degree cap, halflen 116u at scale 6.8 (~825u)
     if (cd < minD) {
       const s = minD / cd;
       d.grp.position.set(camera.position.x + cdx * s, camera.position.y + cdy * s, camera.position.z + cdz * s);
