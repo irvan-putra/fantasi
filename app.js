@@ -2486,7 +2486,7 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
       B(36, 0.4, 24, 0xa87444, 0, 0.2, -12); B(36, 12, 0.8, 0x7a5068, 0, 6, -24); B(0.8, 12, 24, 0x6a4a5e, -18, 6, -12); B(0.8, 12, 24, 0x6a4a5e, 18, 6, -12); B(40, 0.8, 28, 0x5a3a52, 0, 12.4, -12); B(40.4, 0.5, 28.4, 0xe0a030, 0, 11.9, -12); B(36, 1.6, 1, 0xd0503a, 0, 11, -0.4);
       for (const x of [-18, -9, 0, 9, 18]) B(1.2, 11, 1.2, 0xc8503a, x, 5.5, -0.4);
       B(6, 0.12, 24, 0xd04a4a, 0, 0.45, -12); B(14, 1, 5, 0xb08040, 0, 0.9, -21); B(11, 5, 0.3, 0xd03a3a, 0, 6.5, -23.5); B(8, 0.9, 0.35, 0xf0c030, 0, 6.5, -23.4);
-      for (const x of [-13, -9.5, 0, 9.5, 13]) for (const z of [-5, -13, -19]) { q.push(part(new THREE.SphereGeometry(0.8, 8, 6), 0xffcc66, x, 8.6, z)); B(0.08, 3, 0.08, 0x3a2a1a, x, 10.4, z); }
+      for (const x of [-13, -9.5, 0, 9.5, 13]) for (const z of [-9, -15, -20]) { q.push(part(new THREE.SphereGeometry(0.8, 8, 6), 0xffcc66, x, 8.6, z)); B(0.08, 3, 0.08, 0x3a2a1a, x, 10.4, z); }
       // v23bi: dancing, smiling folk (animated meshes on the loop clock) instead of seated figures
       const hallG = new THREE.Group(); hallG.rotation.y = -Math.PI / 2; hallG.position.set(200, 0.1, -75); scene.add(hallG);
       const SKN = [0xe8b890, 0xd8a070, 0xf0c8a0, 0xb88058], HAIR = [0x2a1a10, 0x6a3a1a, 0xd0a040, 0x1a1a2a], COL = [0xe0503a, 0x3a9ae0, 0xe0b030, 0x5ab040, 0xc04ac0, 0x40c0c0, 0xf08040, 0x8a6ae0];
@@ -2521,7 +2521,7 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
         if (x > 222.6) bad = true; // back wall
         if (x < 202 && [-93, -84, -75, -66, -57].some((pz) => Math.abs(z - pz) < 1.6)) bad = true; // front pillars
         if (x < 202 && y > 9.4) bad = true; // lintel
-        for (const lx of [-13, -9.5, 0, 9.5, 13]) for (const lz of [-5, -13, -19]) { if (Math.hypot(x - (200 - lz), (y - 8.7) * 0.7, z - (-75 + lx)) < 3.5) bad = true; } } // v23cn: hanging lamps keep 3.5 m
+        for (const lx of [-13, -9.5, 0, 9.5, 13]) for (const lz of [-9, -15, -20]) { if (Math.hypot(x - (200 - lz), (y - 8.7) * 0.7, z - (-75 + lx)) < 3.5) bad = true; } } // v23cn: hanging lamps keep 3.5 m
       if (bad) { out.bad++; if (out.ex.length < 5) out.ex.push([ms, +x.toFixed(1), +y.toFixed(1), +z.toFixed(1)]); } }
     return out; };
   window.__FOLK = { wallTest, hallTest, groundTest, camAt, LOOP_MS, KEYS, lanes, items, roofAt, wallNear, clipTest, camTest, counts: FOLK_COUNT, pools: { ground: ground.length, roofs: roofs.length, balconies: balc.length }, total: items.length };
