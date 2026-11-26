@@ -24,7 +24,7 @@ async function fetchWithProgress(url, onp) {
 
 const stallTimer = setTimeout(() => $('stall').classList.add('show'), 12000);
 
-const ASSET_V = 'v21a';
+const ASSET_V = 'v21b';
 const manifest = await (await fetch('./manifest.json?' + ASSET_V)).json();
 bar.style.width = '6%';
 const binBuf = await fetchWithProgress('./scene.bin?' + ASSET_V, (f) => { bar.style.width = (6 + f * 84) + '%'; });
@@ -1500,7 +1500,7 @@ function makeDragon(colorHex, ph0) {
     for (let i = 0; i < RINGS; i++) {
       const t = i / (RINGS - 1);
       const sway = Math.sin(t * 9.0 - time * 3.1 + ph0) * 4.0 * (0.25 + t * 0.95);
-      const bob = Math.cos(t * 5.1 - time * 3.1 + ph0) * 0.9 * (0.3 + t * 0.55);
+      const bob = Math.cos(t * 9.0 - time * 3.1 + ph0) * 2.6 * (0.3 + t * 0.55); // v21b: corkscrew pair with sway
       waved[i].set(basePts[i].x + sway, basePts[i].y + bob, basePts[i].z);
     }
     for (let i = 0; i < RINGS; i++) {
@@ -1533,9 +1533,9 @@ function makeDragon(colorHex, ph0) {
   return { grp, L, R, upd };
 }
 const DRAG_PATHS = [ // v21a: long lanes sweeping across the city sky, not distant loops
-  { cx: 0, cz: 0, r: 330, h: 175, amp: 24, loops: 1, ph: 0.0 },
-  { cx: -60, cz: 40, r: 400, h: 210, amp: 28, loops: 1, ph: 2.1 },
-  { cx: 80, cz: -40, r: 460, h: 150, amp: 32, loops: 1, ph: 4.2 },
+  { cx: 0, cz: 0, r: 330, h: 185, amp: 48, loops: 1, ph: 0.0 },
+  { cx: -60, cz: 40, r: 400, h: 215, amp: 58, loops: 1, ph: 2.1 },
+  { cx: 80, cz: -40, r: 460, h: 160, amp: 40, loops: 1, ph: 4.2 },
 ];
 const dragons = manifest.dragons.map((d, i) => {
   const { grp, L, R, upd } = makeDragon(d.col, DRAG_PATHS[i % DRAG_PATHS.length].ph);
@@ -1560,16 +1560,16 @@ function tickDragons(t, u) {
     // non-leaders pull toward the lead orbit center during the chase
     const pull = chase * (isLead ? 0 : 0.55);
     const cx = d.cx + (177 - d.cx) * pull, cz = d.cz + (-132 - d.cz) * pull;
-    const rr = d.r * (1 - chase * (isLead ? 0 : 0.3));
+    const rr = d.r * (1 - chase * (isLead ? 0 : 0.3)) * (1 - 0.22 * Math.sin(TAU * 2 * u + d.ph * 1.3) * (1 - gather)); // v21b: coiling radius
     let x = cx + Math.cos(a) * rr;
     let z = cz + Math.sin(a) * rr * 0.8;
-    let y = d.h + Math.sin(TAU * 6 * u + d.ph) * d.amp * (1 - chase * 0.3);
+    let y = d.h + Math.sin(TAU * 2 * u + d.ph) * d.amp * (1 - chase * 0.3) * (1 - gather * 0.6) + Math.sin(TAU * 7 * u + d.ph * 2.0) * d.amp * 0.25 * (1 - gather); // v21b: rise/dive arcs + flutter
     // v21a: gather = line-abreast flypast across the UPPER band of the Dragon Lanes
     // frame, side-on to the beat camera (350,120,150 -> 560,95,350). Never central.
     if (gather > 0) {
       const dirx = 0.707, dirz = -0.707; // lane direction, perpendicular to the beat view
       const slot = (isLead ? -1 : (d.ph < 3 ? 0 : 1)) * 85;
-      const tx = 450 + dirx * slot, ty = 205 + (isLead ? 12 : 0), tz = 247 + dirz * slot;
+      const tx = 450 + dirx * slot, ty = 205 + (isLead ? 12 : 0) + Math.sin(TAU * 3 * u + slot * 0.05) * 10, tz = 247 + dirz * slot;
       x += (tx - x) * gather; y += (ty - y) * gather; z += (tz - z) * gather;
     }
     d.grp.position.set(x, y, z);
@@ -1595,10 +1595,12 @@ function tickDragons(t, u) {
     }
     if (gather > 0.5) {
       d.grp.lookAt(d.grp.position.x + 0.707, d.grp.position.y, d.grp.position.z - 0.707); // v21a: hold the side-on lane heading
+      d.grp.rotateZ(Math.sin(TAU * 3 * u + d.ph) * 0.35); // v21b: roll through the dance
     } else {
       const na = a + 0.02 * Math.sign(d.loops);
       const nx = cx + Math.cos(na) * rr, nz = cz + Math.sin(na) * rr * 0.8;
       d.grp.lookAt(nx, y, nz);
+      d.grp.rotateZ(Math.sin(TAU * 3 * u + d.ph) * 0.55); // v21b: bank into coils and dives
     }
     d.upd(TAU * 13 * u + chase * 4);
     const m = d.grp.children[0].material;
