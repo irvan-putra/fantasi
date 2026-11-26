@@ -1863,17 +1863,14 @@ const KEYS = [
   { pos: [30, 30, -350], look: [128, 30, -214], hold: 2200, fly: 4800, title: "Gate of Lanterns", note: "Under the great gate, into the festival" },
   // v23by: Market Street Walk and Lantern Lane merged into one orbit around the market junction (150,-150): comfortable height, natural scattered crowd below
   ...[90, 45, 0, -45, -90, -135, -180].map((d, i) => { const th = d * Math.PI / 180; return { pos: [150 + 70 * Math.cos(th), 76, -150 + 70 * Math.sin(th)], look: i === 6 ? [64, 50, -60] : i === 0 ? [150, 30, -150] : [150, 16, -150], hold: 0, fly: 3000, lift: 0, title: "Market Life Orbit", note: "Circling the market: stalls, lanterns and folk gathering" }; }),
-  { pos: [152, 112, -92], look: [60, 50, -10], hold: 0, fly: 5200, lift: 45, title: "Market Life Orbit", note: "Circling the market: stalls, lanterns and folk gathering" },
+  { pos: [30, 100, -95], look: [-40, 45, 20], hold: 0, fly: 5200, lift: 45, title: "Market Life Orbit", note: "Circling the market: stalls, lanterns and folk gathering" },
   { pos: [-85, 42, 15], look: [-166, 45, 143], hold: 1600, fly: 5000, title: "Pagoda Orbit", note: "Curling around the tiered temple roof" },
   { pos: [-410, 50, -50], look: [-250, 62, 60], hold: 1600, fly: 5200, title: "Palace Mist", note: "Silhouettes of the hall pierce the low fog" },
   ..._beat("Giant of the Lanes", "A giant looms over the lane", [166, 17, 184], [166, 17, 210], [188.6, 10.8, 196.7], [188.6, 10.8, 196.7], 6500, 34, 0, 0),
   { pos: [214, 30, 70], look: [200, 12, -30], hold: 0, fly: 3200, title: "Festival Hall", note: "Through the open front into the hall, folk at tables and on their feet" },
   { pos: [158, 15, -75], look: [200, 6, -75], hold: 0, fly: 3500, title: "Festival Hall", note: "Through the open front into the hall, folk at tables and on their feet" },
-  { pos: [190, 8, -79.5], look: [216, 5, -79.5], hold: 0, fly: 3500, title: "Festival Hall", note: "Through the open front into the hall, folk at tables and on their feet" },
-  { pos: [199.6, 7.6, -79.5], look: [224, 2, -72], hold: 600, fly: 2250, title: "Festival Hall", note: "Through the open front into the hall, folk at tables and on their feet" },
-  { pos: [205, 8.2, -75], look: [224, 2, -75], hold: 0, fly: 2250, title: "Festival Hall", note: "Through the open front into the hall, folk at tables and on their feet" },
-  { pos: [199.6, 7.6, -70.5], look: [224, 2, -78], hold: 600, fly: 3000, title: "Festival Hall", note: "Through the open front into the hall, folk at tables and on their feet" },
-  { pos: [190, 8, -70.5], look: [216, 5, -70.5], hold: 0, fly: 3000, title: "Festival Hall", note: "Through the open front into the hall, folk at tables and on their feet" },
+  { pos: [178, 15, -88], look: [212, 3, -76], hold: 0, fly: 7500, title: "Festival Hall", note: "Through the open front into the hall, folk at tables and on their feet" },
+  { pos: [178, 15, -62], look: [212, 3, -74], hold: 0, fly: 7700, title: "Festival Hall", note: "Through the open front into the hall, folk at tables and on their feet" },
   { pos: [160, 16, -75], look: [200, 6, -75], hold: 0, fly: 3200, lift: 0, title: "Festival Hall", note: "Through the open front into the hall, folk at tables and on their feet" },
   { pos: [150, 55, -60], look: [40, 40, 60], hold: 0, fly: 4000, title: "Festival Hall", note: "Up and over the rooftops" },
   { pos: [-160, 130, 260], look: [740, 14, 450], hold: 1500, fly: 5400, title: "Water Reveal", note: "Rising over the glowing canals for the reveal" },
@@ -2446,7 +2443,7 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
   // v23au: sky life - hot air balloons and a zeppelin drifting on slow orbits above the city (original low-poly, ~1.5k tris each group, camera-safe by QA)
   { const cols = [0xe0503a, 0x3a9ae0, 0xe0b030, 0x4ac070, 0xb05ad0, 0xf0f0e0], skyG = new THREE.Group(); const mat = new THREE.MeshBasicMaterial({ vertexColors: true }); const fl = [];
     const bal = (c1, c2) => merge([part(new THREE.SphereGeometry(7, 10, 7), c1, 0, 10, 0, 0, 0, 1, 1.2, 1), part(cyl(7, 7, 2.2, 8), c2, 0, 10, 0, 0, 0, 1.02, 0.9, 1.02), part(cone(2.6, 4, 6), c1, 0, 1.2, 0, Math.PI), part(box(2.2, 1.6, 2.2), 0x6a4a2a, 0, -1.3, 0), part(box(0.2, 4, 0.2), 0x3a2a1a, 1.1, 0.8, 1.1), part(box(0.2, 4, 0.2), 0x3a2a1a, -1.1, 0.8, -1.1), part(box(0.5, 0.5, 0.5), 0xffe090, 0, -0.1, 0)]);
-    for (let k = 0; k < 8; k++) { const m = new THREE.Mesh(bal(cols[k % 6], cols[(k + 2) % 6]), mat); m.frustumCulled = false; skyG.add(m); fl.push({ m, cx: -100 + (k % 4) * 140, cz: -150 + Math.floor(k / 4) * 330, r: 40 + (k % 3) * 25, y: 120 + (k % 3) * 18, w: 0.03682 * (1 + (k % 2)), ph: k * 0.9 }); }
+    for (let k = 0; k < 8; k++) { const m = new THREE.Mesh(bal(cols[k % 6], cols[(k + 2) % 6]), mat); m.frustumCulled = false; skyG.add(m); fl.push({ m, cx: -100 + (k % 4) * 140, cz: -150 + Math.floor(k / 4) * 330, r: 40 + (k % 3) * 25, y: 120 + (k % 3) * 18, w: 0.03682 * (1 + (k % 2)), ph: k * 0.9 + (k === 4 ? 2.2 : 0) }); }
     const zep = merge([part(new THREE.SphereGeometry(10, 12, 8), 0x6c6a86, 0, 0, 0, 0, 0, 4.2, 1, 1), part(box(30, 1.2, 0.4), 0xffc860, 0, -3.2, 9.6), part(box(30, 1.2, 0.4), 0xffc860, 0, -3.2, -9.6), part(box(14, 3, 3), 0xffd070, 0, -10.5, 0), part(box(8, 0.6, 14), 0xa04030, -34, 1.5, 0), part(box(8, 14, 0.6), 0xa04030, -34, 1.5, 0), part(box(3, 0.8, 24), 0x303a48, 8, -9.5, 0, 0, 0, 0.3, 1, 1), part(box(1, 6, 1), 0x606a78, 5, -8, 5), part(box(1, 6, 1), 0x606a78, 5, -8, -5)]);
     const zm = new THREE.Mesh(zep, mat); zm.frustumCulled = false; skyG.add(zm); scene.add(skyG);
     window.__SKYTICK = (t) => { for (const f of fl) { const a = f.ph + t * f.w; f.m.position.set(f.cx + Math.cos(a) * f.r, f.y + Math.sin(t * 0.2946 + f.ph) * 2, f.cz + Math.sin(a) * f.r); f.m.rotation.y = -a; }
