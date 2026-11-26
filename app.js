@@ -2085,7 +2085,9 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
       T(1, part(box(0.17, 0.82, 0.18), o.pants, -0.11, 0.41, 0)), T(2, part(box(0.17, 0.82, 0.18), o.pants, 0.11, 0.41, 0)),
       part(box(0.52, 0.66, 0.28), o.cloth, 0, 1.15, 0),
       T(3, part(box(0.13, 0.66, 0.15), o.cloth, -0.34, 1.12, 0, 0, 0.14)), T(4, part(box(0.13, 0.66, 0.15), o.cloth, 0.34, 1.12, 0, 0, -0.14)),
-      T(5, part(ball(0.19), o.skin, 0, 1.68)), ...(extra || [])];
+      T(5, part(ball(0.19), o.skin, 0, 1.68)),
+      T(5, part(box(0.05, 0.06, 0.04), 0x15110e, -0.07, 1.7, 0.19)), T(5, part(box(0.05, 0.06, 0.04), 0x15110e, 0.07, 1.7, 0.19)),
+      T(5, part(box(0.1, 0.022, 0.04), 0x4a1414, 0, 1.615, 0.19)), T(5, part(box(0.022, 0.03, 0.04), 0x4a1414, -0.062, 1.632, 0.19)), T(5, part(box(0.022, 0.03, 0.04), 0x4a1414, 0.062, 1.632, 0.19)), ...(extra || [])];
     const g = merge(gs);
     if (o.sx !== 1 || o.sy !== 1) { g.scale(o.sx, o.sy, o.sx); g.computeVertexNormals(); }
     return g;
@@ -2245,13 +2247,13 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
       const ux = T[3] - T[0], uy = T[4] - T[1], uz = T[5] - T[2], vx = T[6] - T[0], vy = T[7] - T[1], vz = T[8] - T[2];
       const nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx, ln = Math.hypot(nx, ny, nz); if (ln < 1e-3 || Math.abs(ny) / ln < 0.93) continue;
       if (Math.max(T[1], T[4], T[7]) < 7 || Math.max(T[1], T[4], T[7]) > 95) continue;
-      if (rnd() > 0.7) continue;
+      if (rnd() > 0.95) continue;
       const bs = [[1 / 3, 1 / 3, 1 / 3], [0.5, 0.25, 0.25], [0.25, 0.5, 0.25], [0.25, 0.25, 0.5]];
       const [b0, b1, b2] = bs[(rnd() * 4) | 0]; const x = b0 * T[0] + b1 * T[3] + b2 * T[6], z = b0 * T[2] + b1 * T[5] + b2 * T[8];
       if (wallNear(x, z)[0] < 3.0) continue;
-      const cm = cornerMax(x, z, 2.4); if (!cm || cm[0] - cm[1] > 0.3) continue;
-      if (roofs.some((q) => Math.hypot(q[0] - x, q[2] - z) < 5)) continue;
-      roofs.push([x, cm[0] + 0.03, z, rnd() * 6.283]); } }
+      const cm = cornerMax(x, z, 1.9); if (!cm || cm[0] - cm[1] > 1.0) continue;
+      if (roofs.some((q) => Math.hypot(q[0] - x, q[2] - z) < 6)) continue;
+      const dd = cm[0] - cm[1]; roofs.push([x, cm[0] + (dd > 0.3 ? 0.1 : 0.03), z, rnd() * 6.283, dd > 0.3 ? dd + 0.6 : 0]); } }
   // balcony ledges: flush to a wall face, outward side open (no roof overhead, no other wall within 1.5 m)
   { const nt = wi.length / 3;
     for (let t = 0; t < nt && balc.length < 3500; t++) { if (rnd() > 0.2) continue;
@@ -2334,10 +2336,10 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
     im.instanceMatrix.needsUpdate = true; scene.add(im);
   }
   ledgeSpots.forEach((o, i) => { dummy.position.set(o.lx, o.y - 0.25, o.lz); dummy.rotation.set(0, o.ledgeYaw, 0); dummy.scale.setScalar(1); dummy.updateMatrix(); ledge.setMatrixAt(i, dummy.matrix); });
-  const terr = []; // v23ag: no terrace slabs; sitters rest on flat roof tiles directly
-  const terrMat = new THREE.MeshLambertMaterial({ color: 0x5a4c40, emissive: 0x2a2018, emissiveIntensity: 1.0 }); lamb.push(terrMat);
-  const terrI = new THREE.InstancedMesh(new THREE.BoxGeometry(3.4, 1.3, 3.4), terrMat, Math.max(1, terr.length));
-  terr.forEach((o, i) => { dummy.position.set(o.x, o.y - 0.65, o.z); dummy.rotation.set(0, 0, 0); dummy.scale.setScalar(1); dummy.updateMatrix(); terrI.setMatrixAt(i, dummy.matrix); });
+  const terr = items.filter((o) => o.w === 'r' && o.lx > 0); // v23aj: wooden deck only where the roof is not flat; it runs down to the lowest roof corner so nothing floats
+  const terrMat = new THREE.MeshLambertMaterial({ color: 0xa8794a, emissive: 0x3a2814, emissiveIntensity: 1.0 }); lamb.push(terrMat);
+  const terrI = new THREE.InstancedMesh(new THREE.BoxGeometry(3.8, 1, 3.8).translate(0, -0.5, 0), terrMat, Math.max(1, terr.length));
+  terr.forEach((o, i) => { dummy.position.set(o.x, o.y, o.z); dummy.rotation.set(0, 0, 0); dummy.scale.set(1, o.lx, 1); dummy.updateMatrix(); terrI.setMatrixAt(i, dummy.matrix); });
   terrI.count = terr.length; terrI.instanceMatrix.needsUpdate = true; terrI.frustumCulled = false; scene.add(terrI);
   ledge.count = ledgeSpots.length; ledge.instanceMatrix.needsUpdate = true; ledge.frustumCulled = false; scene.add(ledge);
   // v23ae: picnic mood: balcony sitters get a chair, rooftop sitters get a blanket with a food basket
@@ -2407,7 +2409,7 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
       for (const o of g) { const rx = o.x - x, rz = o.z - z, al = rx * dx + rz * dz, la = -rx * dz + rz * dx; if (al > 0 && al < len && Math.abs(la) < 9) { sc++; if (la > 0) L++; else Rr++; } }
       if (L >= 2 && Rr >= 2) res.push({ x, z, a: +a.toFixed(2), sc, L, R: Rr }); }
     return res.sort((p, q) => q.sc - p.sc).slice(0, 12); };
-  const groundTest = () => { const r = { roofSitters: 0, maxGapRoof: 0, balcSitters: 0, standingRoofBalc: 0 }; for (const o of items) { if (o.w === 'r') { r.roofSitters++; if (o.mode < 6) r.standingRoofBalc++; for (const [a, b] of [[0, 0], [-2.5, -2], [2.5, -2], [-2.5, 3.5], [2.5, 3.5]]) { const c = Math.cos(o.yaw), sn = Math.sin(o.yaw); const px = o.x + a * c + b * sn, pz = o.z - a * sn + b * c; const g = roofAt(px, pz); r.maxGapRoof = Math.max(r.maxGapRoof, Math.abs(o.y - g)); } } else if (o.w === 'b') { r.balcSitters++; if (o.mode < 6) r.standingRoofBalc++; } } return r; };
+  const groundTest = () => { const r = { roofSitters: 0, maxGapRoof: 0, balcSitters: 0, standingRoofBalc: 0 }; for (const o of items) { if (o.w === 'r') { r.roofSitters++; if (o.mode < 6) r.standingRoofBalc++; for (const [a, b] of [[0, 0], [-2.5, -2], [2.5, -2], [-2.5, 3.5], [2.5, 3.5]]) { const c = Math.cos(o.yaw), sn = Math.sin(o.yaw); const px = o.x + a * c + b * sn, pz = o.z - a * sn + b * c; const g = roofAt(px, pz); if (!(o.lx > 0)) r.maxGapRoof = Math.max(r.maxGapRoof, Math.abs(o.y - g)); else r.decks = (r.decks || 0) + 1; } } else if (o.w === 'b') { r.balcSitters++; if (o.mode < 6) r.standingRoofBalc++; } } return r; };
   window.__FOLK = { groundTest, camAt, LOOP_MS, KEYS, lanes, items, roofAt, wallNear, clipTest, camTest, counts: FOLK_COUNT, pools: { ground: ground.length, roofs: roofs.length, balconies: balc.length }, total: items.length };
 }
 function tickFolk(t, phase) { if (folkTick) folkTick(t, phase); }
