@@ -24,7 +24,7 @@ async function fetchWithProgress(url, onp) {
 
 const stallTimer = setTimeout(() => $('stall').classList.add('show'), 12000);
 
-const ASSET_V = 'v20r';
+const ASSET_V = 'v20s';
 const manifest = await (await fetch('./manifest.json?' + ASSET_V)).json();
 bar.style.width = '6%';
 const binBuf = await fetchWithProgress('./scene.bin?' + ASSET_V, (f) => { bar.style.width = (6 + f * 84) + '%'; });
@@ -805,13 +805,13 @@ lmPagoda(-320, -260, 5, 22, 8.5);
   bgr.addColorStop(0, 'rgba(255,255,255,1)'); bgr.addColorStop(0.35, 'rgba(255,255,255,0.5)'); bgr.addColorStop(1, 'rgba(255,255,255,0)');
   bcx.fillStyle = bgr; bcx.fillRect(0, 0, 2, 64);
   const beamFadeTex = new THREE.CanvasTexture(bcv);
-  const beamGeoI = new THREE.ConeGeometry(3.2, 280, 24, 1, true);
-  beamGeoI.translate(0, -140, 0); beamGeoI.rotateX(-Math.PI / 2);
-  const beamGeoO = new THREE.ConeGeometry(8, 280, 24, 1, true);
-  beamGeoO.translate(0, -140, 0); beamGeoO.rotateX(-Math.PI / 2);
-  const beamMatB = new THREE.MeshBasicMaterial({ color: 0xffe9b0, map: beamFadeTex, transparent: true, opacity: 0.34, blending: THREE.AdditiveBlending, side: THREE.FrontSide, depthWrite: false });
+  const beamGeoI = new THREE.ConeGeometry(4, 280, 24, 1, true);
+  beamGeoI.translate(0, -140, 0); beamGeoI.rotateX(-Math.PI / 2); beamGeoI.rotateX(-0.12);
+  const beamGeoO = new THREE.ConeGeometry(10, 280, 24, 1, true);
+  beamGeoO.translate(0, -140, 0); beamGeoO.rotateX(-Math.PI / 2); beamGeoO.rotateX(-0.12);
+  const beamMatB = new THREE.MeshBasicMaterial({ color: 0xffe9b0, map: beamFadeTex, transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, side: THREE.FrontSide, depthWrite: false });
   beamMatB.toneMapped = false;
-  const beamMatO = new THREE.MeshBasicMaterial({ color: 0xffe9b0, map: beamFadeTex, transparent: true, opacity: 0.13, blending: THREE.AdditiveBlending, side: THREE.FrontSide, depthWrite: false });
+  const beamMatO = new THREE.MeshBasicMaterial({ color: 0xffe9b0, map: beamFadeTex, transparent: true, opacity: 0.2, blending: THREE.AdditiveBlending, side: THREE.FrontSide, depthWrite: false });
   beamMatO.toneMapped = false;
   const beamMesh = new THREE.Mesh(beamGeoI, beamMatB);
   beamMesh.position.set(LX, y + 3, LZ);
@@ -833,7 +833,7 @@ lmPagoda(-320, -260, 5, 22, 8.5);
     beamMeshO.rotation.y = t * 0.7;
     beamMesh2.rotation.y = Math.PI + t * 0.7;
     beamMesh2O.rotation.y = Math.PI + t * 0.7;
-    beamMesh.material.opacity = 0.16 + phase * 0.2;
+    beamMesh.material.opacity = 0.30 + phase * 0.25;
     lampHalo.opacity = 0.5 + 0.4 * phase + Math.sin(t * 3.1) * 0.1;
   });
 }
