@@ -2051,9 +2051,11 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
       for (const g of gs) { arr.set(g.attributes[name].array, o); o += g.attributes[name].array.length; }
       out.setAttribute(name, new THREE.BufferAttribute(arr, 3));
     }
+    { const pa = []; for (const g of gs) { const n = g.attributes.position.count, id = g.userData.pid || 0; for (let i = 0; i < n; i++) pa.push(id); } out.setAttribute('aPart', new THREE.BufferAttribute(new Float32Array(pa), 1)); }
     out.computeVertexNormals();
     return out;
   };
+  const T = (id, g) => { g.userData.pid = id; return g; }; // part ids: 0 body, 1 left leg, 2 right leg, 3 left arm, 4 right arm (and held props), 5 head (and hair, ears, helmet)
   const cone = (r, h, s = 6) => new THREE.ConeGeometry(r, h, s);
   const cyl = (rt, rb, h, s = 6) => new THREE.CylinderGeometry(rt, rb, h, s);
   const ball = (r) => new THREE.SphereGeometry(r, 5, 3);
@@ -2063,10 +2065,10 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
   // v23f: real humanoids: two legs, torso, two arms, head, per-race extras. 1 unit = ~1.8 m human.
   const man = (o, extra) => {
     const gs = [
-      part(box(0.17, 0.82, 0.18), o.pants, -0.11, 0.41, 0), part(box(0.17, 0.82, 0.18), o.pants, 0.11, 0.41, 0),
+      T(1, part(box(0.17, 0.82, 0.18), o.pants, -0.11, 0.41, 0)), T(2, part(box(0.17, 0.82, 0.18), o.pants, 0.11, 0.41, 0)),
       part(box(0.52, 0.66, 0.28), o.cloth, 0, 1.15, 0),
-      part(box(0.13, 0.66, 0.15), o.cloth, -0.34, 1.12, 0, 0, 0.14), part(box(0.13, 0.66, 0.15), o.cloth, 0.34, 1.12, 0, 0, -0.14),
-      part(ball(0.19), o.skin, 0, 1.68), ...(extra || [])];
+      T(3, part(box(0.13, 0.66, 0.15), o.cloth, -0.34, 1.12, 0, 0, 0.14)), T(4, part(box(0.13, 0.66, 0.15), o.cloth, 0.34, 1.12, 0, 0, -0.14)),
+      T(5, part(ball(0.19), o.skin, 0, 1.68)), ...(extra || [])];
     const g = merge(gs);
     if (o.sx !== 1 || o.sy !== 1) { g.scale(o.sx, o.sy, o.sx); g.computeVertexNormals(); }
     return g;
@@ -2074,32 +2076,56 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
   const BUILD = {
     human(v) {
       const cloth = [0xd9534f, 0x3a86c8, 0x5aa469, 0xe0a030, 0x8e5cc4][v % 5], pants = [0x3a3f58, 0x5a4a3a, 0x2f4a3a][v % 3], skin = SKIN[v % 4], hair = [0x2a1c14, 0x5a3a20, 0xc8a050, 0x1a1a1a][v % 4];
-      return man({ cloth, pants, skin, sx: 1, sy: 1 }, [part(new THREE.SphereGeometry(0.2, 5, 2, 0, Math.PI * 2, 0, Math.PI / 2), hair, 0, 1.72)]);
+      return man({ cloth, pants, skin, sx: 1, sy: 1 }, [T(5, part(new THREE.SphereGeometry(0.2, 5, 2, 0, Math.PI * 2, 0, Math.PI / 2), hair, 0, 1.72))]);
     },
     elf(v) {
       const cloth = [0x2f9e8f, 0x7fc86a, 0xc8d6ff, 0x9b7fe0, 0xe8e0a0][v % 5], skin = [0xf3ddc4, 0xe6c8a8, 0xd8b896][v % 3], hair = [0xf4ecc0, 0xc8c8d8, 0x6b4a2a, 0xf0a0c0][v % 4];
       return man({ cloth, pants: 0x4a5a48, skin, boots: 0x6a5a3a, sx: 0.78, sy: 1.22 }, [
-        part(cone(0.07, 0.5, 4), skin, -0.3, 1.82, 0, 0, 1.25), part(cone(0.07, 0.5, 4), skin, 0.3, 1.82, 0, 0, -1.25), // long pointed ears
+        T(5, part(cone(0.07, 0.5, 4), skin, -0.3, 1.82, 0, 0, 1.25)), T(5, part(cone(0.07, 0.5, 4), skin, 0.3, 1.82, 0, 0, -1.25)), // long pointed ears
         part(box(0.42, 0.5, 0.06), cloth, 0, 0.78, -0.17), // long coat tail
-        part(new THREE.SphereGeometry(0.2, 5, 2, 0, Math.PI * 2, 0, Math.PI / 2), hair, 0, 1.72), part(box(0.1, 0.55, 0.08), hair, 0, 1.45, -0.2)]);
+        T(5, part(new THREE.SphereGeometry(0.2, 5, 2, 0, Math.PI * 2, 0, Math.PI / 2), hair, 0, 1.72)), T(5, part(box(0.1, 0.55, 0.08), hair, 0, 1.45, -0.2))]);
     },
     dwarf(v) {
       const cloth = [0x8a4b2a, 0x5a6b7a, 0xa85a2a, 0x6a3a3a][v % 4], beard = [0xc06a2a, 0x8a8a8a, 0x3a2a1a, 0xd8b060][v % 4];
       return man({ cloth, pants: 0x4a3a2a, skin: SKIN[(v + 1) % 4], boots: 0x2a2018, sx: 1.55, sy: 0.62 }, [
         part(box(0.36, 0.5, 0.14), beard, 0, 1.35, 0.17), // big beard down the chest
-        part(new THREE.SphereGeometry(0.24, 5, 2, 0, Math.PI * 2, 0, Math.PI / 2), 0x7a7f88, 0, 1.72), // helmet
+        T(5, part(new THREE.SphereGeometry(0.24, 5, 2, 0, Math.PI * 2, 0, Math.PI / 2), 0x7a7f88, 0, 1.72)), // helmet
         part(box(0.56, 0.08, 0.3), 0x2a2018, 0, 0.88, 0), // belt
-        part(box(0.07, 0.8, 0.07), 0x6a4a2a, 0.5, 0.95, 0.1), part(box(0.3, 0.2, 0.06), 0x9a9aa4, 0.5, 1.45, 0.1)]); // axe
+        T(4, part(box(0.07, 0.8, 0.07), 0x6a4a2a, 0.5, 0.95, 0.1)), T(4, part(box(0.3, 0.2, 0.06), 0x9a9aa4, 0.5, 1.45, 0.1))]); // axe
     },
     giant(v) {
       const cloth = [0x6a5a48, 0x4a6a58, 0x6a4a58][v % 3], skin = [0xb09070, 0x90a080, 0xa08878][v % 3];
       return man({ cloth, pants: 0x4a4038, skin, boots: 0x2a2018, sx: 1.25, sy: 1 }, [
-        part(box(0.14, 2.2, 0.14), 0x5a3f28, 0.62, 1.3, 0.15), part(box(0.34, 0.5, 0.34), 0x5a3f28, 0.62, 2.45, 0.15), // huge club
+        T(4, part(box(0.14, 2.2, 0.14), 0x5a3f28, 0.62, 1.3, 0.15)), T(4, part(box(0.34, 0.5, 0.34), 0x5a3f28, 0.62, 2.45, 0.15)), // huge club
         part(box(0.6, 0.12, 0.34), 0x2a2018, 0, 0.9, 0)]);
     },
   };
   const SC = { human: 2.6, elf: 2.6, dwarf: 2.6, giant: 6.0 }; // world scale per unit (giants ~ 2.7x humans' height with bulk)
   const meshes = {}; const lamb = [];
+  const folkU = { uTime: { value: 0 } };
+  const PIV = { human: [0.82, 1.43, 0.34, 1.68, 1, 1], elf: [0.82, 1.43, 0.34, 1.68, 0.78, 1.22], dwarf: [0.82, 1.43, 0.34, 1.68, 1.55, 0.62], giant: [0.82, 1.43, 0.34, 1.68, 1.25, 1] };
+  // v23o: skeletal-ish animation in the vertex shader: leg/arm swing about hip/shoulder, head turn, lean, back-and-forth walk. Per-instance phase and mode in aAct.
+  const animate = (mat, race) => { const p = PIV[race], piv = new THREE.Vector4(p[0] * p[5], p[1] * p[5], p[2] * p[4], p[3] * p[5]);
+    mat.onBeforeCompile = (sh) => { sh.uniforms.uTime = folkU.uTime; sh.uniforms.uPiv = { value: piv };
+      sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nattribute float aPart; attribute vec2 aAct; uniform float uTime; uniform vec4 uPiv;\nvec2 rot2(vec2 v, float a) { float c = cos(a), s = sin(a); return vec2(v.x * c - v.y * s, v.x * s + v.y * c); }')
+        .replace('#include <begin_vertex>', `vec3 transformed = vec3(position);
+  { float md = aAct.y, ph = aAct.x, tm = uTime; float legA = 0.0, armL = 0.0, armR = 0.0, hy = 0.0, lean = 0.0, walk = 0.0;
+    if (md < 0.5) { armL = 0.07 * sin(tm * 1.3 + ph); armR = -armL; hy = 0.6 * sin(tm * 0.45 + ph * 2.0); lean = 0.02 * sin(tm * 1.1 + ph); }
+    else if (md < 1.5) { float s = sin(tm * 2.4 + ph * 3.0); legA = 0.65 * s; armL = -0.55 * s; armR = 0.55 * s; hy = 0.12 * sin(tm * 0.9 + ph); walk = 1.0; }
+    else if (md < 2.5) { armR = -1.15 + 0.5 * sin(tm * 4.0 + ph); armL = 0.12 * sin(tm * 1.5 + ph); hy = 0.4 * sin(tm * 1.1 + ph); lean = 0.05 * sin(tm * 2.0 + ph); }
+    else if (md < 3.5) { armL = -0.9 + 0.35 * sin(tm * 3.0 + ph); armR = -0.9 + 0.35 * sin(tm * 3.0 + ph + 1.6); lean = 0.16 + 0.04 * sin(tm * 1.5 + ph); hy = 0.45 * sin(tm * 0.8 + ph); }
+    else if (md < 4.5) { armR = -2.6 + 0.35 * sin(tm * 6.0 + ph); armL = 0.05; hy = 0.85 * sin(tm * 0.6 + ph); }
+    else { lean = 0.38; armL = -0.75 + 0.1 * sin(tm + ph); armR = -0.75 + 0.1 * sin(tm * 1.2 + ph); hy = 0.9 * sin(tm * 0.45 + ph); }
+    vec2 hp = vec2(uPiv.x, 0.0), sp = vec2(uPiv.y, 0.0);
+    if (aPart > 0.5 && aPart < 1.5) transformed.yz = hp + rot2(transformed.yz - hp, legA);
+    else if (aPart > 1.5 && aPart < 2.5) transformed.yz = hp + rot2(transformed.yz - hp, -legA);
+    else if (aPart > 2.5 && aPart < 3.5) transformed.yz = sp + rot2(transformed.yz - sp, armL);
+    else if (aPart > 3.5 && aPart < 4.5) transformed.yz = sp + rot2(transformed.yz - sp, armR);
+    else if (aPart > 4.5) { vec2 xz = transformed.zx; xz = rot2(xz - vec2(0.0), hy); transformed.zx = xz; }
+    if (aPart < 0.5 || aPart > 2.5) transformed.yz = hp + rot2(transformed.yz - hp, lean);
+    if (walk > 0.5) { float cv = cos(tm * 0.5 + ph); float sg = clamp(cv * 6.0, -1.0, 1.0); float yw = (1.0 - sg) * 1.5708; transformed.xz = rot2(transformed.xz, yw); transformed.z += 0.85 * sin(tm * 0.5 + ph); }
+  }`); };
+    return mat; };
   const caps = { human: [0, 0], elf: [0, 0], dwarf: [0, 0], giant: [0, 0] };
   // ---- spots (v23i): real surfaces only. Ground off walls and not under roofs, roofs flat with measured height, ledges flush to a wall.
   const camPts = []; { for (let i = 0; i < 160; i++) camPts.push(camAt(i * LOOP_MS / 160).pos); }
@@ -2202,7 +2228,10 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
       if (race === 'giant' && w === 'g' && s[4] < 6) continue;
       if (nearCam(s[0], s[1] + 3, s[2], clear)) continue;
       const yaw = s[3] + (rnd() - 0.5) * (w === 'g' ? 0.5 : 0.7);
-      items.push({ race, v: (rnd() * 12) | 0, x: s[0], y: s[1], z: s[2], yaw, ph: rnd() * 6.28, w, lx: s[4], lz: s[5], ly: s[1], ledgeYaw: s[3] }); made++;
+      const rr = rnd(); let mode = 0;
+      if (w === 'g') mode = race === 'giant' ? 0 : (s[4] >= 5.5 && rr < 0.35) ? 1 : rr < 0.6 ? 2 : rr < 0.8 ? 3 : 0;
+      else if (w === 'r') mode = rr < 0.45 ? 4 : 0; else mode = 5;
+      items.push({ race, v: (rnd() * 12) | 0, x: s[0], y: s[1], z: s[2], yaw, ph: rnd() * 6.28, w, lx: s[4], lz: s[5], ly: s[1], ledgeYaw: s[3], mode }); made++;
       FOLK_COUNT[race]++;
     }
   }
@@ -2222,9 +2251,9 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
   for (const key in slots) {
     const list = slots[key]; if (!list.length) continue;
     const race = key.replace(/\d+$/, ''), v = +key.slice(race.length);
-    const mat = new THREE.MeshLambertMaterial({ vertexColors: true, emissive: 0x3a2a20, emissiveIntensity: 1.0 }); lamb.push(mat);
-    const im = new THREE.InstancedMesh(BUILD[race](v), mat, list.length); im.frustumCulled = false;
-    list.forEach((o, i) => { o.im = im; o.i = i; const s = SC[race] * (o.w === 'g' ? 1 : 1.3); dummy.position.set(o.x, o.y, o.z); dummy.rotation.set(0, o.yaw, 0); dummy.scale.setScalar(s); dummy.updateMatrix(); im.setMatrixAt(i, dummy.matrix); o.s = s; if (o.w === 'g' && race !== 'giant') animated.push(o); });
+    const mat = new THREE.MeshLambertMaterial({ vertexColors: true, emissive: 0x3a2a20, emissiveIntensity: 1.0 }); lamb.push(mat); animate(mat, race);
+    const geoF = BUILD[race](v); geoF.setAttribute('aAct', new THREE.InstancedBufferAttribute(new Float32Array(list.length * 2), 2)); const im = new THREE.InstancedMesh(geoF, mat, list.length); im.frustumCulled = false;
+    list.forEach((o, i) => { geoF.attributes.aAct.setXY(i, o.ph, o.mode); o.im = im; o.i = i; const s = SC[race] * (o.w === 'g' ? 1 : 1.3); dummy.position.set(o.x, o.y, o.z); dummy.rotation.set(0, o.yaw, 0); dummy.scale.setScalar(s); dummy.updateMatrix(); im.setMatrixAt(i, dummy.matrix); o.s = s; });
     im.instanceMatrix.needsUpdate = true; scene.add(im);
   }
   ledgeSpots.forEach((o, i) => { dummy.position.set(o.lx, o.y - 0.25, o.lz); dummy.rotation.set(0, o.ledgeYaw, 0); dummy.scale.setScalar(1); dummy.updateMatrix(); ledge.setMatrixAt(i, dummy.matrix); });
@@ -2237,6 +2266,7 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
   const touched = new Set(); let cursor = 0;
   folkTick = (t, phase) => {
     for (const m of lamb) m.emissiveIntensity = 0.55 + phase * 0.9;
+    folkU.uTime.value = t;
     // sway a rotating slice of street folk each frame (cheap)
     const n = animated.length, step = Math.min(n, 160); touched.clear();
     for (let k = 0; k < step; k++) { const o = animated[(cursor + k) % n];
