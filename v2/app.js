@@ -1864,7 +1864,7 @@ const KEYS = [
   { pos: [-85, 42, 15], look: [-166, 45, 143], hold: 1600, fly: 5000, title: "Pagoda Orbit", note: "Curling around the tiered temple roof" },
   ..._beat("Balcony Fly-by", "Past the neighbours leaning on their balcony", [-47.5, 8.4, 66], [-78, 8.4, 56.4], [-61.3, 8.2, 56.4], [-61.3, 8.2, 56.4], 6500, 55),
   { pos: [-410, 50, -50], look: [-250, 40, 60], hold: 1600, fly: 5200, title: "Palace Mist", note: "Silhouettes of the hall pierce the low fog" },
-  ..._beat("Rooftop Glide", "Skimming the terrace where the rooftop folk wave", [25.1, 18.1, 209.7], [61.1, 18.1, 209.7], [47.1, 17.4, 209.7], [47.1, 17.4, 209.7], 6500, 62),
+  ..._beat("Rooftop Glide", "Skimming the terrace where the rooftop folk wave", [25.1, 19.6, 209.7], [61.1, 19.6, 209.7], [47.1, 17.5, 209.7], [47.1, 17.5, 209.7], 6500, 62),
   ..._beat("Giant of the Lanes", "A giant looms over the lane", [210.6, 2.2, 196.7], [198.6, 2.2, 196.7], [188.6, 9, 196.7], [188.6, 10, 196.7], 6500, 62),
   { pos: [-160, 130, 260], look: [740, 14, 450], hold: 1500, fly: 5400, title: "Water Reveal", note: "Rising over the glowing canals for the reveal" },
   { pos: [370, 85, 300], look: [740, 15, 460], hold: 1600, fly: 5200, title: "Magic Harbor", note: "The beacon sweeps across shimmering water" },
@@ -2232,6 +2232,7 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
   { const seen = camPts.filter((p) => p[1] < 150); const dnear = (s) => { let d = 1e9; for (const p of seen) { const dx = p[0] - s[0], dz = p[2] - s[2], dy = p[1] - s[1]; const q = dx * dx + dz * dz + dy * dy * 0.3; if (q < d) d = q; } return d; };
     for (const pool of [ground, roofs, balc]) { const a = [], b = []; for (const s of pool) (dnear(s) < 230 * 230 ? a : b).push(s); pool.length = 0; pool.push(...a, ...b); } }
   // ---- plan: [race, where, count]
+  const FOCUS = [[-61.3, 56.4], [47.1, 209.7]];
   const PLAN = [['human', 'g', 560], ['human', 'b', 340], ['human', 'r', 340], ['elf', 'r', 150], ['elf', 'b', 130], ['elf', 'g', 100],
     ['dwarf', 'g', 210], ['dwarf', 'b', 45], ['dwarf', 'r', 30], ['giant', 'g', 28]];
   const pools = { g: ground, b: balc, r: roofs }; const cur = { g: 0, b: 0, r: 0 };
@@ -2241,7 +2242,7 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
     while (made < cnt && cur[w] < pool.length && guard++ < 20000) {
       const s = pool[cur[w]++]; const clear = race === 'giant' ? 70 : 16;
       if (race === 'giant' && w === 'g' && s[4] < 6) continue;
-      if (nearCam(s[0], s[1] + 3, s[2], clear)) continue;
+      if (nearCam(s[0], s[1] + 3, s[2], clear) && !FOCUS.some((q) => Math.hypot(q[0] - s[0], q[1] - s[2]) < 14)) continue; // v23v: keep the figures the close-up beats look at
       const yaw = s[3] + (rnd() - 0.5) * (w === 'g' ? 0.5 : 0.7);
       const rr = rnd(); let mode = 0;
       if (w === 'g') mode = race === 'giant' ? 0 : (s[4] >= 5.5 && rr < 0.35) ? 1 : rr < 0.6 ? 2 : rr < 0.8 ? 3 : 0;
