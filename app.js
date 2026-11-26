@@ -2410,6 +2410,15 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
       if (L >= 2 && Rr >= 2) res.push({ x, z, a: +a.toFixed(2), sc, L, R: Rr }); }
     return res.sort((p, q) => q.sc - p.sc).slice(0, 12); };
   const groundTest = () => { const r = { roofSitters: 0, maxGapRoof: 0, balcSitters: 0, standingRoofBalc: 0 }; for (const o of items) { if (o.w === 'r') { r.roofSitters++; if (o.mode < 6) r.standingRoofBalc++; for (const [a, b] of [[0, 0], [-2.5, -2], [2.5, -2], [-2.5, 3.5], [2.5, 3.5]]) { const c = Math.cos(o.yaw), sn = Math.sin(o.yaw); const px = o.x + a * c + b * sn, pz = o.z - a * sn + b * c; const g = roofAt(px, pz); if (!(o.lx > 0)) r.maxGapRoof = Math.max(r.maxGapRoof, Math.abs(o.y - g)); else r.decks = (r.decks || 0) + 1; } } else if (o.w === 'b') { r.balcSitters++; if (o.mode < 6) r.standingRoofBalc++; } } return r; };
+  // v23au: sky life - hot air balloons and a zeppelin drifting on slow orbits above the city (original low-poly, ~1.5k tris each group, camera-safe by QA)
+  { const cols = [0xe0503a, 0x3a9ae0, 0xe0b030, 0x4ac070, 0xb05ad0, 0xf0f0e0], skyG = new THREE.Group(); const mat = new THREE.MeshLambertMaterial({ vertexColors: true }); const fl = [];
+    const bal = (c1, c2) => merge([part(ball(7), c1, 0, 10, 0, 0, 0, 1, 1.25, 1), part(cyl(7, 7, 2.2, 8), c2, 0, 10, 0, 0, 0, 1.02, 0.9, 1.02), part(cone(2.6, 4, 6), c1, 0, 1.2, 0, Math.PI), part(box(2.2, 1.6, 2.2), 0x6a4a2a, 0, -1.3, 0), part(box(0.2, 4, 0.2), 0x3a2a1a, 1.1, 0.8, 1.1), part(box(0.2, 4, 0.2), 0x3a2a1a, -1.1, 0.8, -1.1), part(box(0.5, 0.5, 0.5), 0xffe090, 0, -0.1, 0)]);
+    for (let k = 0; k < 8; k++) { const m = new THREE.Mesh(bal(cols[k % 6], cols[(k + 2) % 6]), mat); m.frustumCulled = false; skyG.add(m); fl.push({ m, cx: -100 + (k % 4) * 140, cz: -150 + Math.floor(k / 4) * 330, r: 40 + (k % 3) * 25, y: 120 + (k % 3) * 18, w: 0.012 + 0.002 * (k % 3), ph: k * 0.9 }); }
+    const zep = merge([part(ball(10), 0xd8d0c0, 0, 0, 0, 0, 0, 4.2, 1, 1), part(box(14, 3, 3), 0x303a48, 0, -10.5, 0), part(box(8, 0.6, 14), 0xa04030, -34, 1.5, 0), part(box(8, 14, 0.6), 0xa04030, -34, 1.5, 0), part(box(3, 0.8, 24), 0x303a48, 8, -9.5, 0, 0, 0, 0.3, 1, 1), part(box(1, 6, 1), 0x606a78, 5, -8, 5), part(box(1, 6, 1), 0x606a78, 5, -8, -5)]);
+    const zm = new THREE.Mesh(zep, mat); zm.frustumCulled = false; skyG.add(zm); scene.add(skyG);
+    window.__SKYTICK = (t) => { for (const f of fl) { const a = f.ph + t * f.w; f.m.position.set(f.cx + Math.cos(a) * f.r, f.y + Math.sin(t * 0.3 + f.ph) * 2, f.cz + Math.sin(a) * f.r); f.m.rotation.y = -a; }
+      const za = t * 0.006; zm.position.set(60 + Math.cos(za) * 260, 150 + Math.sin(t * 0.1) * 3, 80 + Math.sin(za) * 260); zm.rotation.y = -za - Math.PI / 2; };
+    window.__SKY = { fl, zm, G: skyG }; }
   window.__FOLK = { groundTest, camAt, LOOP_MS, KEYS, lanes, items, roofAt, wallNear, clipTest, camTest, counts: FOLK_COUNT, pools: { ground: ground.length, roofs: roofs.length, balconies: balc.length }, total: items.length };
 }
 function tickFolk(t, phase) { if (folkTick) folkTick(t, phase); }
@@ -2445,6 +2454,7 @@ function frame() {
   const phase = phaseAt(u);
   skyMat.uniforms.uPhase.value = phase;
   skyMat.uniforms.uTime.value = t;
+  if (window.__SKYTICK) window.__SKYTICK(t);
   starMat.opacity = THREE.MathUtils.smoothstep(phase, 0.10, 0.6);
   sky.position.copy(camera.position);
 
