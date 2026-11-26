@@ -2245,12 +2245,12 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
       const ux = T[3] - T[0], uy = T[4] - T[1], uz = T[5] - T[2], vx = T[6] - T[0], vy = T[7] - T[1], vz = T[8] - T[2];
       const nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx, ln = Math.hypot(nx, ny, nz); if (ln < 1e-3 || Math.abs(ny) / ln < 0.93) continue;
       if (Math.max(T[1], T[4], T[7]) < 7 || Math.max(T[1], T[4], T[7]) > 95) continue;
-      if (rnd() > 0.35) continue;
+      if (rnd() > 0.7) continue;
       const bs = [[1 / 3, 1 / 3, 1 / 3], [0.5, 0.25, 0.25], [0.25, 0.5, 0.25], [0.25, 0.25, 0.5]];
       const [b0, b1, b2] = bs[(rnd() * 4) | 0]; const x = b0 * T[0] + b1 * T[3] + b2 * T[6], z = b0 * T[2] + b1 * T[5] + b2 * T[8];
       if (wallNear(x, z)[0] < 3.0) continue;
-      const cm = cornerMax(x, z, 3.8); if (!cm || cm[0] - cm[1] > 0.35) continue;
-      if (roofs.some((q) => Math.hypot(q[0] - x, q[2] - z) < 9)) continue;
+      const cm = cornerMax(x, z, 2.4); if (!cm || cm[0] - cm[1] > 0.3) continue;
+      if (roofs.some((q) => Math.hypot(q[0] - x, q[2] - z) < 5)) continue;
       roofs.push([x, cm[0] + 0.03, z, rnd() * 6.283]); } }
   // balcony ledges: flush to a wall face, outward side open (no roof overhead, no other wall within 1.5 m)
   { const nt = wi.length / 3;
