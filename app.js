@@ -1549,6 +1549,50 @@ const dragons = manifest.dragons.map((d, i) => {
   return { grp, L, R, upd, ...p };
 });
 const _fwd = new THREE.Vector3();
+
+let _DW = null;
+function _dragonWorld() {
+  if (_DW) return _DW;
+  const ti = (name) => KEYS.findIndex((k) => k.title === name);
+  const tAt = (idx) => { let t = 0; for (let j = 0; j < idx; j++) t += KEYS[j].fly + KEYS[j].hold; return t; };
+  const uH = (tAt(ti('Magic Harbor')) + 800) / LOOP_MS, dU = 7500 / LOOP_MS;
+  const slot = [[-80, 185, -30], [0, 225, 20], [80, 205, 60]]; // lateral (screen right), height, depth along the Dragon Lanes view
+  const VIEW = [0.724, 0.690], RIGHT = [-0.690, 0.724], BASE = [567, 357];
+  const ring = [[330, 290], [60, 200], [-120, 20], [-90, -150], [180, -230], [520, -120], [700, 100], [760, 300]];
+  const rh = [200, 215, 230, 240, 235, 220, 205, 195];
+  const lanes = [];
+  for (let i = 0; i < 3; i++) {
+    const off = (i - 1) * 55;
+    const pts = [[720 + off * 0.4, 190 + i * 15, 440 - off * 0.6]]; // above the harbor
+    pts.push([BASE[0] + RIGHT[0] * slot[i][0] + VIEW[0] * slot[i][2], slot[i][1], BASE[1] + RIGHT[1] * slot[i][0] + VIEW[1] * slot[i][2]]);
+    ring.forEach((r, k) => pts.push([r[0] + (i - 1) * 60 * (k % 2 ? 1 : -1), rh[k] + i * 12, r[1] + (i - 1) * 50]));
+    // times: harbor -> slot fixed, rest by arc length across the remaining loop
+    const ts = [uH, uH + dU]; const rest = pts.slice(1); let tot = 0; const segs = [];
+    for (let k = 0; k < rest.length; k++) { const q = rest[(k + 1) % rest.length === 0 ? 0 : k + 1] || pts[0]; const A = rest[k], B = k + 1 < rest.length ? rest[k + 1] : pts[0]; const dl = Math.hypot(B[0] - A[0], B[1] - A[1], B[2] - A[2]); segs.push(dl); tot += dl; }
+    let acc = 0; for (let k = 0; k < segs.length - 1; k++) { acc += segs[k]; ts.push(uH + dU + (1 - dU) * acc / tot); }
+    lanes.push({ pts, ts });
+  }
+  const crpos = (L, u) => { const n = L.pts.length, t0 = L.ts[0]; let x = ((u - t0) % 1 + 1) % 1 + t0; let k = n - 1; for (let j = 0; j < n; j++) { const te = j + 1 < n ? L.ts[j + 1] : t0 + 1; if (x < te) { k = j; break; } }
+    const te = k + 1 < n ? L.ts[k + 1] : t0 + 1, s = (x - L.ts[k]) / (te - L.ts[k]);
+    const P = (j) => L.pts[((j % n) + n) % n], p0 = P(k - 1), p1 = P(k), p2 = P(k + 1), p3 = P(k + 2), s2 = s * s, s3 = s2 * s; const o = [0, 0, 0];
+    for (let c = 0; c < 3; c++) o[c] = 0.5 * ((2 * p1[c]) + (-p0[c] + p2[c]) * s + (2 * p0[c] - 5 * p1[c] + 4 * p2[c] - p3[c]) * s2 + (-p0[c] + 3 * p1[c] - 3 * p2[c] + p3[c]) * s3);
+    return o; };
+  const ribbonUniform = { value: 0 };
+  // glowing ribbon rivers in the sky along each lane
+  const rmat = (hex) => new THREE.ShaderMaterial({ transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, uniforms: { uT: ribbonUniform, uC: { value: new THREE.Color(hex) } },
+    vertexShader: 'varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
+    fragmentShader: 'uniform float uT; uniform vec3 uC; varying vec2 vUv; void main(){ float e=1.0-abs(vUv.y*2.0-1.0); float a=pow(e,1.6); float f=0.65+0.35*sin(vUv.x*180.0-uT*1.4); gl_FragColor=vec4(uC*(0.5+1.4*a)*f, a*0.85);}' });
+  const N = 260, HW = 15;
+  lanes.forEach((L, i) => { const pos = [], uv = [], idx = [];
+    for (let k = 0; k <= N; k++) { const uu = L.ts[0] + k / N, a = crpos(L, uu), b = crpos(L, uu + 0.002); let tx = b[0] - a[0], tz = b[2] - a[2]; const ln = Math.hypot(tx, tz) || 1; tx /= ln; tz /= ln; const nx = -tz * HW, nz = tx * HW;
+      pos.push(a[0] + nx, a[1] - 6, a[2] + nz, a[0] - nx, a[1] - 6, a[2] - nz); uv.push(k / N * 12, 0, k / N * 12, 1);
+      if (k < N) { const q = k * 2; idx.push(q, q + 1, q + 2, q + 1, q + 3, q + 2); } }
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx);
+    const m = new THREE.Mesh(g, rmat(manifest.dragons[i % manifest.dragons.length].col)); m.frustumCulled = false; m.renderOrder = 5; scene.add(m); });
+  _DW = { pos: (i, u) => crpos(lanes[i % 3], u), lanes, uH, dU, ribbonUniform };
+  window.__DRAG = _DW;
+  return _DW;
+}
 function tickDragons(t, u) {
   // chase window: mid-loop the pack closes on the lead dragon's orbit,
   // speed and flapping pick up, bellies glow brighter. Pure function of u.
@@ -1563,88 +1607,19 @@ function tickDragons(t, u) {
   // TO THE BEAT CAMERA, a pure function of loop phase u, so routes stay identical every
   // loop. Band: 16-26 deg off the view axis, >=12.5 deg above the horizon, 400-470u out:
   // inside the relaxed camera rule, never central, in frame at portrait FOV.
-  const fwv = _fwd.set(0, 0, -1).applyQuaternion(camera.quaternion).clone();
-  const pitch = Math.asin(THREE.MathUtils.clamp(fwv.y, -1, 1)) * 180 / Math.PI;
-  const topEdge = pitch + 26; // world elevation of the frame's top edge (portrait margin)
-  const heading0 = Math.atan2(fwv.x, fwv.z);
+  // v23aq: dragons fly fixed WORLD paths (closed Catmull-Rom loops), a pure function of loop phase u, independent of the camera and of the beats.
+  const W = _dragonWorld();
   let di = 0;
   for (const d of dragons) {
     const i = di++;
-    // v22d: fixed lanes - left / high-center / right, no sign flips, no stacking.
-    // 640-800u out so they stay a skyline presence and never cover a third of the
-    // screen (Irvan 12:59 PM); heads point inward so a head plus a good length of
-    // body is always in frame (stripes alone don't read as dragons).
-    const az = (i - 1) * 11 + ((i === 2 && pitch < 2) ? 6 : 0) + Math.sin(TAU * u + d.ph) * 2.0; // v22h: wider lane spread so no two dragons overlap (was *8); v22k: +6 for the lowered azure lane so its off-axis angle stays >15 deg and the relaxed camera rule keeps it close
-    const el = (i === 1 ? 19 : (i === 0 ? 16 : 18)) + Math.sin(TAU * 2 * u + d.ph * 1.7) * 2.0;
-    let ew = pitch + el;                                    // world elevation of the anchor
-    let dist = 480;                                          // v22j: flat 480u for all three - measured blue 603u vs red 474u read 21% smaller on Twin Spire Dive (Irvan 1:52 PM: match apparent size)
-    // v22i (Irvan 1:47 PM): on down-pitched beats the azure dragon rides lower
-    // (rel ~14 deg instead of ~18) so it sits against the darker sunset band
-    // and reads as a full dragon, not a faint streak at the top edge.
-    const azureLow = (i === 2 && pitch < 2);
-    if (azureLow) ew = Math.max(10.8, ew - 4.5);
-    if (ew > topEdge - 1) ew = topEdge - 1;
-    if (ew < 12.5 && !azureLow) {
-      if (topEdge - 1 >= 12.5) ew = 12.5;                    // lift into the relaxed band
-      else if (topEdge > 5) { ew = topEdge - 1; dist = 1200; } // down-beat: distant top-edge silhouette
-      else { ew = 20; dist = 720; }                          // no sky in frame this beat
-    }
-    const azr = az * Math.PI / 180, ewr = ew * Math.PI / 180;
-    const horiz = Math.cos(ewr);
-    let x = camera.position.x + Math.sin(heading0 + azr) * horiz * dist;
-    let y = camera.position.y + Math.sin(ewr) * dist;
-    let z = camera.position.z + Math.cos(heading0 + azr) * horiz * dist;
-    // v22d: shift the group back along its heading so the HEAD sits near the anchor
-    // angle and the body trails toward the frame edge
-    const rtx = -fwv.z, rtz = fwv.x;                        // screen-right in world space
-    const hs = (i === 2) ? -1 : 1;                          // right-lane dragon faces left, others face right
-    const hn = Math.hypot(rtx, rtz) || 1;
-    x -= (rtx * hs / hn) * 75; z -= (rtz * hs / hn) * 75;
-    // v22: gather = staggered flypast, three clearly separated dragons (Irvan 12:39 PM).
-    // Slots +-110u across the lane, the high dragon in the middle (222/300/222), so no
-    // two overlap in frame and each head reads on its own. Beat camera (350,120,150)->(560,95,350).
-    if (gather > 0) {
-      const dirx = -0.689, dirz = 0.725; // lane direction across the frame (right vector of the beat view)
-      const slot = (i - 1) * 110;
-      const ty = (i === 1 ? 278 : 246) + Math.sin(TAU * 3 * u + slot * 0.05) * 4;
-      const tx = 749.6 + dirx * slot, tz = 530.7 + dirz * slot; // ~550-565u out: all three fully inside the portrait frame, heads clear
-      x += (tx - x) * gather; y += (ty - y) * gather; z += (tz - z) * gather;
-    }
-    d.grp.position.set(x, y, z);
-    // screen-space rule (Irvan 8:46 AM): a dragon never fills more than ~16 deg of the
-    // view on any beat: push it out along the view ray until its angular size fits.
-    const cdx = x - camera.position.x, cdy = y - camera.position.y, cdz = z - camera.position.z;
-    const cd = Math.sqrt(cdx * cdx + cdy * cdy + cdz * cdz) || 1;
-    // v21a (Irvan 10:11): default stays 130u floor + 16-degree cap. Relaxed to a 60u
-    // floor + ~40-degree cap ONLY when the dragon is in the upper sky band (>12 deg
-    // above the horizon) AND off the central view axis (>15 deg), so it can sweep big
-    // across the sky and screen edges but never covers the city view.
-    let minD = Math.max(130, 150 / Math.tan(8 * Math.PI / 180));
-    {
-      const horiz = Math.sqrt(cdx * cdx + cdz * cdz) || 1;
-      const elev = Math.atan2(cdy, horiz) * 180 / Math.PI;
-      const fw = _fwd.set(0, 0, -1).applyQuaternion(camera.quaternion);
-      const offAxis = Math.acos(Math.min(1, Math.max(-1, (cdx * fw.x + cdy * fw.y + cdz * fw.z) / cd))) * 180 / Math.PI;
-      if (elev > 10.5 && offAxis > 15) minD = Math.max(60, 150 / Math.tan(20 * Math.PI / 180)); // v22i: 10.5 so the lowered azure lane keeps the relaxed cap; screen-coverage caps unchanged
-    }
-    if (cd < minD) {
-      const s = minD / cd;
-      d.grp.position.set(camera.position.x + cdx * s, camera.position.y + cdy * s, camera.position.z + cdz * s);
-    }
-    if (gather > 0.5) {
-      d.grp.lookAt(d.grp.position.x - 0.689, d.grp.position.y, d.grp.position.z + 0.725); // v21c: hold the side-on lane heading
-      d.grp.rotateZ(Math.sin(TAU * 3 * u + d.ph) * 0.35); // v21b: roll through the dance
-    } else {
-      // v22d: head toward the frame center on a fixed heading (no flip), side-on body
-      d.grp.lookAt(d.grp.position.x + rtx * hs / hn, d.grp.position.y, d.grp.position.z + rtz * hs / hn);
-      d.grp.rotateZ(Math.sin(TAU * 3 * u + d.ph) * 0.55); // v21b: bank through the dance
-    }
+    const p = W.pos(i, u), p2 = W.pos(i, u + 0.002);
+    d.grp.position.set(p[0], p[1], p[2]);
+    d.grp.lookAt(p2[0], p2[1], p2[2]);
+    d.grp.rotateZ(Math.sin(TAU * 3 * u + d.ph) * 0.25);
     d.upd(TAU * 13 * u + chase * 4);
-    // v22d: half size on escort beats (the ribbon is ~360u long - full size covered
-    // a third of the screen), full size for the gather flypast where it reads well
-    d.grp.scale.setScalar(1.0); // v22h: full size on escort beats too (Irvan approved bolder)
-    const m = d.grp.children[0].material;
-    m.emissiveIntensity = 0.55 + chase * 0.3;
+    d.grp.scale.setScalar(1.0);
+    d.grp.children[0].material.emissiveIntensity = 0.55 + chase * 0.3;
+    W.ribbonUniform.value = t;
   }
 }
 
@@ -1870,7 +1845,7 @@ const KEYS = [
   ..._beat("Giant of the Lanes", "A giant looms over the lane", [210.6, 6.5, 196.7], [198.6, 6.5, 196.7], [188.6, 10.8, 196.7], [188.6, 10.8, 196.7], 6500, 62),
   { pos: [-160, 130, 260], look: [740, 14, 450], hold: 1500, fly: 5400, title: "Water Reveal", note: "Rising over the glowing canals for the reveal" },
   { pos: [370, 85, 300], look: [740, 15, 460], hold: 1600, fly: 5200, title: "Magic Harbor", note: "The beacon sweeps across shimmering water" },
-  { pos: [350, 120, 150], look: [560, 95, 350], hold: 1500, fly: 5000, title: "Dragon Lanes", note: "A dragon's wake stirs the festival lights" },
+  { pos: [350, 120, 150], look: [567, 150, 357], hold: 1500, fly: 5000, title: "Dragon Lanes", note: "A dragon's wake stirs the festival lights" },
   { pos: [100, 120, -190], look: [-88, 155, -66], hold: 1600, fly: 5200, title: "Crystal Awakening", note: "Facets ignite in cascades of electric light" },
   { pos: [-820, 330, -760], look: [22, 90, 33], hold: 2000, fly: 6000, title: "Grand Astral Night", note: "The city breathes under a canopy of stars" },
 ];
@@ -2083,10 +2058,10 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
   // v23ap: friendly lego face: big white eyes with pupils, curved smile. Gain >1 on vertex colour keeps eyes bright at night (pseudo-unlit).
   const glow = (g, k) => { const a = g.attributes.color.array; for (let i = 0; i < a.length; i++) a[i] *= k; return g; };
   const FACE = () => [
-    T(5, glow(part(box(0.11, 0.12, 0.05), 0xffffff, -0.08, 1.71, 0.19), 2.6)), T(5, glow(part(box(0.11, 0.12, 0.05), 0xffffff, 0.08, 1.71, 0.19), 2.6)),
-    T(5, part(box(0.055, 0.065, 0.06), 0x0a0806, -0.08, 1.705, 0.205)), T(5, part(box(0.055, 0.065, 0.06), 0x0a0806, 0.08, 1.705, 0.205)),
-    T(5, glow(part(box(0.1, 0.026, 0.05), 0x5a1a14, 0, 1.6, 0.19), 1.0)), T(5, glow(part(box(0.03, 0.03, 0.05), 0x5a1a14, -0.07, 1.62, 0.19), 1.0)), T(5, glow(part(box(0.03, 0.03, 0.05), 0x5a1a14, 0.07, 1.62, 0.19), 1.0)),
-    T(5, glow(part(box(0.03, 0.03, 0.05), 0x5a1a14, -0.1, 1.645, 0.185), 1.0)), T(5, glow(part(box(0.03, 0.03, 0.05), 0x5a1a14, 0.1, 1.645, 0.185), 1.0))];
+    T(5, glow(part(box(0.095, 0.1, 0.05), 0xffffff, -0.075, 1.71, 0.19), 2.6)), T(5, glow(part(box(0.095, 0.1, 0.05), 0xffffff, 0.075, 1.71, 0.19), 2.6)),
+    T(5, part(box(0.06, 0.07, 0.06), 0x0a0806, -0.075, 1.705, 0.205)), T(5, part(box(0.06, 0.07, 0.06), 0x0a0806, 0.075, 1.705, 0.205)),
+    T(5, part(box(0.09, 0.022, 0.05), 0x3a1010, 0, 1.59, 0.19)), T(5, part(box(0.028, 0.028, 0.05), 0x3a1010, -0.065, 1.608, 0.19)), T(5, part(box(0.028, 0.028, 0.05), 0x3a1010, 0.065, 1.608, 0.19)),
+    T(5, part(box(0.026, 0.026, 0.05), 0x3a1010, -0.092, 1.632, 0.185)), T(5, part(box(0.026, 0.026, 0.05), 0x3a1010, 0.092, 1.632, 0.185))];
   const man = (o, extra) => {
     const gs = [
       T(1, part(box(0.17, 0.82, 0.18), o.pants, -0.11, 0.41, 0)), T(2, part(box(0.17, 0.82, 0.18), o.pants, 0.11, 0.41, 0)),
