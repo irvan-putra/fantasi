@@ -1586,8 +1586,8 @@ function tickDragons(t, u) {
     if (gather > 0) {
       const dirx = -0.689, dirz = 0.725; // lane direction across the frame (right vector of the beat view)
       const slot = (i - 1) * 110;
-      const ty = (i === 1 ? 268 : 228) + Math.sin(TAU * 3 * u + slot * 0.05) * 8;
-      const tx = 690.4 + dirx * slot, tz = 474.3 + dirz * slot; // ~470-485u out: all three inside the portrait frame
+      const ty = (i === 1 ? 296 : 248) + Math.sin(TAU * 3 * u + slot * 0.05) * 4;
+      const tx = 749.6 + dirx * slot, tz = 530.7 + dirz * slot; // ~550-565u out: all three fully inside the portrait frame, heads clear
       x += (tx - x) * gather; y += (ty - y) * gather; z += (tz - z) * gather;
     }
     d.grp.position.set(x, y, z);
