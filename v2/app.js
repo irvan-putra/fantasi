@@ -24,7 +24,7 @@ async function fetchWithProgress(url, onp) {
 
 const stallTimer = setTimeout(() => $('stall').classList.add('show'), 12000);
 
-const ASSET_V = 'v20k';
+const ASSET_V = 'v20m';
 const manifest = await (await fetch('./manifest.json?' + ASSET_V)).json();
 bar.style.width = '6%';
 const binBuf = await fetchWithProgress('./scene.bin?' + ASSET_V, (f) => { bar.style.width = (6 + f * 84) + '%'; });
@@ -652,16 +652,17 @@ lmPagoda(-320, -260, 5, 22, 8.5);
     const c2 = new THREE.CylinderGeometry(1.5, 1.7, 34, 6); c2.translate(HX + i * 12, 22, HZ);
     parts.push({ g: c2, c: [0.6, 0.36, 0.17] });
   }
-  const t1 = lmEaveRoof(46, 15, 0.12); for (const p of t1) { p.c = [0.16, 0.36, 0.4]; p.g.translate(HX, 27 + 7.5, HZ); parts.push(p); }
-  const t2 = lmEaveRoof(30, 12, 0.14); for (const p of t2) { p.c = [0.2, 0.44, 0.48]; p.g.translate(HX, 41 + 6, HZ); parts.push(p); }
+  const t1 = lmEaveRoof(50, 22, 0.10); for (const p of t1) { p.c = [0.10, 0.28, 0.32]; p.g.translate(HX, 27 + 11, HZ); parts.push(p); }
+  const t2 = lmEaveRoof(33, 16, 0.12); for (const p of t2) { p.c = [0.13, 0.34, 0.38]; p.g.translate(HX, 42 + 8, HZ); parts.push(p); }
+  const t3 = lmEaveRoof(17, 10, 0.14); for (const p of t3) { p.c = [0.16, 0.4, 0.44]; p.g.translate(HX, 53 + 5, HZ); parts.push(p); }
   lmHaloAt(HX, 24, HZ, 34, 0xffc46e, 0.4);
-  const fin = new THREE.ConeGeometry(3.2, 9, 6); fin.translate(HX, 53 + 4.5, HZ);
+  const fin = new THREE.ConeGeometry(3.2, 9, 6); fin.translate(HX, 63 + 4.5, HZ);
   parts.push({ g: fin, c: [0.85, 0.6, 0.2] });
   scene.add(new THREE.Mesh(mergeGeos(parts), mat));
   const door = new THREE.BoxGeometry(10, 13, 1); door.translate(HX, 11.5, HZ + 17.2);
   scene.add(new THREE.Mesh(mergeGeos([{ g: door, c: [1.0, 0.7, 0.3] }]), lmBasic(0xffffff)));
   lmHaloAt(HX, 13, HZ + 19, 26, 0xffb75e, 0.75);
-  lmHaloAt(HX, 48, HZ, 40, 0xffd98a, 0.5);
+  lmHaloAt(HX, 56, HZ, 44, 0xffd98a, 0.5);
 }
 // drifting mist banks around the palace (v20d)
 {
@@ -1678,7 +1679,7 @@ const KEYS = [
   { pos: [30, 30, -350], look: [128, 30, -214], hold: 2200, fly: 4800, title: "Gate of Lanterns", note: "Under the great gate, into the festival" },
   { pos: [128, 66, -62], look: [185, 22, -140], hold: 2000, fly: 5000, title: "Star Market Life", note: "Vendors weave through drifting sky lanterns" },
   { pos: [-95, 78, 25], look: [-166, 48, 143], hold: 1600, fly: 5000, title: "Pagoda Orbit", note: "Curling around the tiered temple roof" },
-  { pos: [-400, 70, -60], look: [-250, 40, 60], hold: 1600, fly: 5200, title: "Palace Mist", note: "Silhouettes of the hall pierce the low fog" },
+  { pos: [-410, 50, -50], look: [-250, 40, 60], hold: 1600, fly: 5200, title: "Palace Mist", note: "Silhouettes of the hall pierce the low fog" },
   { pos: [-160, 130, 260], look: [740, 14, 450], hold: 1500, fly: 5400, title: "Water Reveal", note: "Rising over the glowing canals for the reveal" },
   { pos: [370, 85, 300], look: [740, 15, 460], hold: 1600, fly: 5200, title: "Magic Harbor", note: "The beacon sweeps across shimmering water" },
   { pos: [350, 120, 150], look: [560, 95, 350], hold: 1500, fly: 5000, title: "Dragon Lanes", note: "A dragon's wake stirs the festival lights" },
