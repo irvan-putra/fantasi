@@ -2090,17 +2090,40 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
     if (o.sx !== 1 || o.sy !== 1) { g.scale(o.sx, o.sy, o.sx); g.computeVertexNormals(); }
     return g;
   };
+  // v23af: per-variant costume parts so humans, elves and dwarves do not all read as blocky bodies
+  const EXTRA = {
+    human(v) { const k = v % 5, ex = [part(box(0.54, 0.07, 0.3), 0x2a1c14, 0, 0.88, 0), T(1, part(box(0.19, 0.14, 0.22), 0x2a1c14, -0.11, 0.07, 0.03)), T(2, part(box(0.19, 0.14, 0.22), 0x2a1c14, 0.11, 0.07, 0.03))];
+      if (k === 0) ex.push(T(5, part(cyl(0.36, 0.36, 0.03, 8), 0xe0c070, 0, 1.82)), T(5, part(cyl(0.16, 0.18, 0.12, 8), 0xe0c070, 0, 1.9)), part(box(0.1, 0.62, 0.3), 0xf0d060, 0.12, 1.15, 0.01, 0, 0.5));
+      if (k === 1) ex.push(T(5, part(box(0.42, 0.08, 0.42), 0xd03060, 0, 1.8, 0)), T(5, part(box(0.1, 0.3, 0.06), 0xd03060, 0, 1.62, -0.22)), part(box(0.56, 0.1, 0.3), 0xf0c040, 0, 0.92, 0));
+      if (k === 2) ex.push(part(box(0.46, 0.5, 0.04), 0xf4f0e0, 0, 0.82, 0.16), T(5, part(box(0.4, 0.07, 0.42), 0x2f4a6a, 0, 1.8, 0)), T(5, part(box(0.4, 0.04, 0.22), 0x2f4a6a, 0, 1.78, 0.24)));
+      if (k === 3) ex.push(part(box(0.58, 0.62, 0.05), 0x8e5cc4, 0, 1.1, -0.18), T(5, part(cone(0.26, 0.34, 5), 0xe0b030, 0, 1.92, 0)), T(5, part(cyl(0.3, 0.3, 0.03, 6), 0xe0b030, 0, 1.78, 0)));
+      if (k === 4) ex.push(part(box(0.36, 0.42, 0.16), 0x8a5a2e, 0, 1.15, -0.22), T(4, part(box(0.04, 0.5, 0.04), 0x5a3a20, 0.4, 0.85, 0.12)), T(4, part(box(0.16, 0.2, 0.16), 0xffd070, 0.4, 0.55, 0.12)));
+      return ex; },
+    elf(v) { const k = v % 4, ex = [part(box(0.44, 0.08, 0.3), 0xf0d060, 0, 1.45, 0.02), T(1, part(box(0.18, 0.2, 0.2), 0x4a3a28, -0.11, 0.1, 0.02)), T(2, part(box(0.18, 0.2, 0.2), 0x4a3a28, 0.11, 0.1, 0.02))];
+      if (k === 0) ex.push(part(box(0.62, 0.9, 0.05), 0x2f9e5a, 0, 0.95, -0.2), T(5, part(cone(0.22, 0.35, 5), 0x2f9e5a, 0, 1.92, -0.05)));
+      if (k === 1) ex.push(T(4, part(box(0.05, 0.7, 0.05), 0xc08a3a, 0.4, 1.0, 0.18)), T(4, part(box(0.26, 0.3, 0.1), 0xe0a050, 0.4, 0.62, 0.18)));
+      if (k === 2) ex.push(T(5, part(box(0.4, 0.04, 0.3), 0xf0f0ff, 0, 1.78, 0.02)), T(5, part(box(0.07, 0.07, 0.05), 0x70d0ff, 0, 1.8, 0.2)), part(box(0.1, 0.8, 0.04), 0x9b7fe0, 0.18, 0.55, 0.16));
+      if (k === 3) ex.push(T(5, part(box(0.03, 0.3, 0.12), 0xe04040, 0.18, 1.95, -0.05, 0, 0.5)), part(box(0.06, 0.9, 0.06), 0x6a4a2a, -0.2, 1.1, -0.22, 0, 0.3));
+      return ex; },
+    dwarf(v) { const k = v % 5, ex = [part(box(0.5, 0.5, 0.05), 0x4a3426, 0, 0.9, 0.17), T(1, part(box(0.2, 0.15, 0.24), 0x2a2018, -0.11, 0.07, 0.03)), T(2, part(box(0.2, 0.15, 0.24), 0x2a2018, 0.11, 0.07, 0.03))];
+      if (k === 0) ex.push(part(box(0.07, 0.5, 0.07), 0xc06a2a, -0.12, 1.1, 0.2), part(box(0.07, 0.5, 0.07), 0xc06a2a, 0.12, 1.1, 0.2));
+      if (k === 1) ex.push(T(4, part(box(0.14, 0.16, 0.14), 0xe8d070, 0.42, 0.68, 0.12)), T(4, part(box(0.04, 0.06, 0.04), 0xf8f4e0, 0.42, 0.78, 0.12)));
+      if (k === 2) ex.push(T(5, part(cyl(0.03, 0.03, 0.2, 5), 0x6a4a2a, 0.08, 1.58, 0.2, 1.4)), part(box(0.34, 0.4, 0.18), 0x7a5a32, 0, 1.2, -0.2), part(box(0.38, 0.1, 0.2), 0xc04a3a, 0, 1.48, -0.2));
+      if (k === 3) ex.push(T(5, part(cone(0.1, 0.3, 5), 0xd8c8a0, -0.2, 1.9, 0, 0, 0.5)), T(5, part(cone(0.1, 0.3, 5), 0xd8c8a0, 0.2, 1.9, 0, 0, -0.5)));
+      if (k === 4) ex.push(T(4, part(box(0.06, 0.6, 0.06), 0x6a4a2a, -0.4, 0.8, 0.1)), T(4, part(box(0.3, 0.22, 0.14), 0x8a8a96, -0.4, 1.12, 0.1)), part(box(0.5, 0.06, 0.3), 0xd8b040, 0, 1.3, 0));
+      return ex; },
+  };
   const BUILD = {
     human(v) {
       const cloth = [0xd9534f, 0x3a86c8, 0x5aa469, 0xe0a030, 0x8e5cc4][v % 5], pants = [0x3a3f58, 0x5a4a3a, 0x2f4a3a][v % 3], skin = SKIN[v % 4], hair = [0x2a1c14, 0x5a3a20, 0xc8a050, 0x1a1a1a][v % 4];
-      return man({ cloth, pants, skin, sx: 1, sy: 1 }, [T(5, part(new THREE.SphereGeometry(0.2, 5, 2, 0, Math.PI * 2, 0, Math.PI / 2), hair, 0, 1.72))]);
+      return man({ cloth, pants, skin, sx: 1, sy: 1 }, [T(5, part(new THREE.SphereGeometry(0.2, 5, 2, 0, Math.PI * 2, 0, Math.PI / 2), hair, 0, 1.72)), ...EXTRA.human(v)]);
     },
     elf(v) {
       const cloth = [0x2f9e8f, 0x7fc86a, 0xc8d6ff, 0x9b7fe0, 0xe8e0a0][v % 5], skin = [0xf3ddc4, 0xe6c8a8, 0xd8b896][v % 3], hair = [0xf4ecc0, 0xc8c8d8, 0x6b4a2a, 0xf0a0c0][v % 4];
       return man({ cloth, pants: 0x4a5a48, skin, boots: 0x6a5a3a, sx: 0.78, sy: 1.22 }, [
         T(5, part(cone(0.07, 0.5, 4), skin, -0.3, 1.82, 0, 0, 1.25)), T(5, part(cone(0.07, 0.5, 4), skin, 0.3, 1.82, 0, 0, -1.25)), // long pointed ears
         part(box(0.42, 0.5, 0.06), cloth, 0, 0.78, -0.17), // long coat tail
-        T(5, part(new THREE.SphereGeometry(0.2, 5, 2, 0, Math.PI * 2, 0, Math.PI / 2), hair, 0, 1.72)), T(5, part(box(0.1, 0.55, 0.08), hair, 0, 1.45, -0.2))]);
+        T(5, part(new THREE.SphereGeometry(0.2, 5, 2, 0, Math.PI * 2, 0, Math.PI / 2), hair, 0, 1.72)), T(5, part(box(0.1, 0.55, 0.08), hair, 0, 1.45, -0.2)), ...EXTRA.elf(v)]);
     },
     dwarf(v) {
       const cloth = [0x8a4b2a, 0x5a6b7a, 0xa85a2a, 0x6a3a3a][v % 4], beard = [0xc06a2a, 0x8a8a8a, 0x3a2a1a, 0xd8b060][v % 4];
@@ -2108,7 +2131,7 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
         part(box(0.36, 0.5, 0.14), beard, 0, 1.35, 0.17), // big beard down the chest
         T(5, part(new THREE.SphereGeometry(0.24, 5, 2, 0, Math.PI * 2, 0, Math.PI / 2), 0x7a7f88, 0, 1.72)), // helmet
         part(box(0.56, 0.08, 0.3), 0x2a2018, 0, 0.88, 0), // belt
-        T(4, part(box(0.07, 0.8, 0.07), 0x6a4a2a, 0.5, 0.95, 0.1)), T(4, part(box(0.3, 0.2, 0.06), 0x9a9aa4, 0.5, 1.45, 0.1))]); // axe
+        T(4, part(box(0.07, 0.8, 0.07), 0x6a4a2a, 0.5, 0.95, 0.1)), T(4, part(box(0.3, 0.2, 0.06), 0x9a9aa4, 0.5, 1.45, 0.1)), ...EXTRA.dwarf(v)]); // axe
     },
     giant(v) {
       // v23ad: three distinct giants: fur-cloaked redbeard, horned stone-blue brute, ochre drummer with topknot
