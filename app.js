@@ -24,7 +24,7 @@ async function fetchWithProgress(url, onp) {
 
 const stallTimer = setTimeout(() => $('stall').classList.add('show'), 12000);
 
-const ASSET_V = 'v20j';
+const ASSET_V = 'v20k';
 const manifest = await (await fetch('./manifest.json?' + ASSET_V)).json();
 bar.style.width = '6%';
 const binBuf = await fetchWithProgress('./scene.bin?' + ASSET_V, (f) => { bar.style.width = (6 + f * 84) + '%'; });
@@ -1420,9 +1420,9 @@ function makeDragon(colorHex, ph0) {
   return { grp, L, R, upd };
 }
 const DRAG_PATHS = [
-  { cx: 177, cz: -132, r: 150, h: 120, amp: 18, speed: 0.16, ph: 0.0 },
-  { cx: -250, cz: 210, r: 140, h: 100, amp: 16, speed: -0.12, ph: 2.1 },
-  { cx: 560, cz: 350, r: 130, h: 105, amp: 25, speed: 0.10, ph: 4.2 },
+  { cx: 177, cz: -132, r: 150, h: 120, amp: 18, loops: 2, ph: 0.0 },
+  { cx: -250, cz: 210, r: 140, h: 100, amp: 16, loops: 2, ph: 2.1 },
+  { cx: 560, cz: 350, r: 130, h: 105, amp: 25, loops: 2, ph: 4.2 },
 ];
 const dragons = manifest.dragons.map((d, i) => {
   const { grp, L, R, upd } = makeDragon(d.col, DRAG_PATHS[i % DRAG_PATHS.length].ph);
@@ -1436,11 +1436,13 @@ function tickDragons(t, u) {
   const cw = Math.min(Math.max((u - 0.55) / 0.13, 0), 1);
   const chase = cw > 0 && cw < 1 ? Math.sin(cw * Math.PI) ** 2 : 0;
   const cw2 = Math.min(Math.max((u - 0.70) / 0.09, 0), 1);
-  const gather = cw2 > 0 && cw2 < 1 ? Math.sin(cw2 * Math.PI) ** 2 : 0;
+  const cw3 = Math.min(Math.max((0.88 - u) / 0.05, 0), 1);
+  const gather = Math.sin(cw2 * Math.PI / 2) ** 2 * Math.sin(cw3 * Math.PI / 2) ** 2; // rise 0.70-0.79, hold through Dragon Lanes, release by 0.88
+  const TAU = Math.PI * 2;
   for (const d of dragons) {
     const isLead = d.ph === 0.0;
-    const spd = d.speed * (1 + chase * (isLead ? 0.8 : 0.45));
-    const a = t * spd + d.ph * (1 - gather * 0.93); // gather collapses phases into a trailing lane
+    // route is a pure function of loop phase u: identical path every loop (Irvan 8:38 AM)
+    const a = TAU * d.loops * u + 2.95 + d.ph * (1 - gather * 0.93) + chase * (isLead ? 0.5 : 0.2);
     // non-leaders pull toward the lead orbit center during the chase
     const pull = chase * (isLead ? 0 : 0.55);
     const pull2 = gather;
@@ -1449,7 +1451,7 @@ function tickDragons(t, u) {
     const rr = d.r * (1 - chase * (isLead ? 0 : 0.3));
     const x = cx + Math.cos(a) * rr;
     const z = cz + Math.sin(a) * rr * 0.8;
-    const y = d.h + Math.sin(t * 0.5 + d.ph) * d.amp * (1 - chase * 0.3);
+    const y = d.h + Math.sin(TAU * 6 * u + d.ph) * d.amp * (1 - chase * 0.3);
     d.grp.position.set(x, y, z);
     // never let a dragon fill or block the camera lens (Irvan 9:41 PM)
     const cdx = x - camera.position.x, cdy = y - camera.position.y, cdz = z - camera.position.z;
@@ -1458,11 +1460,11 @@ function tickDragons(t, u) {
       const s = 130 / (Math.sqrt(cd2) || 1);
       d.grp.position.set(camera.position.x + cdx * s, camera.position.y + cdy * s, camera.position.z + cdz * s);
     }
-    const na = a + 0.02 * Math.sign(d.speed);
+    const na = a + 0.02 * Math.sign(d.loops);
     const nx = cx + Math.cos(na) * rr, nz = cz + Math.sin(na) * rr * 0.8;
     d.grp.lookAt(nx, y, nz);
-    d.upd(t * (1 + chase * 0.5));
-    const f = Math.sin(t * (4.2 + chase * 2.6) + d.ph) * (0.6 + chase * 0.3);
+    d.upd(TAU * 13 * u + chase * 4);
+    const f = Math.sin(TAU * 56 * u + d.ph + chase * 8) * (0.6 + chase * 0.3);
     d.L.rotation.z = 0.2 + f; d.R.rotation.z = -0.2 - f;
     d.L.rotation.y = -0.15 + f * 0.25; d.R.rotation.y = 0.15 - f * 0.25;
     const m = d.grp.children[0].material;
