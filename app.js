@@ -1573,8 +1573,13 @@ function tickDragons(t, u) {
     const el = (i === 1 ? 19 : (i === 0 ? 16 : 18)) + Math.sin(TAU * 2 * u + d.ph * 1.7) * 2.0;
     let ew = pitch + el;                                    // world elevation of the anchor
     let dist = 480 + i * 65;                            // v22h: pulled in from 560+i*70 (bolder)
+    // v22i (Irvan 1:47 PM): on down-pitched beats the azure dragon rides lower
+    // (rel ~14 deg instead of ~18) so it sits against the darker sunset band
+    // and reads as a full dragon, not a faint streak at the top edge.
+    const azureLow = (i === 2 && pitch < 2);
+    if (azureLow) ew = Math.max(10.8, ew - 4.5);
     if (ew > topEdge - 1) ew = topEdge - 1;
-    if (ew < 12.5) {
+    if (ew < 12.5 && !azureLow) {
       if (topEdge - 1 >= 12.5) ew = 12.5;                    // lift into the relaxed band
       else if (topEdge > 5) { ew = topEdge - 1; dist = 1200; } // down-beat: distant top-edge silhouette
       else { ew = 20; dist = 720; }                          // no sky in frame this beat
@@ -1615,7 +1620,7 @@ function tickDragons(t, u) {
       const elev = Math.atan2(cdy, horiz) * 180 / Math.PI;
       const fw = _fwd.set(0, 0, -1).applyQuaternion(camera.quaternion);
       const offAxis = Math.acos(Math.min(1, Math.max(-1, (cdx * fw.x + cdy * fw.y + cdz * fw.z) / cd))) * 180 / Math.PI;
-      if (elev > 12 && offAxis > 15) minD = Math.max(60, 150 / Math.tan(20 * Math.PI / 180));
+      if (elev > 10.5 && offAxis > 15) minD = Math.max(60, 150 / Math.tan(20 * Math.PI / 180)); // v22i: 10.5 so the lowered azure lane keeps the relaxed cap; screen-coverage caps unchanged
     }
     if (cd < minD) {
       const s = minD / cd;
