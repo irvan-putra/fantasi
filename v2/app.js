@@ -2232,7 +2232,9 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
   { const seen = camPts.filter((p) => p[1] < 150); const dnear = (s) => { let d = 1e9; for (const p of seen) { const dx = p[0] - s[0], dz = p[2] - s[2], dy = p[1] - s[1]; const q = dx * dx + dz * dz + dy * dy * 0.3; if (q < d) d = q; } return d; };
     for (const pool of [ground, roofs, balc]) { const a = [], b = []; for (const s of pool) (dnear(s) < 230 * 230 ? a : b).push(s); pool.length = 0; pool.push(...a, ...b); } }
   // ---- plan: [race, where, count]
-  const FOCUS = [[-61.3, 56.4], [47.1, 209.7]];
+  const _sd = (x, z, a) => { const dx = a[2] - a[0], dz = a[3] - a[1]; const u = Math.max(0, Math.min(1, ((x - a[0]) * dx + (z - a[1]) * dz) / (dx * dx + dz * dz))); return Math.hypot(x - a[0] - dx * u, z - a[1] - dz * u); };
+  // v23w: figures the close-up beats look at may sit near the camera route, but never within 3.5 m of the path line
+  const _focusOk = (s) => (Math.hypot(s[0] + 61.3, s[2] - 56.4) < 14 && _sd(s[0], s[2], [-47.5, 66, -78, 56.4]) >= 3.5) || (Math.hypot(s[0] - 47.1, s[2] - 209.7) < 14 && _sd(s[0], s[2], [25.1, 209.7, 61.1, 209.7]) >= 3.5);
   const PLAN = [['human', 'g', 560], ['human', 'b', 340], ['human', 'r', 340], ['elf', 'r', 150], ['elf', 'b', 130], ['elf', 'g', 100],
     ['dwarf', 'g', 210], ['dwarf', 'b', 45], ['dwarf', 'r', 30], ['giant', 'g', 28]];
   const pools = { g: ground, b: balc, r: roofs }; const cur = { g: 0, b: 0, r: 0 };
@@ -2242,7 +2244,7 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
     while (made < cnt && cur[w] < pool.length && guard++ < 20000) {
       const s = pool[cur[w]++]; const clear = race === 'giant' ? 70 : 16;
       if (race === 'giant' && w === 'g' && s[4] < 6) continue;
-      if (nearCam(s[0], s[1] + 3, s[2], clear) && !FOCUS.some((q) => Math.hypot(q[0] - s[0], q[1] - s[2]) < 14)) continue; // v23v: keep the figures the close-up beats look at
+      if (nearCam(s[0], s[1] + 3, s[2], clear) && !_focusOk(s)) continue; // v23v: keep the figures the close-up beats look at
       const yaw = s[3] + (rnd() - 0.5) * (w === 'g' ? 0.5 : 0.7);
       const rr = rnd(); let mode = 0;
       if (w === 'g') mode = race === 'giant' ? 0 : (s[4] >= 5.5 && rr < 0.35) ? 1 : rr < 0.6 ? 2 : rr < 0.8 ? 3 : 0;
@@ -2264,6 +2266,7 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
         else { mode = 0; yaw = Math.atan2(ux, uz) + (rnd() - 0.5) * 3; }
         const q = rnd(), race = q < 0.7 ? 'human' : q < 0.82 ? 'elf' : 'dwarf';
         items.push({ race, v: (rnd() * 12) | 0, x, y: 0.5, z, yaw, ph: rnd() * 6.28, w: 'g', lx: wd, lz: 0, ly: 0.5, ledgeYaw: yaw, mode }); FOLK_COUNT[race]++; made++; } } }
+  items.push({ race: 'giant', v: 3, x: 188.6, y: 0.5, z: 196.7, yaw: Math.PI / 2, ph: 1.3, w: 'g', lx: 10, lz: 0, ly: 0.5, ledgeYaw: Math.PI / 2, mode: 0 }); FOLK_COUNT.giant++; // v23w: the giant of the Giant of the Lanes beat
   // ---- ledges (small balcony slabs)
   const ledgeSpots = items.filter((o) => o.w === 'b');
   const ledgeMat = new THREE.MeshLambertMaterial({ color: 0x6a5a4c, emissive: 0x2a2018, emissiveIntensity: 1.0 }); lamb.push(ledgeMat);
