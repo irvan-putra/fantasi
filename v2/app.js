@@ -1572,7 +1572,7 @@ function tickDragons(t, u) {
     const az = (i - 1) * 11 + Math.sin(TAU * u + d.ph) * 2.0; // v22h: wider lane spread so no two dragons overlap (was *8)              // [-10,-6] / [-2,2] / [6,10]
     const el = (i === 1 ? 19 : (i === 0 ? 16 : 18)) + Math.sin(TAU * 2 * u + d.ph * 1.7) * 2.0;
     let ew = pitch + el;                                    // world elevation of the anchor
-    let dist = 480 + i * 65;                            // v22h: pulled in from 560+i*70 (bolder)
+    let dist = 480;                                          // v22j: flat 480u for all three - measured blue 603u vs red 474u read 21% smaller on Twin Spire Dive (Irvan 1:52 PM: match apparent size)
     // v22i (Irvan 1:47 PM): on down-pitched beats the azure dragon rides lower
     // (rel ~14 deg instead of ~18) so it sits against the darker sunset band
     // and reads as a full dragon, not a faint streak at the top edge.
