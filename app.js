@@ -2333,7 +2333,7 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
       for (const o of g) { const rx = o.x - x, rz = o.z - z, al = rx * dx + rz * dz, la = -rx * dz + rz * dx; if (al > 0 && al < len && Math.abs(la) < 9) { sc++; if (la > 0) L++; else Rr++; } }
       if (L >= 2 && Rr >= 2) res.push({ x, z, a: +a.toFixed(2), sc, L, R: Rr }); }
     return res.sort((p, q) => q.sc - p.sc).slice(0, 12); };
-  window.__FOLK = { lanes, items, roofAt, wallNear, clipTest, camTest, counts: FOLK_COUNT, pools: { ground: ground.length, roofs: roofs.length, balconies: balc.length }, total: items.length };
+  window.__FOLK = { camAt, LOOP_MS, KEYS, lanes, items, roofAt, wallNear, clipTest, camTest, counts: FOLK_COUNT, pools: { ground: ground.length, roofs: roofs.length, balconies: balc.length }, total: items.length };
 }
 function tickFolk(t, phase) { if (folkTick) folkTick(t, phase); }
 {
