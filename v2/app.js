@@ -24,7 +24,7 @@ async function fetchWithProgress(url, onp) {
 
 const stallTimer = setTimeout(() => $('stall').classList.add('show'), 12000);
 
-const ASSET_V = 'v20u';
+const ASSET_V = 'v20v';
 const manifest = await (await fetch('./manifest.json?' + ASSET_V)).json();
 bar.style.width = '6%';
 const binBuf = await fetchWithProgress('./scene.bin?' + ASSET_V, (f) => { bar.style.width = (6 + f * 84) + '%'; });
@@ -539,10 +539,10 @@ function lmHaloAt(x, y, z, size, hex, opacity) {
   const pcv = document.createElement('canvas'); pcv.width = 2; pcv.height = 64;
   const pcx = pcv.getContext('2d');
   const pgr = pcx.createLinearGradient(0, 0, 0, 64);
-  pgr.addColorStop(0, 'rgba(255,255,255,0)'); pgr.addColorStop(0.55, 'rgba(255,255,255,0.45)'); pgr.addColorStop(1, 'rgba(255,255,255,1)');
+  pgr.addColorStop(0, 'rgba(255,255,255,0)'); pgr.addColorStop(0.5, 'rgba(255,255,255,0.12)'); pgr.addColorStop(0.78, 'rgba(255,255,255,0.6)'); pgr.addColorStop(1, 'rgba(255,255,255,1)');
   pcx.fillStyle = pgr; pcx.fillRect(0, 0, 2, 64);
   const pilFadeTex = new THREE.CanvasTexture(pcv);
-  const pilGeo = new THREE.CylinderGeometry(0.8, 7, 300, 12, 1, true); // v20u: tapered light shaft
+  const pilGeo = new THREE.CylinderGeometry(0.25, 16, 340, 12, 1, true); // v20v: aggressive taper, wide base to hairline top
   const pilMat = new THREE.MeshBasicMaterial({ color: 0x9fe4ff, map: pilFadeTex, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
   pilMat.toneMapped = false;
   const pillar = new THREE.Mesh(pilGeo, pilMat);
