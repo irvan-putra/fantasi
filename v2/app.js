@@ -24,7 +24,7 @@ async function fetchWithProgress(url, onp) {
 
 const stallTimer = setTimeout(() => $('stall').classList.add('show'), 12000);
 
-const ASSET_V = 'v20s';
+const ASSET_V = 'v20t';
 const manifest = await (await fetch('./manifest.json?' + ASSET_V)).json();
 bar.style.width = '6%';
 const binBuf = await fetchWithProgress('./scene.bin?' + ASSET_V, (f) => { bar.style.width = (6 + f * 84) + '%'; });
@@ -757,9 +757,9 @@ lmPagoda(-320, -260, 5, 22, 8.5);
   aurTex.wrapS = THREE.RepeatWrapping;
   const auroras = [];
   const adefs = [
-    [0x77ffd9, -300, 88, 40, 260, 110, 0.50, 0.5],
-    [0x9a6bff, -225, 108, 95, 220, 100, 0.44, -0.35],
-    [0x64ff9a, -275, 78, -15, 300, 120, 0.40, 0.95],
+    [0x77ffd9, -300, 138, 40, 260, 120, 0.55, 0.5],
+    [0x9a6bff, -225, 158, 95, 220, 110, 0.48, -0.35],
+    [0x64ff9a, -275, 128, -15, 300, 130, 0.45, 0.95],
   ];
   for (const [col, x, y, z, w, h, op, ry] of adefs) {
     const m = new THREE.MeshBasicMaterial({ map: aurTex, color: col, transparent: true, opacity: op, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
