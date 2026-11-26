@@ -24,7 +24,7 @@ async function fetchWithProgress(url, onp) {
 
 const stallTimer = setTimeout(() => $('stall').classList.add('show'), 12000);
 
-const ASSET_V = 'v20z';
+const ASSET_V = 'v21a';
 const manifest = await (await fetch('./manifest.json?' + ASSET_V)).json();
 bar.style.width = '6%';
 const binBuf = await fetchWithProgress('./scene.bin?' + ASSET_V, (f) => { bar.style.width = (6 + f * 84) + '%'; });
@@ -1359,10 +1359,10 @@ function makeDragon(colorHex, ph0) {
   const belly = base.clone().lerp(new THREE.Color(0xfff0cf), 0.8);
   const fin = base.clone().multiplyScalar(0.5);
   const mane = base.clone().lerp(new THREE.Color(0xffd98a), 0.55); // gold-tinged mane/antler color
-  const RINGS = 48, RAD = 8, LEN = 34;
+  const RINGS = 60, RAD = 8, LEN = 44;
   const radiusAt = t => {
     // tail tip -> chest -> neck
-    const prof = [[0, 0.3], [0.12, 0.8], [0.35, 1.45], [0.55, 1.75], [0.68, 1.6], [0.82, 1.2], [0.93, 1.0], [1, 0.8]];
+    const prof = [[0, 0.4], [0.12, 1.2], [0.35, 2.1], [0.55, 2.6], [0.68, 2.35], [0.82, 1.8], [0.93, 1.5], [1, 1.2]];
     for (let i = 1; i < prof.length; i++) {
       if (t <= prof[i][0]) {
         const [t0, r0] = prof[i - 1], [t1, r1] = prof[i];
@@ -1411,6 +1411,14 @@ function makeDragon(colorHex, ph0) {
     vRing.push(ringOf); vOff.push(0, r + 0.05 + h, -h * 0.55); vNrm.push(0, 0.8, -0.6);
     vCol.push(mane.r, mane.g, mane.b); vUv.push(0.2, 0.12);
     idx.push(start, start + 1, start + 4, start + 1, start + 2, start + 4, start + 2, start + 3, start + 4, start + 3, start + 0, start + 4);
+  }
+  // tail fin fan (v21a): flat gold triangles fanning behind the tail tip
+  for (const [fn, fl] of [[-0.9, 1.5], [0, 2.2], [0.9, 1.5]]) {
+    const r0 = radiusAt(0.02);
+    const start = vRing.length;
+    const pts = [[-0.15, 0, 0.3], [0.15, 0, 0.3], [fn, 0.35, -fl]];
+    for (const pv of pts) { vRing.push(1); vOff.push(pv[0], pv[1] + r0 * 0.2, pv[2]); vNrm.push(0, 1, 0); vCol.push(mane.r, mane.g, mane.b); vUv.push(0.12, 0.05); }
+    idx.push(start, start + 1, start + 2, start, start + 2, start + 1);
   }
   const nv = vRing.length;
   const pos = new Float32Array(nv * 3), nrm = new Float32Array(nv * 3);
@@ -1468,7 +1476,7 @@ function makeDragon(colorHex, ph0) {
   const pearlHalo = new THREE.Points(pg, pmat);
   const headG = new THREE.Group();
   headG.add(headMesh, eyeMesh, pearl, pearlHalo);
-  headG.scale.setScalar(1.6);
+  headG.scale.setScalar(1.9);
 
   // v20x: no wings - Chinese dragons ride the sky by virtue, not wings
   const L = new THREE.Group(), R = new THREE.Group();
@@ -1491,7 +1499,7 @@ function makeDragon(colorHex, ph0) {
   function upd(time) {
     for (let i = 0; i < RINGS; i++) {
       const t = i / (RINGS - 1);
-      const sway = Math.sin(t * 12.0 - time * 3.1 + ph0) * 3.2 * (0.25 + t * 0.95);
+      const sway = Math.sin(t * 9.0 - time * 3.1 + ph0) * 4.0 * (0.25 + t * 0.95);
       const bob = Math.cos(t * 5.1 - time * 3.1 + ph0) * 0.9 * (0.3 + t * 0.55);
       waved[i].set(basePts[i].x + sway, basePts[i].y + bob, basePts[i].z);
     }
@@ -1524,10 +1532,10 @@ function makeDragon(colorHex, ph0) {
   upd(0);
   return { grp, L, R, upd };
 }
-const DRAG_PATHS = [
-  { cx: 177, cz: -132, r: 150, h: 120, amp: 18, loops: 2, ph: 0.0 },
-  { cx: -250, cz: 210, r: 140, h: 100, amp: 16, loops: 2, ph: 2.1 },
-  { cx: 560, cz: 350, r: 130, h: 105, amp: 25, loops: 2, ph: 4.2 },
+const DRAG_PATHS = [ // v21a: long lanes sweeping across the city sky, not distant loops
+  { cx: 0, cz: 0, r: 330, h: 175, amp: 24, loops: 1, ph: 0.0 },
+  { cx: -60, cz: 40, r: 400, h: 210, amp: 28, loops: 1, ph: 2.1 },
+  { cx: 80, cz: -40, r: 460, h: 150, amp: 32, loops: 1, ph: 4.2 },
 ];
 const dragons = manifest.dragons.map((d, i) => {
   const { grp, L, R, upd } = makeDragon(d.col, DRAG_PATHS[i % DRAG_PATHS.length].ph);
@@ -1535,6 +1543,7 @@ const dragons = manifest.dragons.map((d, i) => {
   const p = DRAG_PATHS[i % DRAG_PATHS.length];
   return { grp, L, R, upd, ...p };
 });
+const _fwd = new THREE.Vector3();
 function tickDragons(t, u) {
   // chase window: mid-loop the pack closes on the lead dragon's orbit,
   // speed and flapping pick up, bellies glow brighter. Pure function of u.
@@ -1547,29 +1556,50 @@ function tickDragons(t, u) {
   for (const d of dragons) {
     const isLead = d.ph === 0.0;
     // route is a pure function of loop phase u: identical path every loop (Irvan 8:38 AM)
-    const a = TAU * d.loops * u + 2.95 + d.ph * (1 - gather * 0.96) + chase * (isLead ? 0.5 : 0.2) + gather * 0.90; // v20r: gather also swings the train dead-center into the Dragon Lanes frame
+    const a = TAU * d.loops * u + 2.95 + d.ph + chase * (isLead ? 0.5 : 0.2);
     // non-leaders pull toward the lead orbit center during the chase
     const pull = chase * (isLead ? 0 : 0.55);
-    const pull2 = gather;
-    const gx = d.cx + (560 - d.cx) * pull2, gz = d.cz + (350 - d.cz) * pull2;
-    const cx = gx + (177 - gx) * pull, cz = gz + (-132 - gz) * pull;
+    const cx = d.cx + (177 - d.cx) * pull, cz = d.cz + (-132 - d.cz) * pull;
     const rr = d.r * (1 - chase * (isLead ? 0 : 0.3));
-    const x = cx + Math.cos(a) * rr;
-    const z = cz + Math.sin(a) * rr * 0.8;
-    const y = d.h + Math.sin(TAU * 6 * u + d.ph) * d.amp * (1 - chase * 0.3);
+    let x = cx + Math.cos(a) * rr;
+    let z = cz + Math.sin(a) * rr * 0.8;
+    let y = d.h + Math.sin(TAU * 6 * u + d.ph) * d.amp * (1 - chase * 0.3);
+    // v21a: gather = line-abreast flypast across the UPPER band of the Dragon Lanes
+    // frame, side-on to the beat camera (350,120,150 -> 560,95,350). Never central.
+    if (gather > 0) {
+      const dirx = 0.707, dirz = -0.707; // lane direction, perpendicular to the beat view
+      const slot = (isLead ? -1 : (d.ph < 3 ? 0 : 1)) * 85;
+      const tx = 450 + dirx * slot, ty = 205 + (isLead ? 12 : 0), tz = 247 + dirz * slot;
+      x += (tx - x) * gather; y += (ty - y) * gather; z += (tz - z) * gather;
+    }
     d.grp.position.set(x, y, z);
     // screen-space rule (Irvan 8:46 AM): a dragon never fills more than ~16 deg of the
     // view on any beat: push it out along the view ray until its angular size fits.
     const cdx = x - camera.position.x, cdy = y - camera.position.y, cdz = z - camera.position.z;
     const cd = Math.sqrt(cdx * cdx + cdy * cdy + cdz * cdz) || 1;
-    const minD = Math.max(130, 116 / Math.tan(8 * Math.PI / 180)); // v20z: 130-unit floor + original 16-degree cap, halflen 116u at scale 6.8 (~825u)
+    // v21a (Irvan 10:11): default stays 130u floor + 16-degree cap. Relaxed to a 60u
+    // floor + ~40-degree cap ONLY when the dragon is in the upper sky band (>12 deg
+    // above the horizon) AND off the central view axis (>15 deg), so it can sweep big
+    // across the sky and screen edges but never covers the city view.
+    let minD = Math.max(130, 150 / Math.tan(8 * Math.PI / 180));
+    {
+      const horiz = Math.sqrt(cdx * cdx + cdz * cdz) || 1;
+      const elev = Math.atan2(cdy, horiz) * 180 / Math.PI;
+      const fw = _fwd.set(0, 0, -1).applyQuaternion(camera.quaternion);
+      const offAxis = Math.acos(Math.min(1, Math.max(-1, (cdx * fw.x + cdy * fw.y + cdz * fw.z) / cd))) * 180 / Math.PI;
+      if (elev > 12 && offAxis > 15) minD = Math.max(60, 150 / Math.tan(20 * Math.PI / 180));
+    }
     if (cd < minD) {
       const s = minD / cd;
       d.grp.position.set(camera.position.x + cdx * s, camera.position.y + cdy * s, camera.position.z + cdz * s);
     }
-    const na = a + 0.02 * Math.sign(d.loops);
-    const nx = cx + Math.cos(na) * rr, nz = cz + Math.sin(na) * rr * 0.8;
-    d.grp.lookAt(nx, y, nz);
+    if (gather > 0.5) {
+      d.grp.lookAt(d.grp.position.x + 0.707, d.grp.position.y, d.grp.position.z - 0.707); // v21a: hold the side-on lane heading
+    } else {
+      const na = a + 0.02 * Math.sign(d.loops);
+      const nx = cx + Math.cos(na) * rr, nz = cz + Math.sin(na) * rr * 0.8;
+      d.grp.lookAt(nx, y, nz);
+    }
     d.upd(TAU * 13 * u + chase * 4);
     const m = d.grp.children[0].material;
     m.emissiveIntensity = 0.55 + chase * 0.3;
