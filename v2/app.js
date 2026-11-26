@@ -24,7 +24,7 @@ async function fetchWithProgress(url, onp) {
 
 const stallTimer = setTimeout(() => $('stall').classList.add('show'), 12000);
 
-const ASSET_V = 'v21b';
+const ASSET_V = 'v21c';
 const manifest = await (await fetch('./manifest.json?' + ASSET_V)).json();
 bar.style.width = '6%';
 const binBuf = await fetchWithProgress('./scene.bin?' + ASSET_V, (f) => { bar.style.width = (6 + f * 84) + '%'; });
@@ -1567,9 +1567,11 @@ function tickDragons(t, u) {
     // v21a: gather = line-abreast flypast across the UPPER band of the Dragon Lanes
     // frame, side-on to the beat camera (350,120,150 -> 560,95,350). Never central.
     if (gather > 0) {
-      const dirx = 0.707, dirz = -0.707; // lane direction, perpendicular to the beat view
+      // v21c: formation sits ON the relaxed-rule ray - ~18 deg above the beat view axis,
+      // 420-430u out, so the cap does not shove it out of frame. Camera (350,120,150)->(560,95,350).
+      const dirx = -0.689, dirz = 0.725; // lane direction across the frame (right vector of the beat view)
       const slot = (isLead ? -1 : (d.ph < 3 ? 0 : 1)) * 85;
-      const tx = 450 + dirx * slot, ty = 205 + (isLead ? 12 : 0) + Math.sin(TAU * 3 * u + slot * 0.05) * 10, tz = 247 + dirz * slot;
+      const tx = 646 + dirx * slot, ty = 216 + (isLead ? 12 : 0) + Math.sin(TAU * 3 * u + slot * 0.05) * 8, tz = 432 + dirz * slot;
       x += (tx - x) * gather; y += (ty - y) * gather; z += (tz - z) * gather;
     }
     d.grp.position.set(x, y, z);
@@ -1594,7 +1596,7 @@ function tickDragons(t, u) {
       d.grp.position.set(camera.position.x + cdx * s, camera.position.y + cdy * s, camera.position.z + cdz * s);
     }
     if (gather > 0.5) {
-      d.grp.lookAt(d.grp.position.x + 0.707, d.grp.position.y, d.grp.position.z - 0.707); // v21a: hold the side-on lane heading
+      d.grp.lookAt(d.grp.position.x - 0.689, d.grp.position.y, d.grp.position.z + 0.725); // v21c: hold the side-on lane heading
       d.grp.rotateZ(Math.sin(TAU * 3 * u + d.ph) * 0.35); // v21b: roll through the dance
     } else {
       const na = a + 0.02 * Math.sign(d.loops);
