@@ -1908,7 +1908,7 @@ function scoreFadeAt(u) {
 
 // ---------------- score (ported from v1) ----------------
 const Score = (() => {
-  let ctx = null, master = null, running = false, chimeTimer = null, brightness = 0;
+  let ctx = null, master = null, running = false, chimeTimer = null, brightness = 0, legacyMode = false, trackSrc = null, trackBuf = null, trackLoading = false, trackFilt = null;
   function ensure() {
     if (ctx) return true;
     const AC = window.AudioContext || window.webkitAudioContext;
@@ -1916,17 +1916,19 @@ const Score = (() => {
     ctx = new AC();
     master = ctx.createGain(); master.gain.value = 0.0; master.connect(ctx.destination);
     const filt = ctx.createBiquadFilter(); filt.type = 'lowpass'; filt.frequency.value = 700; filt.Q.value = 0.4; filt.connect(master);
-    // v22m: phone speakers cannot reproduce 110-165 Hz, so the old pad was inaudible on a Galaxy A24;
-    // add a 220-440 Hz layer and lift the pad gains (Irvan 2:05 PM: "i can't hear the sounds")
-    for (const [f, g] of [[110, 0.08], [130.81, 0.06], [164.81, 0.05], [220, 0.07], [329.63, 0.05], [440, 0.03]]) {
-      const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = f;
-      o.detune.value = (Math.random() * 8) - 4;
-      const og = ctx.createGain(); og.gain.value = g;
-      o.connect(og); og.connect(filt); o.start();
-    }
-    const lfo = ctx.createOscillator(); lfo.frequency.value = 0.05;
-    const lg = ctx.createGain(); lg.gain.value = 90; lfo.connect(lg); lg.connect(filt.frequency); lfo.start();
     Score._filt = filt;
+    Score._legacy = () => {
+    // v22m: phone speakers cannot reproduce 110-165 Hz, so the old pad was inaudible on a Galaxy A24;
+      // add a 220-440 Hz layer and lift the pad gains (Irvan 2:05 PM: "i can't hear the sounds")
+      for (const [f, g] of [[110, 0.08], [130.81, 0.06], [164.81, 0.05], [220, 0.07], [329.63, 0.05], [440, 0.03]]) {
+        const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = f;
+        o.detune.value = (Math.random() * 8) - 4;
+        const og = ctx.createGain(); og.gain.value = g;
+        o.connect(og); og.connect(filt); o.start();
+      }
+      const lfo = ctx.createOscillator(); lfo.frequency.value = 0.05;
+      const lg = ctx.createGain(); lg.gain.value = 90; lfo.connect(lg); lg.connect(filt.frequency); lfo.start();
+    };
     return true;
   }
   const SCALE = [220, 261.63, 293.66, 329.63, 392, 440, 523.25, 587.33];
@@ -1940,7 +1942,29 @@ const Score = (() => {
     g.gain.linearRampToValueAtTime(0.16 + brightness * 0.06, t + 0.06);
     g.gain.exponentialRampToValueAtTime(0.0001, t + 2.2);
     o.connect(g); g.connect(master); o.start(t); o.stop(t + 2.4);
-    chimeTimer = setTimeout(chime, 2200 + Math.random() * 2200 - brightness * 700);
+    if (legacyMode) chimeTimer = setTimeout(chime, 2200 + Math.random() * 2200 - brightness * 700);
+  }
+  // v23c: composed loop (music-src/compose.py, original, AI-written) replaces the drone pad + random chimes.
+  async function playTrack() {
+    if (trackSrc || trackLoading || legacyMode) return;
+    trackLoading = true;
+    try {
+      if (!trackBuf) {
+        const a = document.createElement('audio');
+        const url = (a.canPlayType('audio/ogg; codecs="vorbis"') ? '../score.ogg' : '../score.m4a') + '?v23c';
+        const r = await fetch(url); if (!r.ok) throw new Error('score fetch ' + r.status);
+        trackBuf = await ctx.decodeAudioData(await r.arrayBuffer());
+      }
+      if (!running) { trackLoading = false; return; }
+      trackFilt = ctx.createBiquadFilter(); trackFilt.type = 'lowpass'; trackFilt.frequency.value = 3200 + brightness * 2800; trackFilt.Q.value = 0.3;
+      const tg = ctx.createGain(); tg.gain.value = 1.0;
+      trackSrc = ctx.createBufferSource(); trackSrc.buffer = trackBuf; trackSrc.loop = true;
+      trackSrc.connect(trackFilt); trackFilt.connect(tg); tg.connect(master); trackSrc.start();
+    } catch (err) {
+      console.warn('score track failed, falling back to synth pad', err);
+      legacyMode = true; if (Score._legacy) Score._legacy(); chime();
+    }
+    trackLoading = false;
   }
   return {
     _filt: null,
@@ -1949,9 +1973,9 @@ const Score = (() => {
       if (!ensure()) return;
       if (ctx.state === 'suspended') ctx.resume();
       running = true;
+      playTrack();
       master.gain.cancelScheduledValues(ctx.currentTime);
       master.gain.linearRampToValueAtTime(0.9, ctx.currentTime + 2.0);
-      chime();
       document.getElementById('sound').textContent = '\u{1F50A}';
     },
     stop() {
@@ -1959,11 +1983,13 @@ const Score = (() => {
       running = false;
       master.gain.linearRampToValueAtTime(0.0, ctx.currentTime + 0.6);
       if (chimeTimer) clearTimeout(chimeTimer);
+      if (trackSrc) { try { trackSrc.stop(ctx.currentTime + 0.7); } catch (e) {} trackSrc = null; }
       document.getElementById('sound').textContent = '\u{1F507}';
     },
     nightfall(frac) {
       brightness = Math.max(0, Math.min(1, frac));
       if (this._filt) this._filt.frequency.setTargetAtTime(700 + brightness * 900, ctx ? ctx.currentTime : 0, 1.5);
+      if (trackFilt && ctx) trackFilt.frequency.setTargetAtTime(3200 + brightness * 2800, ctx.currentTime, 1.5);
     },
     duck(f) {
       if (!running || !ctx || !master) return;
@@ -1973,7 +1999,7 @@ const Score = (() => {
     // v22m: Chrome on Android only counts pointerup/touchend/click as an audio-unlocking gesture
     // (pointerdown with touch does not), so the context stayed suspended while the icon said on.
     wake() { if (ctx && ctx.state !== 'running') ctx.resume(); },
-    debug() { return { state: ctx ? ctx.state : 'none', running, gain: master ? +master.gain.value.toFixed(3) : null, t: ctx ? +ctx.currentTime.toFixed(2) : null }; },
+    debug() { return { state: ctx ? ctx.state : 'none', track: trackSrc ? 'playing' : trackBuf ? 'loaded' : trackLoading ? 'loading' : 'none', legacy: legacyMode, running, gain: master ? +master.gain.value.toFixed(3) : null, t: ctx ? +ctx.currentTime.toFixed(2) : null }; },
   };
 })();
 let soundWanted = true;
