@@ -1866,7 +1866,7 @@ const KEYS = [
   { pos: [-85, 42, 15], look: [-166, 45, 143], hold: 1600, fly: 5000, title: "Pagoda Orbit", note: "Curling around the tiered temple roof" },
   ..._beat("Balcony Fly-by", "Past the neighbours leaning on their balcony", [-47.5, 8.4, 66], [-78, 8.4, 56.4], [-61.3, 8.2, 56.4], [-61.3, 8.2, 56.4], 6500, 55),
   { pos: [-410, 50, -50], look: [-250, 40, 60], hold: 1600, fly: 5200, title: "Palace Mist", note: "Silhouettes of the hall pierce the low fog" },
-  ..._beat("Rooftop Glide", "Skimming the terrace where the rooftop folk wave", [25.1, 27, 209.7], [61.1, 27, 209.7], [47.1, 24, 209.7], [47.1, 24, 209.7], 6500, 62),
+  ..._beat("Rooftop Glide", "Skimming the terrace where the rooftop folk wave", [22, 25, 210], [58, 25, 210], [37, 16.8, 194.5], [37, 16.8, 194.5], 6500, 62),
   ..._beat("Giant of the Lanes", "A giant looms over the lane", [210.6, 3.5, 196.7], [198.6, 3.5, 196.7], [188.6, 5, 196.7], [188.6, 5, 196.7], 6500, 62),
   { pos: [-160, 130, 260], look: [740, 14, 450], hold: 1500, fly: 5400, title: "Water Reveal", note: "Rising over the glowing canals for the reveal" },
   { pos: [370, 85, 300], look: [740, 15, 460], hold: 1600, fly: 5200, title: "Magic Harbor", note: "The beacon sweeps across shimmering water" },
