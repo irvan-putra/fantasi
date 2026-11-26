@@ -24,7 +24,7 @@ async function fetchWithProgress(url, onp) {
 
 const stallTimer = setTimeout(() => $('stall').classList.add('show'), 12000);
 
-const ASSET_V = 'v20i';
+const ASSET_V = 'v20j';
 const manifest = await (await fetch('./manifest.json?' + ASSET_V)).json();
 bar.style.width = '6%';
 const binBuf = await fetchWithProgress('./scene.bin?' + ASSET_V, (f) => { bar.style.width = (6 + f * 84) + '%'; });
@@ -240,12 +240,13 @@ void main(){
   float b2=sin(vW.x*0.11-uTime*1.7+vW.z*0.07);
   float band=0.5+0.25*b1+0.25*b2;
   vec3 col=mix(deep,teal,band);
-  float sh1=smoothstep(0.72,0.98,sin(vW.x*0.22+uTime*1.4+vW.z*0.09)*0.5+0.5);
-  float sh2=smoothstep(0.80,1.00,sin(vW.z*0.18-uTime*1.9-vW.x*0.05)*0.5+0.5);
+  float wx=vW.x*0.62+vW.z*0.78, wz=vW.z*0.66-vW.x*0.75;
+  float sh1=smoothstep(0.55,0.98,sin(wx*0.16+uTime*1.4+wz*0.07)*0.5+0.5);
+  float sh2=smoothstep(0.62,1.00,sin(wz*0.13-uTime*1.9-wx*0.04)*0.5+0.5);
   float shimmer=(sh1+sh2)*0.5*band;
-  col+=vec3(0.35,0.75,0.85)*shimmer*uGlow*0.4;
-  col+=vec3(1.0,0.6,0.25)*shimmer*uGlow*0.35;
-  col+=cy*band*uGlow*0.22;
+  col+=vec3(0.35,0.75,0.85)*shimmer*uGlow*0.55;
+  col+=vec3(1.0,0.6,0.25)*shimmer*uGlow*0.42;
+  col+=cy*band*uGlow*0.4;
   vec2 cell=floor(vW.xz*0.9);
   float sp=hash(cell);
   if(sp>0.986){float tw=0.5+0.5*sin(uTime*2.5+sp*90.0);col+=cy*tw*uGlow*0.9;}
@@ -698,22 +699,34 @@ lmPagoda(-320, -260, 5, 22, 8.5);
   const top = new THREE.ConeGeometry(6, 12, 8); top.translate(LX, y + 6, LZ);
   parts.push({ g: top, c: [0.12, 0.26, 0.3] });
   scene.add(new THREE.Mesh(mergeGeos(parts), mat));
-  const beamGeo = new THREE.ConeGeometry(7, 150, 10, 1, true);
-  beamGeo.translate(0, -75, 0);
-  beamGeo.rotateX(-Math.PI / 2);
-  const beamMatB = new THREE.MeshBasicMaterial({ color: 0xffe9b0, transparent: true, opacity: 0.15, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, depthWrite: false });
+  const beamGeoI = new THREE.ConeGeometry(5, 280, 10, 1, true);
+  beamGeoI.translate(0, -140, 0); beamGeoI.rotateX(-Math.PI / 2);
+  const beamGeoO = new THREE.ConeGeometry(14, 280, 10, 1, true);
+  beamGeoO.translate(0, -140, 0); beamGeoO.rotateX(-Math.PI / 2);
+  const beamMatB = new THREE.MeshBasicMaterial({ color: 0xffe9b0, transparent: true, opacity: 0.13, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, depthWrite: false });
   beamMatB.toneMapped = false;
-  const beamMesh = new THREE.Mesh(beamGeo, beamMatB);
+  const beamMatO = new THREE.MeshBasicMaterial({ color: 0xffe9b0, transparent: true, opacity: 0.05, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, depthWrite: false });
+  beamMatO.toneMapped = false;
+  const beamMesh = new THREE.Mesh(beamGeoI, beamMatB);
   beamMesh.position.set(LX, y + 3, LZ);
   scene.add(beamMesh);
-  const beamMesh2 = new THREE.Mesh(beamGeo, beamMatB);
+  const beamMeshO = new THREE.Mesh(beamGeoO, beamMatO);
+  beamMeshO.position.set(LX, y + 3, LZ);
+  scene.add(beamMeshO);
+  const beamMesh2 = new THREE.Mesh(beamGeoI, beamMatB);
   beamMesh2.position.set(LX, y + 3, LZ);
   beamMesh2.rotation.y = Math.PI;
   scene.add(beamMesh2);
+  const beamMesh2O = new THREE.Mesh(beamGeoO, beamMatO);
+  beamMesh2O.position.set(LX, y + 3, LZ);
+  beamMesh2O.rotation.y = Math.PI;
+  scene.add(beamMesh2O);
   const lampHalo = lmHaloAt(LX, y + 3, LZ, 40, 0xffe9b0, 0.9);
   lmTickers.push((t, phase) => {
     beamMesh.rotation.y = t * 0.7;
+    beamMeshO.rotation.y = t * 0.7;
     beamMesh2.rotation.y = Math.PI + t * 0.7;
+    beamMesh2O.rotation.y = Math.PI + t * 0.7;
     beamMesh.material.opacity = 0.16 + phase * 0.2;
     lampHalo.opacity = 0.5 + 0.4 * phase + Math.sin(t * 3.1) * 0.1;
   });
@@ -723,6 +736,8 @@ const BAY = { x: 800, z: 470, r: 250 };
 {
   const g = new THREE.CircleGeometry(BAY.r, 40); g.rotateX(-Math.PI / 2); g.translate(BAY.x, 0.4, BAY.z);
   scene.add(new THREE.Mesh(g, new THREE.ShaderMaterial({ uniforms: waterUniforms, vertexShader: WATER_VERT, fragmentShader: WATER_FRAG })));
+  lmHaloAt(BAY.x, 5, BAY.z, 470, 0x35e0d0, 0.3);
+  lmHaloAt(740, 5, 450, 200, 0x7ff0e0, 0.28);
 }
 // lantern-lit boats drifting on the bay (v19w)
 {
@@ -731,19 +746,19 @@ const BAY = { x: 800, z: 470, r: 250 };
   const radii = [45, 78, 150, 195];
   for (let i = 0; i < 4; i++) {
     const parts = [];
-    const hull = new THREE.CylinderGeometry(1.6, 2.6, 10, 6); hull.rotateZ(Math.PI / 2); hull.scale(1, 0.55, 0.62); hull.translate(0, 1.0, 0);
+    const hull = new THREE.CylinderGeometry(3.4, 5.4, 22, 6); hull.rotateZ(Math.PI / 2); hull.scale(1, 0.55, 0.62); hull.translate(0, 2.2, 0);
     parts.push({ g: hull, c: [0.24, 0.14, 0.08] });
-    const mast = new THREE.CylinderGeometry(0.18, 0.22, 9, 5); mast.translate(0.6, 6.0, 0);
+    const mast = new THREE.CylinderGeometry(0.4, 0.5, 19, 5); mast.translate(1.3, 12.6, 0);
     parts.push({ g: mast, c: [0.3, 0.2, 0.12] });
-    const sail = new THREE.PlaneGeometry(4.6, 5.6); sail.rotateY(Math.PI / 2); sail.translate(0.6, 6.4, 0);
-    parts.push({ g: sail, c: [0.75, 0.62, 0.4] });
-    const cabin = new THREE.BoxGeometry(2.6, 1.6, 2.0); cabin.translate(-1.6, 2.0, 0);
+    const sail = new THREE.PlaneGeometry(10, 12); sail.rotateY(Math.PI / 2); sail.translate(1.3, 13.4, 0);
+    parts.push({ g: sail, c: [0.78, 0.64, 0.42] });
+    const cabin = new THREE.BoxGeometry(5.6, 3.4, 4.2); cabin.translate(-3.4, 4.4, 0);
     parts.push({ g: cabin, c: [0.2, 0.12, 0.07] });
     const mesh = new THREE.Mesh(mergeGeos(parts), boatMat);
     scene.add(mesh);
     const lampGeo = new THREE.BufferGeometry();
-    lampGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array([0, 3.4, 0]), 3));
-    const lampMatB = new THREE.PointsMaterial({ size: 14, map: haloTex, color: 0xffc46e, transparent: true, opacity: 0.9, depthWrite: false, blending: THREE.AdditiveBlending });
+    lampGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array([-3.4, 8.0, 0]), 3));
+    const lampMatB = new THREE.PointsMaterial({ size: 34, map: haloTex, color: 0xffc46e, transparent: true, opacity: 0.95, depthWrite: false, blending: THREE.AdditiveBlending });
     lampMatB.toneMapped = false;
     mesh.add(new THREE.Points(lampGeo, lampMatB));
     boats.push({ mesh, a0: i * 1.7, r: radii[i], sp: 0.021 + i * 0.006 });
@@ -1355,12 +1370,12 @@ function makeDragon(colorHex, ph0) {
   // halo so the dragon reads at distance
   const hg = new THREE.BufferGeometry();
   hg.setAttribute('position', new THREE.BufferAttribute(new Float32Array([0, 1, 1]), 3));
-  const hm = new THREE.PointsMaterial({ size: 22, map: haloTex, color: colorHex, transparent: true, opacity: 0.18, depthWrite: false, blending: THREE.AdditiveBlending });
+  const hm = new THREE.PointsMaterial({ size: 42, map: haloTex, color: colorHex, transparent: true, opacity: 0.34, depthWrite: false, blending: THREE.AdditiveBlending });
   hm.toneMapped = false;
   const halo = new THREE.Points(hg, hm);
   const grp = new THREE.Group();
   grp.add(bodyMesh, L, R, halo, headG);
-  grp.scale.setScalar(5.2);
+  grp.scale.setScalar(6.2);
 
   // ---- per-frame spine update ----
   const waved = basePts.map(p => p.clone());
@@ -1425,10 +1440,10 @@ function tickDragons(t, u) {
   for (const d of dragons) {
     const isLead = d.ph === 0.0;
     const spd = d.speed * (1 + chase * (isLead ? 0.8 : 0.45));
-    const a = t * spd + d.ph * (1 - gather * 0.88); // gather collapses phases into a trailing lane
+    const a = t * spd + d.ph * (1 - gather * 0.93); // gather collapses phases into a trailing lane
     // non-leaders pull toward the lead orbit center during the chase
     const pull = chase * (isLead ? 0 : 0.55);
-    const pull2 = gather * 0.8;
+    const pull2 = gather;
     const gx = d.cx + (560 - d.cx) * pull2, gz = d.cz + (350 - d.cz) * pull2;
     const cx = gx + (177 - gx) * pull, cz = gz + (-132 - gz) * pull;
     const rr = d.r * (1 - chase * (isLead ? 0 : 0.3));
@@ -1451,7 +1466,7 @@ function tickDragons(t, u) {
     d.L.rotation.z = 0.2 + f; d.R.rotation.z = -0.2 - f;
     d.L.rotation.y = -0.15 + f * 0.25; d.R.rotation.y = 0.15 - f * 0.25;
     const m = d.grp.children[0].material;
-    m.emissiveIntensity = 0.14 + chase * 0.4;
+    m.emissiveIntensity = 0.30 + chase * 0.3;
   }
 }
 
@@ -1664,7 +1679,7 @@ const KEYS = [
   { pos: [-400, 70, -60], look: [-250, 40, 60], hold: 1600, fly: 5200, title: "Palace Mist", note: "Silhouettes of the hall pierce the low fog" },
   { pos: [-160, 130, 260], look: [740, 14, 450], hold: 1500, fly: 5400, title: "Water Reveal", note: "Rising over the glowing canals for the reveal" },
   { pos: [370, 85, 300], look: [740, 15, 460], hold: 1600, fly: 5200, title: "Magic Harbor", note: "The beacon sweeps across shimmering water" },
-  { pos: [480, 100, 240], look: [560, 95, 350], hold: 1500, fly: 5000, title: "Dragon Lanes", note: "A dragon's wake stirs the festival lights" },
+  { pos: [350, 120, 150], look: [560, 95, 350], hold: 1500, fly: 5000, title: "Dragon Lanes", note: "A dragon's wake stirs the festival lights" },
   { pos: [60, 190, -160], look: [-88, 150, -66], hold: 1600, fly: 5200, title: "Crystal Awakening", note: "Facets ignite in cascades of electric light" },
   { pos: [-820, 330, -760], look: [22, 90, 33], hold: 2000, fly: 6000, title: "Grand Astral Night", note: "The city breathes under a canopy of stars" },
 ];
