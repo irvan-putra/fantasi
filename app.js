@@ -24,7 +24,7 @@ async function fetchWithProgress(url, onp) {
 
 const stallTimer = setTimeout(() => $('stall').classList.add('show'), 12000);
 
-const ASSET_V = 'v20n';
+const ASSET_V = 'v20o';
 const manifest = await (await fetch('./manifest.json?' + ASSET_V)).json();
 bar.style.width = '6%';
 const binBuf = await fetchWithProgress('./scene.bin?' + ASSET_V, (f) => { bar.style.width = (6 + f * 84) + '%'; });
@@ -735,6 +735,46 @@ lmPagoda(-320, -260, 5, 22, 8.5);
   }
   lmTickers.push((t) => {
     for (const mi of mists) mi.mesh.position.x = mi.x0 + Math.sin(t * mi.sp + mi.ph) * 16;
+  });
+}
+// aurora ribbons over the palace (v20o, Irvan 8:47 AM: "need more like aurora")
+{
+  const cv = document.createElement('canvas'); cv.width = 256; cv.height = 128;
+  const cx2 = cv.getContext('2d');
+  for (let x = 0; x < 256; x++) {
+    const hue = 150 + 90 * Math.sin(x * 0.05) + 40 * Math.sin(x * 0.013 + 2);
+    const a = 0.55 * Math.max(0, Math.sin(x * 0.11 + 1)) * (0.5 + 0.5 * Math.sin(x * 0.031 + 4));
+    const gr = cx2.createLinearGradient(0, 0, 0, 128);
+    gr.addColorStop(0, 'hsla(' + hue.toFixed(0) + ',100%,65%,0)');
+    gr.addColorStop(0.45, 'hsla(' + hue.toFixed(0) + ',100%,62%,' + a.toFixed(3) + ')');
+    gr.addColorStop(1, 'hsla(' + hue.toFixed(0) + ',100%,55%,0)');
+    cx2.fillStyle = gr;
+    cx2.fillRect(x, 0, 1, 128);
+  }
+  const aurTex = new THREE.CanvasTexture(cv);
+  aurTex.wrapS = THREE.RepeatWrapping;
+  const auroras = [];
+  const adefs = [
+    [0x77ffd9, -300, 72, 40, 260, 95, 0.34, 0.5],
+    [0x9a6bff, -225, 92, 95, 220, 85, 0.30, -0.35],
+    [0x64ff9a, -275, 62, -15, 300, 105, 0.26, 0.95],
+  ];
+  for (const [col, x, y, z, w, h, op, ry] of adefs) {
+    const m = new THREE.MeshBasicMaterial({ map: aurTex, color: col, transparent: true, opacity: op, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
+    m.toneMapped = false;
+    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(w, h), m);
+    mesh.position.set(x, y, z);
+    mesh.rotation.y = ry;
+    scene.add(mesh);
+    auroras.push({ m, mesh, y0: y, op, ph: x * 0.01 });
+  }
+  lmTickers.push((t, phase) => {
+    aurTex.offset.x = (t * 0.02) % 1;
+    const dim = 0.25 + 0.75 * phase;
+    for (const a of auroras) {
+      a.m.opacity = a.op * dim * (0.55 + 0.45 * Math.sin(t * 0.4 + a.ph * 6));
+      a.mesh.position.y = a.y0 + Math.sin(t * 0.23 + a.ph * 9) * 8;
+    }
   });
 }
 // 4) lighthouse-minaret by the harbor (700, 430)
