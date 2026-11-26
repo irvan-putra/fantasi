@@ -2154,20 +2154,21 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
     for (let k = 0; k < 16000 && ground.length < 2600; k++) { const i = (rnd() * n) | 0; const x = rp[i * 3] + (rnd() - 0.5) * 5, z = rp[i * 3 + 2] + (rnd() - 0.5) * 5; if (Math.abs(x) > LIM || Math.abs(z) > LIM) continue;
       if (roofAt(x, z) >= 0) continue; const w = wallNear(x, z); if (w[0] < 2.4) continue;
       ground.push([x, 0.5, z, Math.atan2(w[1], w[2]) + (rnd() < 0.5 ? 0 : Math.PI), w[0]]); } }
-  // flat roof areas: centroid-ish points at least 2.4 m inside every edge, nothing higher above them
+  // rooftop terraces: a small flat slab sunk into a (mostly pitched) roof; the figure stands on the slab top, so nothing sinks or pokes
+  const cornerMax = (x, z, h) => { let mx = -1, mn = 1e9; for (const [a, b] of [[-h, -h], [h, -h], [-h, h], [h, h], [0, 0]]) { const r = roofAt(x + a, z + b); if (r < 0) return null; if (r > mx) mx = r; if (r < mn) mn = r; } return [mx, mn]; };
   { for (const T of rtris) {
       const ux = T[3] - T[0], uy = T[4] - T[1], uz = T[5] - T[2], vx = T[6] - T[0], vy = T[7] - T[1], vz = T[8] - T[2];
-      const nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx, ln = Math.hypot(nx, ny, nz); if (ln < 1e-3 || Math.abs(ny) / ln < 0.985) continue;
-      if (Math.max(T[1], T[4], T[7]) - Math.min(T[1], T[4], T[7]) > 0.2 || T[1] < 6 || T[1] > 95) continue;
-      if (rnd() > 0.6) continue;
+      const nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx, ln = Math.hypot(nx, ny, nz); if (ln < 1e-3 || Math.abs(ny) / ln < 0.93) continue;
+      if (Math.max(T[1], T[4], T[7]) < 7 || Math.max(T[1], T[4], T[7]) > 95) continue;
+      if (rnd() > 0.35) continue;
       const bs = [[1 / 3, 1 / 3, 1 / 3], [0.5, 0.25, 0.25], [0.25, 0.5, 0.25], [0.25, 0.25, 0.5]];
-      const [b0, b1, b2] = bs[(rnd() * 4) | 0]; const x = b0 * T[0] + b1 * T[3] + b2 * T[6], z = b0 * T[2] + b1 * T[5] + b2 * T[8], y = T[1];
-      if (wallNear(x, z)[0] < 2.6) continue;
-      if (Math.abs(roofAt(x, z) - y) > 0.3) continue;
-      roofs.push([x, y, z, rnd() * 6.283]); } }
+      const [b0, b1, b2] = bs[(rnd() * 4) | 0]; const x = b0 * T[0] + b1 * T[3] + b2 * T[6], z = b0 * T[2] + b1 * T[5] + b2 * T[8];
+      if (wallNear(x, z)[0] < 3.0) continue;
+      const cm = cornerMax(x, z, 1.7); if (!cm || cm[0] - cm[1] > 1.1) continue;
+      roofs.push([x, cm[0] + 0.1, z, rnd() * 6.283]); } }
   // balcony ledges: flush to a wall face, outward side open (no roof overhead, no other wall within 1.5 m)
   { const nt = wi.length / 3;
-    for (let t = 0; t < nt && balc.length < 3500; t++) { if (rnd() > 0.05) continue;
+    for (let t = 0; t < nt && balc.length < 3500; t++) { if (rnd() > 0.2) continue;
       const a = wi[t * 3] * 3, b = wi[t * 3 + 1] * 3, c = wi[t * 3 + 2] * 3;
       const cx = (wp[a] + wp[b] + wp[c]) / 3, cy = (wp[a + 1] + wp[b + 1] + wp[c + 1]) / 3, cz = (wp[a + 2] + wp[b + 2] + wp[c + 2]) / 3;
       if (Math.abs(cx) > LIM || Math.abs(cz) > LIM || cy < 7 || cy > 70) continue;
@@ -2179,7 +2180,7 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
       if (cA === cB) continue; if (cA) { nx = -nx; nz = -nz; }
       const fy = Math.round(cy / 3.4) * 3.4; if (Math.abs(fy - cy) > 1.2 || fy < 3.4) continue;
       const tx = -nz, tz = nx; let ok = true;
-      for (const [o, s] of [[1.75, 0.8], [1.75, -0.8], [1.7, 0], [3.2, 2.1], [3.2, -2.1], [3.2, 0]]) { const px = cx + nx * o + tx * s, pz = cz + nz * o + tz * s; if (roofAt(px, pz) > fy - 0.5) { ok = false; break; } if (o > 3 && wallNear(px, pz)[0] < 1.5) { ok = false; break; } }
+      for (const [o, s] of [[1.75, 0.8], [1.75, -0.8], [1.7, 0], [1.2, 0], [3.2, 2.1], [3.2, -2.1], [3.2, 0]]) { const px = cx + nx * o + tx * s, pz = cz + nz * o + tz * s; if (roofAt(px, pz) > fy - 0.5) { ok = false; break; } if (o > 1.1 && wallNear(px, pz)[0] < (o > 3 ? 1.5 : 1.2)) { ok = false; break; } }
       if (!ok) continue;
       const lx = cx + nx * 1.75, lz = cz + nz * 1.75, sgn = rnd() < 0.5 ? -1 : 1;
       balc.push([lx + tx * 0.8 * sgn, fy, lz + tz * 0.8 * sgn, Math.atan2(nx, nz), lx, lz]); } }
@@ -2227,6 +2228,11 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
     im.instanceMatrix.needsUpdate = true; scene.add(im);
   }
   ledgeSpots.forEach((o, i) => { dummy.position.set(o.lx, o.y - 0.25, o.lz); dummy.rotation.set(0, o.ledgeYaw, 0); dummy.scale.setScalar(1); dummy.updateMatrix(); ledge.setMatrixAt(i, dummy.matrix); });
+  const terr = items.filter((o) => o.w === 'r');
+  const terrMat = new THREE.MeshLambertMaterial({ color: 0x5a4c40, emissive: 0x2a2018, emissiveIntensity: 1.0 }); lamb.push(terrMat);
+  const terrI = new THREE.InstancedMesh(new THREE.BoxGeometry(3.4, 1.3, 3.4), terrMat, Math.max(1, terr.length));
+  terr.forEach((o, i) => { dummy.position.set(o.x, o.y - 0.65, o.z); dummy.rotation.set(0, 0, 0); dummy.scale.setScalar(1); dummy.updateMatrix(); terrI.setMatrixAt(i, dummy.matrix); });
+  terrI.count = terr.length; terrI.instanceMatrix.needsUpdate = true; terrI.frustumCulled = false; scene.add(terrI);
   ledge.count = ledgeSpots.length; ledge.instanceMatrix.needsUpdate = true; ledge.frustumCulled = false; scene.add(ledge);
   const touched = new Set(); let cursor = 0;
   folkTick = (t, phase) => {
@@ -2243,7 +2249,7 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
   const clipTest = () => { const r = { ground: 0, roof: 0, balcony: 0, checked: items.length, bad: 0, badGiant: 0 };
     for (const o of items) { let bad = false;
       if (o.w === 'g') { const w = wallNear(o.x, o.z)[0]; bad = roofAt(o.x, o.z) >= 0 || w < (o.race === 'giant' ? 5.5 : o.race === 'dwarf' ? 2.0 : 1.6); if (bad) r.ground++; }
-      else if (o.w === 'r') { bad = Math.abs(roofAt(o.x, o.z) - o.y) > 0.35; if (bad) r.roof++; }
+      else if (o.w === 'r') { const cm = cornerMax(o.x, o.z, 1.7); bad = !cm || cm[0] > o.y + 0.02 || o.y - cm[1] > 1.3; if (bad) r.roof++; }
       else { const wd = wallNear(o.x, o.z)[0], ra = roofAt(o.x, o.z); bad = ra > o.y - 0.5 || wd < 1.0; if (bad) { r.balcony++; (r.dbg = r.dbg || []).length < 5 && r.dbg.push([+wd.toFixed(2), +ra.toFixed(1), +o.y.toFixed(1)]); } }
       if (bad) { r.bad++; if (o.race === 'giant') r.badGiant++; } }
     return r; };
