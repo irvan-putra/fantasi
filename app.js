@@ -1868,7 +1868,7 @@ const KEYS = [
   ..._beat("Balcony Fly-by", "Past the neighbours leaning on their balcony", [-47.5, 8.4, 66], [-78, 8.4, 56.4], [-61.3, 8.2, 56.4], [-61.3, 8.2, 56.4], 6500, 55, 0, 14),
   { pos: [-410, 50, -50], look: [-250, 40, 60], hold: 1600, fly: 5200, title: "Palace Mist", note: "Silhouettes of the hall pierce the low fog" },
   ..._beat("Rooftop Glide", "Skimming the terrace where the rooftop folk wave", [22, 25, 210], [58, 25, 210], [37, 16.8, 194.5], [37, 16.8, 194.5], 6500, 62, 0, 14),
-  ..._beat("Giant of the Lanes", "A giant looms over the lane", [210.6, 6.5, 196.7], [198.6, 6.5, 196.7], [188.6, 10.8, 196.7], [188.6, 10.8, 196.7], 6500, 62, 0, 14),
+  ..._beat("Giant of the Lanes", "A giant looms over the lane", [238, 20, 196.7], [226, 20, 196.7], [188.6, 10.8, 196.7], [188.6, 10.8, 196.7], 6500, 40, 0, 0),
   { pos: [-160, 130, 260], look: [740, 14, 450], hold: 1500, fly: 5400, title: "Water Reveal", note: "Rising over the glowing canals for the reveal" },
   { pos: [370, 85, 300], look: [740, 15, 460], hold: 1600, fly: 5200, title: "Magic Harbor", note: "The beacon sweeps across shimmering water" },
   { pos: [350, 120, 150], look: [567, 150, 357], hold: 1500, fly: 5000, title: "Dragon Lanes", note: "A dragon's wake stirs the festival lights" },
@@ -2364,20 +2364,20 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
     // retarget the balcony beat at a real seated balcony figure, with a camera line in open air (checked against roofs and walls)
     const ri = KEYS.findIndex((k) => k.title === 'Rooftop Glide');
     if (ri >= 0) { const cand = picF.filter((o) => o.y >= 8 && o.y <= 60).sort((p, q) => Math.hypot(p.x - 47, p.z - 205) - Math.hypot(q.x - 47, q.z - 205));
-      outer: for (const o of cand.slice(0, 60)) for (let dir = 0; dir < 7; dir++) { const ang = o.yaw + [0, 0.5, -0.5, 1.0, -1.0, 1.5, -1.5][dir], nx = Math.sin(ang), nz = Math.cos(ang), tx = -nz, tz = nx, cy = o.y + 9; let ok = true;
+      outer: for (const o of cand.slice(0, 60)) for (let dir = 0; dir < 7; dir++) { const ang = o.yaw + [0, 0.5, -0.5, 1.0, -1.0, 1.5, -1.5][dir], nx = Math.sin(ang), nz = Math.cos(ang), tx = -nz, tz = nx, cy = o.y + 12; let ok = true;
         const P = (u, d) => [o.x + nx * d + tx * u, o.z + nz * d + tz * u];
-        for (const [u, d] of [[-10, 14], [-5, 14], [0, 14], [5, 14], [10, 14], [0, 8], [0, 4]]) { const [px, pz] = P(u, d); if (roofAt(px, pz) > cy - 3 || wallNear(px, pz)[0] < 3) { ok = false; break; } }
-        if (!ok) continue; const a = P(-10, 14), b = P(10, 14), L = [o.x, o.y + 1.5, o.z];
+        for (const [u, d] of [[-14, 32], [-7, 32], [0, 32], [7, 32], [14, 32], [0, 24], [0, 16], [0, 8]]) { const [px, pz] = P(u, d); if (roofAt(px, pz) > cy - 3 || wallNear(px, pz)[0] < 3) { ok = false; break; } }
+        if (!ok) continue; const a = P(-14, 32), b = P(14, 32), L = [o.x, o.y + 1.5, o.z];
         const set = (kk, p, y) => { kk.pos = [p[0], y, p[1]]; kk.look = L.slice(); };
-        set(KEYS[ri], a, 62); set(KEYS[ri + 1], a, cy); set(KEYS[ri + 2], b, cy); set(KEYS[ri + 3], b, 62); window.__ROOF = { x: o.x, y: o.y, z: o.z, a, b, cy }; break outer; } }
+        set(KEYS[ri], a, cy + 14); set(KEYS[ri + 1], a, cy); set(KEYS[ri + 2], b, cy); set(KEYS[ri + 3], b, cy + 14); window.__ROOF = { x: o.x, y: o.y, z: o.z, a, b, cy }; break outer; } }
     const bi = KEYS.findIndex((k) => k.title === 'Balcony Fly-by');
     if (bi >= 0) { const cand = seatF.filter((o) => o.y >= 6.5 && o.y <= 26).sort((p, q) => Math.hypot(p.x + 62, p.z - 60) - Math.hypot(q.x + 62, q.z - 60));
-      for (const o of cand.slice(0, 40)) { const nx = Math.sin(o.ledgeYaw), nz = Math.cos(o.ledgeYaw), tx = -nz, tz = nx; let ok = true; const cy = o.y + 2.5;
+      for (const o of cand.slice(0, 40)) { const nx = Math.sin(o.ledgeYaw), nz = Math.cos(o.ledgeYaw), tx = -nz, tz = nx; let ok = true; const cy = o.y + 9;
         const P = (u, d) => [o.lx + nx * d + tx * u, o.lz + nz * d + tz * u];
-        for (const [u, d] of [[-9, 13], [-4.5, 13], [0, 13], [4.5, 13], [9, 13], [0, 7], [0, 3]]) { const [px, pz] = P(u, d); if (roofAt(px, pz) > cy - 3 || wallNear(px, pz)[0] < 3) { ok = false; break; } }
-        if (!ok) continue; const a = P(-9, 13), b = P(9, 13), L = [o.x, o.y + 1.4, o.z];
+        for (const [u, d] of [[-14, 30], [-7, 30], [0, 30], [7, 30], [14, 30], [0, 22], [0, 14], [0, 7]]) { const [px, pz] = P(u, d); if (roofAt(px, pz) > cy - 3 || wallNear(px, pz)[0] < 3) { ok = false; break; } }
+        if (!ok) continue; const a = P(-14, 30), b = P(14, 30), L = [o.x, o.y + 1.4, o.z];
         const set = (k, p, y) => { k.pos = [p[0], y, p[1]]; k.look = L.slice(); };
-        set(KEYS[bi], a, 55); set(KEYS[bi + 1], a, cy); set(KEYS[bi + 2], b, cy); set(KEYS[bi + 3], b, 55); window.__BALC = { x: o.x, y: o.y, z: o.z, a, b, cy }; break; } }
+        set(KEYS[bi], a, cy + 14); set(KEYS[bi + 1], a, cy); set(KEYS[bi + 2], b, cy); set(KEYS[bi + 3], b, cy + 14); window.__BALC = { x: o.x, y: o.y, z: o.z, a, b, cy }; break; } }
   }
   const touched = new Set(); let cursor = 0;
   folkTick = (t, phase) => {
