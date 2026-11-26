@@ -1570,7 +1570,7 @@ function tickDragons(t, u) {
     // screen (Irvan 12:59 PM); heads point inward so a head plus a good length of
     // body is always in frame (stripes alone don't read as dragons).
     const az = (i - 1) * 8 + Math.sin(TAU * u + d.ph) * 2.0;              // [-10,-6] / [-2,2] / [6,10]
-    const el = (i === 1 ? 21 : (i === 0 ? 16 : 18)) + Math.sin(TAU * 2 * u + d.ph * 1.7) * 2.0;
+    const el = (i === 1 ? 19 : (i === 0 ? 16 : 18)) + Math.sin(TAU * 2 * u + d.ph * 1.7) * 2.0;
     let ew = pitch + el;                                    // world elevation of the anchor
     let dist = 640 + i * 80;
     if (ew > topEdge - 1) ew = topEdge - 1;
@@ -1630,6 +1630,9 @@ function tickDragons(t, u) {
       d.grp.rotateZ(Math.sin(TAU * 3 * u + d.ph) * 0.55); // v21b: bank through the dance
     }
     d.upd(TAU * 13 * u + chase * 4);
+    // v22d: half size on escort beats (the ribbon is ~360u long - full size covered
+    // a third of the screen), full size for the gather flypast where it reads well
+    d.grp.scale.setScalar(0.5 + gather * 0.5);
     const m = d.grp.children[0].material;
     m.emissiveIntensity = 0.55 + chase * 0.3;
   }
