@@ -2064,10 +2064,8 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
   const man = (o, extra) => {
     const gs = [
       part(box(0.17, 0.82, 0.18), o.pants, -0.11, 0.41, 0), part(box(0.17, 0.82, 0.18), o.pants, 0.11, 0.41, 0),
-      part(box(0.2, 0.1, 0.3), o.boots || 0x3a2a1c, -0.11, 0.05, 0.05), part(box(0.2, 0.1, 0.3), o.boots || 0x3a2a1c, 0.11, 0.05, 0.05),
       part(box(0.52, 0.66, 0.28), o.cloth, 0, 1.15, 0),
       part(box(0.13, 0.66, 0.15), o.cloth, -0.34, 1.12, 0, 0, 0.14), part(box(0.13, 0.66, 0.15), o.cloth, 0.34, 1.12, 0, 0, -0.14),
-      part(box(0.12, 0.14, 0.14), o.skin, -0.38, 0.76, 0), part(box(0.12, 0.14, 0.14), o.skin, 0.38, 0.76, 0),
       part(ball(0.19), o.skin, 0, 1.68), ...(extra || [])];
     const g = merge(gs);
     if (o.sx !== 1 || o.sy !== 1) { g.scale(o.sx, o.sy, o.sx); g.computeVertexNormals(); }
@@ -2139,8 +2137,8 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
   { const seen = camPts.filter((p) => p[1] < 150); const dnear = (s) => { let d = 1e9; for (const p of seen) { const dx = p[0] - s[0], dz = p[2] - s[2], dy = p[1] - s[1]; const q = dx * dx + dz * dz + dy * dy * 0.3; if (q < d) d = q; } return d; };
     for (const pool of [ground, roofs, balc]) { const a = [], b = []; for (const s of pool) (dnear(s) < 230 * 230 ? a : b).push(s); pool.length = 0; pool.push(...a, ...b); } }
   // ---- plan: [race, where, count]
-  const PLAN = [['human', 'g', 880], ['human', 'b', 520], ['human', 'r', 520], ['elf', 'r', 240], ['elf', 'b', 220], ['elf', 'g', 150],
-    ['dwarf', 'g', 330], ['dwarf', 'b', 70], ['dwarf', 'r', 50], ['giant', 'g', 40]];
+  const PLAN = [['human', 'g', 560], ['human', 'b', 340], ['human', 'r', 340], ['elf', 'r', 150], ['elf', 'b', 130], ['elf', 'g', 100],
+    ['dwarf', 'g', 210], ['dwarf', 'b', 45], ['dwarf', 'r', 30], ['giant', 'g', 28]];
   const pools = { g: ground, b: balc, r: roofs }; const cur = { g: 0, b: 0, r: 0 };
   const items = []; // {race, v, x,y,z, yaw, ph, kind}
   for (const [race, w, cnt] of PLAN) {
