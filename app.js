@@ -2089,11 +2089,12 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
   // v23f: real humanoids: two legs, torso, two arms, head, per-race extras. 1 unit = ~1.8 m human.
   // v23ap: friendly lego face: big white eyes with pupils, curved smile. Gain >1 on vertex colour keeps eyes bright at night (pseudo-unlit).
   const glow = (g, k) => { const a = g.attributes.color.array; for (let i = 0; i < a.length; i++) a[i] *= k; return g; };
-  const FACE = () => [
-    T(5, glow(part(box(0.095, 0.1, 0.05), 0xffffff, -0.075, 1.71, 0.19), 2.6)), T(5, glow(part(box(0.095, 0.1, 0.05), 0xffffff, 0.075, 1.71, 0.19), 2.6)),
-    T(5, part(box(0.04, 0.05, 0.06), 0x0a0806, -0.075, 1.7, 0.207)), T(5, part(box(0.04, 0.05, 0.06), 0x0a0806, 0.075, 1.7, 0.207)),
-    T(5, glow(part(box(0.11, 0.026, 0.05), 0xd04848, 0, 1.59, 0.195), 2.2)), T(5, glow(part(box(0.032, 0.032, 0.05), 0xd04848, -0.075, 1.612, 0.195), 2.2)), T(5, glow(part(box(0.032, 0.032, 0.05), 0xd04848, 0.075, 1.612, 0.195), 2.2)),
-    T(5, glow(part(box(0.03, 0.03, 0.05), 0xd04848, -0.1, 1.636, 0.19), 2.2)), T(5, glow(part(box(0.03, 0.03, 0.05), 0xd04848, 0.1, 1.636, 0.19), 2.2))];
+  // v23bu: flat painted face (dot eyes + small curved smile), same look as the hall dancers; thin dark patches hugging the head ball, no raised white eyes
+  const FACE = () => { const hz = (x, y) => Math.sqrt(Math.max(0.0004, 0.0361 - x * x - (y - 1.68) * (y - 1.68))) + 0.006, out = [];
+    for (const x of [-0.07, 0.07]) out.push(T(5, part(box(0.05, 0.06, 0.02), 0x1a100a, x, 1.705, hz(x, 1.705))));
+    for (const [x, y] of [[-0.085, 1.628], [-0.045, 1.608], [0, 1.6], [0.045, 1.608], [0.085, 1.628]]) out.push(T(5, part(box(0.04, 0.026, 0.02), 0x2a140c, x, y, hz(x, y))));
+    for (const x of [-0.115, 0.115]) out.push(T(5, glow(part(box(0.04, 0.03, 0.015), 0xf08078, x, 1.645, hz(x, 1.645)), 1.4)));
+    return out; };
   const man = (o, extra) => {
     const gs = [
       T(1, part(box(0.17, 0.82, 0.18), o.pants, -0.11, 0.41, 0)), T(2, part(box(0.17, 0.82, 0.18), o.pants, 0.11, 0.41, 0)),
