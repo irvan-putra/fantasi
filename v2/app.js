@@ -24,7 +24,7 @@ async function fetchWithProgress(url, onp) {
 
 const stallTimer = setTimeout(() => $('stall').classList.add('show'), 12000);
 
-const ASSET_V = 'v20q';
+const ASSET_V = 'v20r';
 const manifest = await (await fetch('./manifest.json?' + ASSET_V)).json();
 bar.style.width = '6%';
 const binBuf = await fetchWithProgress('./scene.bin?' + ASSET_V, (f) => { bar.style.width = (6 + f * 84) + '%'; });
@@ -1548,7 +1548,7 @@ function tickDragons(t, u) {
   for (const d of dragons) {
     const isLead = d.ph === 0.0;
     // route is a pure function of loop phase u: identical path every loop (Irvan 8:38 AM)
-    const a = TAU * d.loops * u + 2.95 + d.ph * (1 - gather * 0.96) + chase * (isLead ? 0.5 : 0.2);
+    const a = TAU * d.loops * u + 2.95 + d.ph * (1 - gather * 0.96) + chase * (isLead ? 0.5 : 0.2) + gather * 0.90; // v20r: gather also swings the train dead-center into the Dragon Lanes frame
     // non-leaders pull toward the lead orbit center during the chase
     const pull = chase * (isLead ? 0 : 0.55);
     const pull2 = gather;
