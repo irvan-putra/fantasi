@@ -2253,7 +2253,14 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
       else { const wd = wallNear(o.x, o.z)[0], ra = roofAt(o.x, o.z); bad = ra > o.y - 0.5 || wd < 1.0; if (bad) { r.balcony++; (r.dbg = r.dbg || []).length < 5 && r.dbg.push([+wd.toFixed(2), +ra.toFixed(1), +o.y.toFixed(1)]); } }
       if (bad) { r.bad++; if (o.race === 'giant') r.badGiant++; } }
     return r; };
-  window.__FOLK = { clipTest, counts: FOLK_COUNT, pools: { ground: ground.length, roofs: roofs.length, balconies: balc.length }, total: items.length };
+  // route test: sample the whole camera loop; a sample is inside a building when a roof is above it, near a wall when <1.5 m from one
+  const camTest = (step = 40) => { const out = { samples: 0, inside: 0, nearWall: 0, bad: [] }; let last = -1e9;
+    for (let ms = 0; ms < LOOP_MS; ms += step) { const p = camAt(ms).pos; out.samples++;
+      const r = roofAt(p[0], p[2]); const inside = r >= 0 && p[1] < r + 0.5; const w = p[1] < 120 ? wallNear(p[0], p[2])[0] : 1e9; const near = !inside && w < 1.5 && r >= 0 ? true : false;
+      if (inside) out.inside++; if (near) out.nearWall++;
+      if ((inside || near) && ms - last > 400) { out.bad.push([Math.round(ms), +p[0].toFixed(0), +p[1].toFixed(0), +p[2].toFixed(0), inside ? 'inside' : 'wall']); last = ms; } }
+    return out; };
+  window.__FOLK = { clipTest, camTest, counts: FOLK_COUNT, pools: { ground: ground.length, roofs: roofs.length, balconies: balc.length }, total: items.length };
 }
 function tickFolk(t, phase) { if (folkTick) folkTick(t, phase); }
 {
