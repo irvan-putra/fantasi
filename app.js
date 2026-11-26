@@ -1867,7 +1867,7 @@ const KEYS = [
   ..._beat("Balcony Fly-by", "Past the neighbours leaning on their balcony", [-47.5, 8.4, 66], [-78, 8.4, 56.4], [-61.3, 8.2, 56.4], [-61.3, 8.2, 56.4], 6500, 55),
   { pos: [-410, 50, -50], look: [-250, 40, 60], hold: 1600, fly: 5200, title: "Palace Mist", note: "Silhouettes of the hall pierce the low fog" },
   ..._beat("Rooftop Glide", "Skimming the terrace where the rooftop folk wave", [22, 25, 210], [58, 25, 210], [37, 16.8, 194.5], [37, 16.8, 194.5], 6500, 62),
-  ..._beat("Giant of the Lanes", "A giant looms over the lane", [210.6, 3.5, 196.7], [198.6, 3.5, 196.7], [188.6, 5, 196.7], [188.6, 5, 196.7], 6500, 62),
+  ..._beat("Giant of the Lanes", "A giant looms over the lane", [210.6, 6.5, 196.7], [198.6, 6.5, 196.7], [188.6, 10.8, 196.7], [188.6, 10.8, 196.7], 6500, 62),
   { pos: [-160, 130, 260], look: [740, 14, 450], hold: 1500, fly: 5400, title: "Water Reveal", note: "Rising over the glowing canals for the reveal" },
   { pos: [370, 85, 300], look: [740, 15, 460], hold: 1600, fly: 5200, title: "Magic Harbor", note: "The beacon sweeps across shimmering water" },
   { pos: [350, 120, 150], look: [560, 95, 350], hold: 1500, fly: 5000, title: "Dragon Lanes", note: "A dragon's wake stirs the festival lights" },
@@ -2076,19 +2076,25 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
   const cone = (r, h, s = 6) => new THREE.ConeGeometry(r, h, s);
   const cyl = (rt, rb, h, s = 6) => new THREE.CylinderGeometry(rt, rb, h, s);
   const ball = (r) => new THREE.SphereGeometry(r, 5, 3);
-  const SKIN = [0xf2c7a0, 0xd9a273, 0xb57a4e, 0x8a5a38];
+  const SKIN = [0xffd9b8, 0xf0bf8c, 0xd8a070, 0xb88058];
   // units: 1 = about 1.8 m human; the whole thing is scaled up so figures read at festival distances
   const box = (w, h, d) => new THREE.BoxGeometry(w, h, d);
   // v23f: real humanoids: two legs, torso, two arms, head, per-race extras. 1 unit = ~1.8 m human.
+  // v23ap: friendly lego face: big white eyes with pupils, curved smile. Gain >1 on vertex colour keeps eyes bright at night (pseudo-unlit).
+  const glow = (g, k) => { const a = g.attributes.color.array; for (let i = 0; i < a.length; i++) a[i] *= k; return g; };
+  const FACE = () => [
+    T(5, glow(part(box(0.11, 0.12, 0.05), 0xffffff, -0.08, 1.71, 0.19), 2.6)), T(5, glow(part(box(0.11, 0.12, 0.05), 0xffffff, 0.08, 1.71, 0.19), 2.6)),
+    T(5, part(box(0.055, 0.065, 0.06), 0x0a0806, -0.08, 1.705, 0.205)), T(5, part(box(0.055, 0.065, 0.06), 0x0a0806, 0.08, 1.705, 0.205)),
+    T(5, glow(part(box(0.1, 0.026, 0.05), 0x5a1a14, 0, 1.6, 0.19), 1.0)), T(5, glow(part(box(0.03, 0.03, 0.05), 0x5a1a14, -0.07, 1.62, 0.19), 1.0)), T(5, glow(part(box(0.03, 0.03, 0.05), 0x5a1a14, 0.07, 1.62, 0.19), 1.0)),
+    T(5, glow(part(box(0.03, 0.03, 0.05), 0x5a1a14, -0.1, 1.645, 0.185), 1.0)), T(5, glow(part(box(0.03, 0.03, 0.05), 0x5a1a14, 0.1, 1.645, 0.185), 1.0))];
   const man = (o, extra) => {
     const gs = [
       T(1, part(box(0.17, 0.82, 0.18), o.pants, -0.11, 0.41, 0)), T(2, part(box(0.17, 0.82, 0.18), o.pants, 0.11, 0.41, 0)),
       part(box(0.52, 0.66, 0.28), o.cloth, 0, 1.15, 0),
       T(3, part(box(0.13, 0.66, 0.15), o.cloth, -0.34, 1.12, 0, 0, 0.14)), T(4, part(box(0.13, 0.66, 0.15), o.cloth, 0.34, 1.12, 0, 0, -0.14)),
       T(5, part(ball(0.19), o.skin, 0, 1.68)),
-      T(5, part(box(0.08, 0.09, 0.05), 0xfaf6ee, -0.075, 1.7, 0.19)), T(5, part(box(0.08, 0.09, 0.05), 0xfaf6ee, 0.075, 1.7, 0.19)),
-      T(5, part(box(0.04, 0.05, 0.06), 0x0c0a08, -0.075, 1.69, 0.2)), T(5, part(box(0.04, 0.05, 0.06), 0x0c0a08, 0.075, 1.69, 0.2)),
-      T(5, part(box(0.13, 0.03, 0.05), 0xfff4e8, 0, 1.61, 0.19)), T(5, part(box(0.03, 0.04, 0.05), 0xfff4e8, -0.08, 1.63, 0.19)), T(5, part(box(0.03, 0.04, 0.05), 0xfff4e8, 0.08, 1.63, 0.19)), ...(extra || [])];
+      ...FACE(),
+      ...(extra || [])];
     const g = merge(gs);
     if (o.sx !== 1 || o.sy !== 1) { g.scale(o.sx, o.sy, o.sx); g.computeVertexNormals(); }
     return g;
@@ -2131,7 +2137,7 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
     dwarf(v) {
       const cloth = [0x8a4b2a, 0x5a6b7a, 0xa85a2a, 0x6a3a3a][v % 4], beard = [0xc06a2a, 0x8a8a8a, 0x3a2a1a, 0xd8b060][v % 4];
       return man({ cloth, pants: 0x4a3a2a, skin: SKIN[(v + 1) % 4], boots: 0x2a2018, sx: 1.55, sy: 0.62 }, [
-        part(box(0.36, 0.5, 0.14), beard, 0, 1.35, 0.17), // big beard down the chest
+        part(box(0.34, 0.36, 0.1), beard, 0, 1.3, 0.16), // beard on the chest, below the smile
         T(5, part(new THREE.SphereGeometry(0.24, 5, 2, 0, Math.PI * 2, 0, Math.PI / 2), 0x7a7f88, 0, 1.72)), // helmet
         part(box(0.56, 0.08, 0.3), 0x2a2018, 0, 0.88, 0), // belt
         T(4, part(box(0.07, 0.8, 0.07), 0x6a4a2a, 0.5, 0.95, 0.1)), T(4, part(box(0.3, 0.2, 0.06), 0x9a9aa4, 0.5, 1.45, 0.1)), ...EXTRA.dwarf(v)]); // axe
@@ -2147,9 +2153,7 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
         part(box(0.5, 0.34, 0.06), cloth, 0, 0.66, 0.15), part(box(0.5, 0.34, 0.06), cloth, 0, 0.66, -0.15), // tabard flaps
         T(3, part(ball(0.17), fur, -0.38, 1.46, 0)), T(4, part(ball(0.17), fur, 0.38, 1.46, 0)), // fur pauldrons
         T(3, part(box(0.16, 0.1, 0.18), trim, -0.34, 0.9, 0)), T(4, part(box(0.16, 0.1, 0.18), trim, 0.34, 0.9, 0)), // arm bands
-        T(5, part(box(0.06, 0.08, 0.07), skin, 0, 1.66, 0.19, 0, 0, 1, 1, 1)), // nose
-        T(5, part(box(0.3, 0.05, 0.05), 0x1a1210, 0, 1.73, 0.15)), // heavy brow
-        T(5, part(box(0.3, 0.2, 0.14), hair, 0, 1.52, 0.14)), // beard
+                        T(5, part(box(0.26, 0.12, 0.1), hair, 0, 1.46, 0.1)), // short chin beard below the smile
         part(box(0.6, 0.26, 0.1), fur, 0, 1.3, -0.2) // back cloak
       ];
       if (k === 0) { ex.push(T(5, part(new THREE.SphereGeometry(0.23, 5, 2, 0, Math.PI * 2, 0, Math.PI / 2), hair, 0, 1.72)), T(4, part(box(0.14, 2.0, 0.14), 0x5a3f28, 0.62, 1.3, 0.15)), T(4, part(box(0.34, 0.5, 0.34), 0x5a3f28, 0.62, 2.35, 0.15)), T(4, part(cone(0.08, 0.25, 4), 0xc0c0c8, 0.62, 2.7, 0.15))); }
