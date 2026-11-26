@@ -1565,28 +1565,38 @@ function tickDragons(t, u) {
   let di = 0;
   for (const d of dragons) {
     const i = di++;
-    const az = Math.sin(TAU * u + d.ph) * 11;               // +-11 deg across the frame
-    const el = 20 + Math.sin(TAU * 2 * u + d.ph * 1.7) * 4; // 16-24 deg above the view axis
+    // v22d: fixed lanes - left / high-center / right, no sign flips, no stacking.
+    // 640-800u out so they stay a skyline presence and never cover a third of the
+    // screen (Irvan 12:59 PM); heads point inward so a head plus a good length of
+    // body is always in frame (stripes alone don't read as dragons).
+    const az = (i - 1) * 8 + Math.sin(TAU * u + d.ph) * 2.0;              // [-10,-6] / [-2,2] / [6,10]
+    const el = (i === 1 ? 21 : (i === 0 ? 16 : 18)) + Math.sin(TAU * 2 * u + d.ph * 1.7) * 2.0;
     let ew = pitch + el;                                    // world elevation of the anchor
-    let dist = 400 + i * 35;
+    let dist = 640 + i * 80;
     if (ew > topEdge - 1) ew = topEdge - 1;
     if (ew < 12.5) {
       if (topEdge - 1 >= 12.5) ew = 12.5;                    // lift into the relaxed band
-      else if (topEdge > 5) { ew = topEdge - 1; dist = 1100; } // down-beat: distant top-edge silhouette
-      else { ew = 20; dist = 470; }                          // no sky in frame this beat
+      else if (topEdge > 5) { ew = topEdge - 1; dist = 1200; } // down-beat: distant top-edge silhouette
+      else { ew = 20; dist = 720; }                          // no sky in frame this beat
     }
     const azr = az * Math.PI / 180, ewr = ew * Math.PI / 180;
     const horiz = Math.cos(ewr);
     let x = camera.position.x + Math.sin(heading0 + azr) * horiz * dist;
     let y = camera.position.y + Math.sin(ewr) * dist;
     let z = camera.position.z + Math.cos(heading0 + azr) * horiz * dist;
+    // v22d: shift the group back along its heading so the HEAD sits near the anchor
+    // angle and the body trails toward the frame edge
+    const rtx = -fwv.z, rtz = fwv.x;                        // screen-right in world space
+    const hs = (i === 2) ? -1 : 1;                          // right-lane dragon faces left, others face right
+    const hn = Math.hypot(rtx, rtz) || 1;
+    x -= (rtx * hs / hn) * 75; z -= (rtz * hs / hn) * 75;
     // v22: gather = staggered flypast, three clearly separated dragons (Irvan 12:39 PM).
     // Slots +-110u across the lane, the high dragon in the middle (222/300/222), so no
     // two overlap in frame and each head reads on its own. Beat camera (350,120,150)->(560,95,350).
     if (gather > 0) {
       const dirx = -0.689, dirz = 0.725; // lane direction across the frame (right vector of the beat view)
       const slot = (i - 1) * 110;
-      const ty = (i === 1 ? 296 : 248) + Math.sin(TAU * 3 * u + slot * 0.05) * 4;
+      const ty = (i === 1 ? 278 : 246) + Math.sin(TAU * 3 * u + slot * 0.05) * 4;
       const tx = 749.6 + dirx * slot, tz = 530.7 + dirz * slot; // ~550-565u out: all three fully inside the portrait frame, heads clear
       x += (tx - x) * gather; y += (ty - y) * gather; z += (tz - z) * gather;
     }
@@ -1615,8 +1625,8 @@ function tickDragons(t, u) {
       d.grp.lookAt(d.grp.position.x - 0.689, d.grp.position.y, d.grp.position.z + 0.725); // v21c: hold the side-on lane heading
       d.grp.rotateZ(Math.sin(TAU * 3 * u + d.ph) * 0.35); // v21b: roll through the dance
     } else {
-      // v22: side-on to the camera so the silhouette and the head read at phone size
-      d.grp.lookAt(d.grp.position.x - fwv.z, d.grp.position.y, d.grp.position.z + fwv.x);
+      // v22d: head toward the frame center on a fixed heading (no flip), side-on body
+      d.grp.lookAt(d.grp.position.x + rtx * hs / hn, d.grp.position.y, d.grp.position.z + rtz * hs / hn);
       d.grp.rotateZ(Math.sin(TAU * 3 * u + d.ph) * 0.55); // v21b: bank through the dance
     }
     d.upd(TAU * 13 * u + chase * 4);
