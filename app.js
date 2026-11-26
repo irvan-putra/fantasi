@@ -2291,7 +2291,15 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
       if (inside) out.inside++; if (near) out.nearWall++;
       if ((inside || near) && ms - last > 400) { out.bad.push([Math.round(ms), +p[0].toFixed(0), +p[1].toFixed(0), +p[2].toFixed(0), inside ? 'inside' : 'wall']); last = ms; } }
     return out; };
-  window.__FOLK = { clipTest, camTest, counts: FOLK_COUNT, pools: { ground: ground.length, roofs: roofs.length, balconies: balc.length }, total: items.length };
+  // QA helper: straight street lanes with clear air and folk beside them
+  const lanes = (cx, cz, R, len = 70, clr = 3.2) => { const res = [], g = items.filter((o) => o.w === 'g');
+    for (let x = cx - R; x <= cx + R; x += 10) for (let z = cz - R; z <= cz + R; z += 10) for (let h = 0; h < 12; h++) { const a = h * Math.PI / 6, dx = Math.cos(a), dz = Math.sin(a); let ok = true;
+      for (let d = 0; d <= len && ok; d += 3) { const px = x + dx * d, pz = z + dz * d; if (roofAt(px, pz) >= 0 || wallNear(px, pz)[0] < clr || roofAt(px - dz * 2.5, pz + dx * 2.5) >= 0 || roofAt(px + dz * 2.5, pz - dx * 2.5) >= 0) ok = false; }
+      if (!ok) continue; let sc = 0, L = 0, Rr = 0;
+      for (const o of g) { const rx = o.x - x, rz = o.z - z, al = rx * dx + rz * dz, la = -rx * dz + rz * dx; if (al > 0 && al < len && Math.abs(la) < 9) { sc++; if (la > 0) L++; else Rr++; } }
+      if (L >= 2 && Rr >= 2) res.push({ x, z, a: +a.toFixed(2), sc, L, R: Rr }); }
+    return res.sort((p, q) => q.sc - p.sc).slice(0, 12); };
+  window.__FOLK = { lanes, items, roofAt, wallNear, clipTest, camTest, counts: FOLK_COUNT, pools: { ground: ground.length, roofs: roofs.length, balconies: balc.length }, total: items.length };
 }
 function tickFolk(t, phase) { if (folkTick) folkTick(t, phase); }
 {
