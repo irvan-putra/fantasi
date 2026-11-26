@@ -2141,20 +2141,23 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
     mat.onBeforeCompile = (sh) => { sh.uniforms.uTime = folkU.uTime; sh.uniforms.uPiv = { value: piv };
       sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nattribute float aPart; attribute vec2 aAct; uniform float uTime; uniform vec4 uPiv;\nvec2 rot2(vec2 v, float a) { float c = cos(a), s = sin(a); return vec2(v.x * c - v.y * s, v.x * s + v.y * c); }')
         .replace('#include <begin_vertex>', `vec3 transformed = vec3(position);
-  { float md = aAct.y, ph = aAct.x, tm = uTime; float legA = 0.0, armL = 0.0, armR = 0.0, hy = 0.0, lean = 0.0, walk = 0.0;
+  { float md = aAct.y, ph = aAct.x, tm = uTime; float sitDrop = 0.0; float legA = 0.0, armL = 0.0, armR = 0.0, hy = 0.0, lean = 0.0, walk = 0.0;
     if (md < 0.5) { armL = 0.07 * sin(tm * 1.3 + ph); armR = -armL; hy = 0.6 * sin(tm * 0.45 + ph * 2.0); lean = 0.02 * sin(tm * 1.1 + ph); }
     else if (md < 1.5) { float s = sin(tm * 2.4 + ph * 3.0); legA = 0.65 * s; armL = -0.55 * s; armR = 0.55 * s; hy = 0.12 * sin(tm * 0.9 + ph); walk = 1.0; }
     else if (md < 2.5) { armR = -1.15 + 0.5 * sin(tm * 4.0 + ph); armL = 0.12 * sin(tm * 1.5 + ph); hy = 0.4 * sin(tm * 1.1 + ph); lean = 0.05 * sin(tm * 2.0 + ph); }
     else if (md < 3.5) { armL = -0.9 + 0.35 * sin(tm * 3.0 + ph); armR = -0.9 + 0.35 * sin(tm * 3.0 + ph + 1.6); lean = 0.16 + 0.04 * sin(tm * 1.5 + ph); hy = 0.45 * sin(tm * 0.8 + ph); }
     else if (md < 4.5) { armR = -2.6 + 0.35 * sin(tm * 6.0 + ph); armL = 0.05; hy = 0.85 * sin(tm * 0.6 + ph); }
-    else { lean = 0.38; armL = -0.75 + 0.1 * sin(tm + ph); armR = -0.75 + 0.1 * sin(tm * 1.2 + ph); hy = 0.9 * sin(tm * 0.45 + ph); }
+    else if (md < 5.5) { lean = 0.38; armL = -0.75 + 0.1 * sin(tm + ph); armR = -0.75 + 0.1 * sin(tm * 1.2 + ph); hy = 0.9 * sin(tm * 0.45 + ph); }
+    else { legA = -1.5; armL = -0.45 + 0.1 * sin(tm * 0.8 + ph); armR = -0.55 + 0.45 * sin(tm * 1.7 + ph * 2.0); hy = 0.7 * sin(tm * 0.5 + ph); lean = 0.04 * sin(tm + ph); sitDrop = (md < 6.5) ? 0.93 : 0.5; }
+    float legB = (md < 5.5) ? -legA : legA;
     vec2 hp = vec2(uPiv.x, 0.0), sp = vec2(uPiv.y, 0.0);
     if (aPart > 0.5 && aPart < 1.5) transformed.yz = hp + rot2(transformed.yz - hp, legA);
-    else if (aPart > 1.5 && aPart < 2.5) transformed.yz = hp + rot2(transformed.yz - hp, -legA);
+    else if (aPart > 1.5 && aPart < 2.5) transformed.yz = hp + rot2(transformed.yz - hp, legB);
     else if (aPart > 2.5 && aPart < 3.5) transformed.yz = sp + rot2(transformed.yz - sp, armL);
     else if (aPart > 3.5 && aPart < 4.5) transformed.yz = sp + rot2(transformed.yz - sp, armR);
     else if (aPart > 4.5) { vec2 xz = transformed.zx; xz = rot2(xz - vec2(0.0), hy); transformed.zx = xz; }
     if (aPart < 0.5 || aPart > 2.5) transformed.yz = hp + rot2(transformed.yz - hp, lean);
+    transformed.y -= uPiv.x * sitDrop;
     if (walk > 0.5) { float cv = cos(tm * 0.5 + ph); float sg = clamp(cv * 6.0, -1.0, 1.0); float yw = (1.0 - sg) * 1.5708; transformed.xz = rot2(transformed.xz, yw); transformed.z += 0.85 * sin(tm * 0.5 + ph); }
   }`); };
     return mat; };
@@ -2265,7 +2268,7 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
       const yaw = s[3] + (rnd() - 0.5) * (w === 'g' ? 0.5 : 0.7);
       const rr = rnd(); let mode = 0;
       if (w === 'g') mode = race === 'giant' ? 0 : (s[4] >= 5.5 && rr < 0.35) ? 1 : rr < 0.6 ? 2 : rr < 0.8 ? 3 : 0;
-      else if (w === 'r') mode = rr < 0.45 ? 4 : 0; else mode = 5;
+      else if (w === 'r') mode = rr < 0.72 ? 6 : rr < 0.86 ? 4 : 0; else mode = rr < 0.8 ? 7 : 5;
       items.push({ race, v: (rnd() * 12) | 0, x: s[0], y: s[1], z: s[2], yaw, ph: rnd() * 6.28, w, lx: s[4], lz: s[5], ly: s[1], ledgeYaw: s[3], mode }); made++;
       FOLK_COUNT[race]++;
     }
@@ -2312,6 +2315,29 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
   terr.forEach((o, i) => { dummy.position.set(o.x, o.y - 0.65, o.z); dummy.rotation.set(0, 0, 0); dummy.scale.setScalar(1); dummy.updateMatrix(); terrI.setMatrixAt(i, dummy.matrix); });
   terrI.count = terr.length; terrI.instanceMatrix.needsUpdate = true; terrI.frustumCulled = false; scene.add(terrI);
   ledge.count = ledgeSpots.length; ledge.instanceMatrix.needsUpdate = true; ledge.frustumCulled = false; scene.add(ledge);
+  // v23ae: picnic mood: balcony sitters get a chair, rooftop sitters get a blanket with a food basket
+  { const seatF = items.filter((o) => o.mode === 7), picF = items.filter((o) => o.mode === 6);
+    const chairGeo = merge([part(box(0.62, 0.07, 0.6), 0x8a5a2e, 0, 0.34, 0), part(box(0.62, 0.55, 0.07), 0x8a5a2e, 0, 0.62, -0.3), part(box(0.07, 0.34, 0.07), 0x5a3a1e, -0.26, 0.17, -0.24), part(box(0.07, 0.34, 0.07), 0x5a3a1e, 0.26, 0.17, -0.24), part(box(0.07, 0.34, 0.07), 0x5a3a1e, -0.26, 0.17, 0.24), part(box(0.07, 0.34, 0.07), 0x5a3a1e, 0.26, 0.17, 0.24)]);
+    const chairMat = new THREE.MeshLambertMaterial({ vertexColors: true, emissive: 0x2a1c10, emissiveIntensity: 0.9 }); lamb.push(chairMat);
+    const chairs = new THREE.InstancedMesh(chairGeo, chairMat, Math.max(1, seatF.length));
+    seatF.forEach((o, i) => { const sc = SC[o.race] * 1.3; dummy.position.set(o.x, o.y, o.z); dummy.rotation.set(0, o.yaw, 0); dummy.scale.setScalar(sc); dummy.updateMatrix(); chairs.setMatrixAt(i, dummy.matrix); });
+    chairs.count = seatF.length; chairs.instanceMatrix.needsUpdate = true; chairs.frustumCulled = false; scene.add(chairs);
+    const blkGeo = merge([part(box(2.2, 0.04, 1.9), 0xffffff, 0, 0.02, 0.45), part(box(0.42, 0.22, 0.34), 0xd8a050, 0.55, 0.15, 0.7), part(box(0.2, 0.1, 0.2), 0xe05a4a, -0.35, 0.09, 0.9), part(box(0.18, 0.08, 0.18), 0x7ac860, -0.05, 0.08, 1.1)]);
+    const blkMat = new THREE.MeshLambertMaterial({ vertexColors: true, emissive: 0x2a1c10, emissiveIntensity: 0.9 }); lamb.push(blkMat);
+    const blk = new THREE.InstancedMesh(blkGeo, blkMat, Math.max(1, picF.length));
+    const BC = [0xd04a4a, 0x4a7ad0, 0xe0b040, 0x4aa86a, 0xb060c0];
+    picF.forEach((o, i) => { const sc = SC[o.race] * 1.3; dummy.position.set(o.x, o.y, o.z); dummy.rotation.set(0, o.yaw, 0); dummy.scale.setScalar(sc); dummy.updateMatrix(); blk.setMatrixAt(i, dummy.matrix); blk.setColorAt(i, new THREE.Color(BC[i % 5])); });
+    blk.count = picF.length; blk.instanceMatrix.needsUpdate = true; if (blk.instanceColor) blk.instanceColor.needsUpdate = true; blk.frustumCulled = false; scene.add(blk);
+    // retarget the balcony beat at a real seated balcony figure, with a camera line in open air (checked against roofs and walls)
+    const bi = KEYS.findIndex((k) => k.title === 'Balcony Fly-by');
+    if (bi >= 0) { const cand = seatF.filter((o) => o.y >= 6.5 && o.y <= 26).sort((p, q) => Math.hypot(p.x + 62, p.z - 60) - Math.hypot(q.x + 62, q.z - 60));
+      for (const o of cand.slice(0, 40)) { const nx = Math.sin(o.ledgeYaw), nz = Math.cos(o.ledgeYaw), tx = -nz, tz = nx; let ok = true; const cy = o.y + 2.5;
+        const P = (u, d) => [o.lx + nx * d + tx * u, o.lz + nz * d + tz * u];
+        for (const [u, d] of [[-9, 13], [-4.5, 13], [0, 13], [4.5, 13], [9, 13], [0, 7], [0, 3]]) { const [px, pz] = P(u, d); if (roofAt(px, pz) > cy - 3 || wallNear(px, pz)[0] < 3) { ok = false; break; } }
+        if (!ok) continue; const a = P(-9, 13), b = P(9, 13), L = [o.x, o.y + 1.4, o.z];
+        const set = (k, p, y) => { k.pos = [p[0], y, p[1]]; k.look = L.slice(); };
+        set(KEYS[bi], a, 55); set(KEYS[bi + 1], a, cy); set(KEYS[bi + 2], b, cy); set(KEYS[bi + 3], b, 55); window.__BALC = { x: o.x, y: o.y, z: o.z, a, b, cy }; break; } }
+  }
   const touched = new Set(); let cursor = 0;
   folkTick = (t, phase) => {
     for (const m of lamb) m.emissiveIntensity = 0.55 + phase * 0.9;
