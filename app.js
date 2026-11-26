@@ -202,6 +202,26 @@ scene.add(new THREE.Mesh(geoFromSections('walls', { uv: true }), wallMat));
 const roofMat = new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide });
 scene.add(new THREE.Mesh(geoFromSections('roofs'), roofMat));
 
+// v23as: flat caps over buildings whose wall rings had no roof (seen from above they looked like hollow shells). caps.bin is built from the wall top rings.
+try {
+  const cb = await (await fetch('./caps.bin?' + ASSET_V)).arrayBuffer(); const dv = new DataView(cb); let o = 0; const nCap = dv.getUint32(o, true); o += 4;
+  const P = [], C = [], I = []; let vb = 0;
+  for (let c = 0; c < nCap; c++) {
+    const top = dv.getFloat32(o, true), cr = dv.getUint8(o + 4), cg = dv.getUint8(o + 5), cbl = dv.getUint8(o + 6), nl = dv.getUint8(o + 7); o += 8;
+    const loops = [];
+    for (let l = 0; l < nl; l++) { const n = dv.getUint16(o, true); o += 2; const L = []; for (let k = 0; k < n; k++) { L.push(new THREE.Vector2(dv.getFloat32(o, true), dv.getFloat32(o + 4, true))); o += 8; } loops.push(L); }
+    const contour = loops[0], holes = loops.slice(1); let tris;
+    try { tris = THREE.ShapeUtils.triangulateShape(contour, holes); } catch (e) { continue; }
+    const all = contour.concat(...holes);
+    for (const v of all) { P.push(v.x, top + 0.04, v.y); C.push(cr / 255, cg / 255, cbl / 255); }
+    for (const t of tris) I.push(vb + t[0], vb + t[1], vb + t[2]);
+    vb += all.length;
+  }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(C, 3));
+  const nrm = new Float32Array(P.length); for (let i = 1; i < nrm.length; i += 3) nrm[i] = 1; g.setAttribute('normal', new THREE.BufferAttribute(nrm, 3)); g.setIndex(I);
+  const capMesh = new THREE.Mesh(g, roofMat); capMesh.frustumCulled = false; scene.add(capMesh); window.__CAPS = { n: nCap, tris: I.length / 3 };
+} catch (e) { console.warn('caps failed', e); }
+
 const glowMat = new THREE.MeshBasicMaterial({ vertexColors: true, toneMapped: false, side: THREE.DoubleSide });
 glowMat.color.setScalar(0.0);
 scene.add(new THREE.Mesh(geoFromSections('glow'), glowMat));
