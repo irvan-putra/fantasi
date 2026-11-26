@@ -8,6 +8,11 @@
 <meta name="description" content="Pramuka Astral — Pasar Lampion. An invented fantasy realm over the real street layout of Green Pramuka City, Jakarta. A directed dusk-to-night flythrough.">
 <title>Pramuka Astral — Pasar Lampion</title>
 <style>
+  #pause{position:fixed;left:50%;top:14%;transform:translateX(-50%);z-index:30;padding:10px 20px;border-radius:999px;background:rgba(10,12,28,.72);color:#fff;font:600 16px/1.2 system-ui,sans-serif;display:flex;gap:10px;align-items:center;pointer-events:none;opacity:0;transition:opacity .25s;border:1px solid rgba(255,220,160,.55);box-shadow:0 0 18px rgba(255,200,120,.35)}
+  #pause .ps{font-weight:400;font-size:13px;opacity:.8}
+  #pause.on{opacity:1}
+  #pause.flash{opacity:1}
+  #pause.flash .pt{display:none}#pause.flash .ps{display:none}#pause.flash .pi{font-size:0}#pause.flash .pi::after{content:"\25B6  Resumed";font-size:16px}
   *{box-sizing:border-box}
   html,body{height:100%;margin:0;background:#0A1420;overflow:hidden;overscroll-behavior:none}
   body{font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#E8E4D8;-webkit-font-smoothing:antialiased}
@@ -58,6 +63,7 @@
 <img id="poster" src="tiles/poster-v2.jpg" alt="">
 <div id="vignette"></div>
 <div id="chip"><b>Pramuka Astral</b> · Pasar Lampion<br><span id="stats">an invented realm over Green Pramuka City, Jakarta</span></div>
+<div id="pause"><span class="pi">&#x23F8;</span><span class="pt">Paused</span><span class="ps">tap to resume</span></div>
 <button id="sound" aria-label="toggle sound">&#x1F507;</button>
 <div id="card"><div class="bt" id="cardTitle"></div><div class="bn" id="cardNote"></div></div>
 <div id="loader">
@@ -67,7 +73,7 @@
   <div id="stall">Slow connection — the realm is loading piece by piece…</div>
 </div>
 <script type="importmap">{"imports":{"three":"./lib/three.module.min.js"}}</script>
-<script type="module" src="./app.js?v=103u"></script>
+<script type="module" src="./app.js?v=104u"></script>
 <div style="position:fixed;right:6px;bottom:4px;font:10px system-ui;color:#fff9;pointer-events:none;text-shadow:0 0 3px #000">Map data: OpenStreetMap contributors (ODbL), Microsoft building footprints (ODbL)</div>
 </body>
 </html>

@@ -1871,10 +1871,11 @@ const KEYS = [
   ..._beat("Giant of the Lanes", "A giant looms over the lane", [238, 20, 196.7], [226, 20, 196.7], [188.6, 10.8, 196.7], [188.6, 10.8, 196.7], 6500, 40, 0, 0),
   { pos: [214, 30, 70], look: [200, 12, -30], hold: 0, fly: 3200, title: "Festival Hall", note: "Through the open front into the hall, folk at tables and on their feet" },
   { pos: [158, 15, -75], look: [200, 6, -75], hold: 0, fly: 3500, title: "Festival Hall", note: "Through the open front into the hall, folk at tables and on their feet" },
-  { pos: [190, 8, -75], look: [216, 5, -75], hold: 0, fly: 3500, title: "Festival Hall", note: "Through the open front into the hall, folk at tables and on their feet" },
+  { pos: [190, 8, -79.5], look: [216, 5, -79.5], hold: 0, fly: 3500, title: "Festival Hall", note: "Through the open front into the hall, folk at tables and on their feet" },
   { pos: [206, 7.5, -83], look: [215, 3.5, -72], hold: 600, fly: 4500, title: "Festival Hall", note: "Through the open front into the hall, folk at tables and on their feet" },
-  { pos: [206, 7.5, -67], look: [215, 3.5, -78], hold: 600, fly: 3500, title: "Festival Hall", note: "Through the open front into the hall, folk at tables and on their feet" },
-  { pos: [160, 16, -75], look: [200, 6, -75], hold: 0, fly: 4600, lift: 20, title: "Festival Hall", note: "Through the open front into the hall, folk at tables and on their feet" },
+  { pos: [206, 7.5, -70.5], look: [215, 3.5, -78], hold: 600, fly: 3000, title: "Festival Hall", note: "Through the open front into the hall, folk at tables and on their feet" },
+  { pos: [190, 8, -70.5], look: [216, 5, -70.5], hold: 0, fly: 3000, title: "Festival Hall", note: "Through the open front into the hall, folk at tables and on their feet" },
+  { pos: [160, 16, -75], look: [200, 6, -75], hold: 0, fly: 4600, lift: 0, title: "Festival Hall", note: "Through the open front into the hall, folk at tables and on their feet" },
   { pos: [-160, 130, 260], look: [740, 14, 450], hold: 1500, fly: 5400, title: "Water Reveal", note: "Rising over the glowing canals for the reveal" },
   { pos: [370, 85, 300], look: [740, 15, 460], hold: 1600, fly: 5200, title: "Magic Harbor", note: "The beacon sweeps across shimmering water" },
   { pos: [350, 120, 150], look: [567, 150, 357], hold: 1500, fly: 5000, title: "Dragon Lanes", note: "A dragon's wake stirs the festival lights" },
@@ -2476,7 +2477,23 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
       for (const x of [-3.5, 0, 3.5]) stander(x, -21, 1.4, false); q.push(part(new THREE.CylinderGeometry(0.8, 0.65, 1.4, 8), 0xc8503a, 5.6, 2.2, -20));
       const m = merge(q); m.rotateY(-Math.PI / 2); m.translate(200, 0.1, -75); P.push(m); }
     const pm = new THREE.Mesh(merge(P), basic); pm.frustumCulled = false; scene.add(pm); window.__PROPS = pm; }
-  window.__FOLK = { groundTest, camAt, LOOP_MS, KEYS, lanes, items, roofAt, wallNear, clipTest, camTest, counts: FOLK_COUNT, pools: { ground: ground.length, roofs: roofs.length, balconies: balc.length }, total: items.length };
+  // v23bd: drone rule tests over the whole loop. wallTest: clearance to every roof/wall (2.5 m and 4 m rings). hallTest: the Festival Hall shell (front pillars, lintel, side walls, back wall, roof).
+  const wallTest = (step = 20) => { const out = { samples: 0, inside: 0, tight: 0, bad: [] };
+    for (let ms = 0; ms < LOOP_MS; ms += step) { const p = camAt(ms).pos; out.samples++; const r0 = roofAt(p[0], p[2]); let bad = r0 >= 0 && p[1] < r0 + 0.5; let tight = false;
+      if (bad) out.inside++; else for (const rad of [2.5, 4]) for (let a = 0; a < 12 && !tight; a++) { const rr = roofAt(p[0] + Math.cos(a * 0.5236) * rad, p[2] + Math.sin(a * 0.5236) * rad); if (rr >= 0 && p[1] < rr + 0.3) tight = true; }
+      if (tight) out.tight++; if ((bad || tight) && out.bad.length < 8) out.bad.push([ms, +p[0].toFixed(1), +p[1].toFixed(1), +p[2].toFixed(1)]); }
+    return out; };
+  const hallTest = (step = 20) => { const out = { samples: 0, inHall: 0, bad: 0, ex: [] };
+    for (let ms = 0; ms < LOOP_MS; ms += step) { const p = camAt(ms).pos, x = p[0], y = p[1], z = p[2]; out.samples++; let bad = false;
+      if (x > 198.6 && x < 225.4 && z > -94.4 && z < -55.6 && y < 14) { out.inHall++;
+        if (y > 11.4 || y < 0.8) bad = true; // roof slab 11.4-13.4 (with overhang), floor
+        if (z < -91.6 || z > -58.4) bad = true; // side walls
+        if (x > 222.6) bad = true; // back wall
+        if (x < 202 && [-93, -84, -75, -66, -57].some((pz) => Math.abs(z - pz) < 1.6)) bad = true; // front pillars
+        if (x < 202 && y > 9.4) bad = true; } // lintel
+      if (bad) { out.bad++; if (out.ex.length < 5) out.ex.push([ms, +x.toFixed(1), +y.toFixed(1), +z.toFixed(1)]); } }
+    return out; };
+  window.__FOLK = { wallTest, hallTest, groundTest, camAt, LOOP_MS, KEYS, lanes, items, roofAt, wallNear, clipTest, camTest, counts: FOLK_COUNT, pools: { ground: ground.length, roofs: roofs.length, balconies: balc.length }, total: items.length };
 }
 function tickFolk(t, phase) { if (folkTick) folkTick(t, phase); }
 {
@@ -2494,10 +2511,17 @@ const PIN_U = (() => { const p = new URLSearchParams(location.search).get('u'); 
 let start = null;
 let firstFrame = true;
 const clock = new THREE.Clock();
+// v23bd: tap anywhere to pause or resume the tour (for screenshots); virtual clock freezes camera, sky and folk
+let paused = false, vt = 0, lastReal = 0;
+window.__PAUSE = (v) => { paused = v === undefined ? !paused : !!v; const el = document.getElementById('pause'); if (el) { el.classList.toggle('on', paused); el.classList.toggle('flash', !paused); if (!paused) setTimeout(() => el.classList.remove('flash'), 900); } return paused; };
+{ let d = null; const down = (e) => { if (e.target.closest && e.target.closest('#sound')) { d = null; return; } d = { x: e.clientX, y: e.clientY, t: performance.now() }; };
+  const up = (e) => { if (!d) return; const m = Math.hypot(e.clientX - d.x, e.clientY - d.y), dt = performance.now() - d.t; d = null; if (m < 12 && dt < 500) window.__PAUSE(); };
+  addEventListener('pointerdown', down, { passive: true }); addEventListener('pointerup', up, { passive: true });
+  addEventListener('keydown', (e) => { if (e.code === 'Space') { e.preventDefault(); window.__PAUSE(); } }); }
 
 function frame() {
   requestAnimationFrame(frame);
-  const t = clock.getElapsedTime();
+  const real = clock.getElapsedTime(); if (!paused) vt += real - lastReal; lastReal = real; const t = vt;
   if (start === null) start = t;
   const ms = (PIN_U >= 0 ? PIN_U * LOOP_MS : (t - start) * 1000 + 400);
   const u = (ms % LOOP_MS) / LOOP_MS;
