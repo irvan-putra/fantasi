@@ -1857,23 +1857,20 @@ const _beat = (title, note, a0, b0, look0, look1, walk, H = 62, lift = 0, back =
   ];
 };
 const KEYS = [
-  { pos: [-1305.9, 520, -1459.1], look: [22.13, 60, 33.16], hold: 2600, fly: 5000, title: "Dusk Horizon", note: "Amber light dissolves into the first twilight shadows" },
-  { pos: [-520, 130, -820], look: [22, 50, 33], hold: 1500, fly: 5200, title: "The High Descent", note: "Sliding down toward the glowing realm" },
+  { pos: [-1305.9, 520, -1459.1], look: [22.13, 60, 33.16], hold: 2600, fly: 9000, title: "Dusk Horizon", note: "Amber light dissolves into the first twilight shadows" },
   { pos: [16, 60, 160], look: [22, 45, -60], hold: 1400, fly: 5000, lift: 26, title: "Twin Spire Dive", note: "Diving straight between the matched towers of light" },
   { pos: [30, 30, -350], look: [128, 30, -214], hold: 2200, fly: 4800, title: "Gate of Lanterns", note: "Under the great gate, into the festival" },
   // v23by: Market Street Walk and Lantern Lane merged into one orbit around the market junction (150,-150): comfortable height, natural scattered crowd below
-  ...[90, 45, 0, -45, -90, -135].map((d, i) => { const th = d * Math.PI / 180; return { pos: [150 + 70 * Math.cos(th), 76, -150 + 70 * Math.sin(th)], look: i === 5 ? [64, 50, -60] : i === 0 ? [150, 30, -150] : [150, 16, -150], hold: 0, fly: 3000, lift: 0, title: "Market Life Orbit", note: "Circling the market: stalls, lanterns and folk gathering" }; }),
-  { pos: [-40, 150, -195], look: [-130, 85, 30], hold: 0, fly: 3000, lift: 0, title: "Market Life Orbit", note: "Circling the market: stalls, lanterns and folk gathering" },
-  { pos: [-150, 110, -90], look: [-166, 45, 143], hold: 0, fly: 5200, lift: 45, title: "Market Life Orbit", note: "Circling the market: stalls, lanterns and folk gathering" },
+  ...[90, 45, 0, -45, -90].map((d, i) => { const th = d * Math.PI / 180; return { pos: [150 + 70 * Math.cos(th), 76, -150 + 70 * Math.sin(th)], look: i === 4 ? [64, 50, -60] : i === 0 ? [150, 30, -150] : [150, 16, -150], hold: 0, fly: 2600, lift: 0, title: "Market Life Orbit", note: "Circling the market: stalls, lanterns and folk gathering" }; }),
+  { pos: [-40, 150, -195], look: [-130, 85, 30], hold: 0, fly: 2600, lift: 0, title: "Pagoda Orbit", note: "Curling around the tiered temple roof" },
+  { pos: [-150, 110, -90], look: [-166, 45, 143], hold: 0, fly: 5200, lift: 45, title: "Pagoda Orbit", note: "Curling around the tiered temple roof" },
   { pos: [-85, 42, 15], look: [-166, 45, 143], hold: 1600, fly: 5000, title: "Pagoda Orbit", note: "Curling around the tiered temple roof" },
   { pos: [-410, 50, -50], look: [-250, 62, 60], hold: 1600, fly: 5200, title: "Palace Mist", note: "Silhouettes of the hall pierce the low fog" },
   ..._beat("Giant of the Lanes", "A giant looms over the lane", [166, 30, 184], [166, 30, 210], [188.6, 10.8, 196.7], [188.6, 10.8, 196.7], 6500, 34, 0, 0),
-  { pos: [214, 30, 70], look: [200, 12, -30], hold: 0, fly: 3200, title: "Festival Hall", note: "Through the open front into the hall, folk at tables and on their feet" },
-  { pos: [158, 15, -75], look: [200, 6, -75], hold: 0, fly: 3500, title: "Festival Hall", note: "Through the open front into the hall, folk at tables and on their feet" },
-  { pos: [178, 15, -88], look: [212, 3, -76], hold: 0, fly: 7500, title: "Festival Hall", note: "Through the open front into the hall, folk at tables and on their feet" },
-  { pos: [178, 15, -62], look: [212, 3, -74], hold: 0, fly: 7700, title: "Festival Hall", note: "Through the open front into the hall, folk at tables and on their feet" },
-  { pos: [160, 16, -75], look: [200, 6, -75], hold: 0, fly: 3200, lift: 0, title: "Festival Hall", note: "Through the open front into the hall, folk at tables and on their feet" },
-  { pos: [150, 55, -60], look: [40, 40, 60], hold: 0, fly: 4000, title: "Festival Hall", note: "Up and over the rooftops" },
+  { pos: [170, 30, 70], look: [200, 12, -30], hold: 0, fly: 3200, title: "Festival Hall", note: "Through the open front into the hall, folk at tables and on their feet" },
+  { pos: [178, 15, -88], look: [212, 3, -76], hold: 0, fly: 5000, title: "Festival Hall", note: "Through the open front into the hall, folk at tables and on their feet" },
+  { pos: [178, 15, -62], look: [212, 3, -74], hold: 0, fly: 5000, title: "Festival Hall", note: "Through the open front into the hall, folk at tables and on their feet" },
+  { pos: [150, 55, -60], look: [40, 40, 60], hold: 0, fly: 3000, title: "Festival Hall", note: "Up and over the rooftops" },
   { pos: [-160, 130, 260], look: [740, 14, 450], hold: 1500, fly: 5400, title: "Water Reveal", note: "Rising over the glowing canals for the reveal" },
   { pos: [370, 85, 300], look: [740, 15, 460], hold: 1600, fly: 5200, title: "Magic Harbor", note: "The beacon sweeps across shimmering water" },
   { pos: [350, 120, 150], look: [567, 150, 357], hold: 1500, fly: 5000, title: "Dragon Lanes", note: "A dragon's wake stirs the festival lights" },
@@ -2089,18 +2086,19 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
   // v23ap: friendly lego face: big white eyes with pupils, curved smile. Gain >1 on vertex colour keeps eyes bright at night (pseudo-unlit).
   const glow = (g, k) => { const a = g.attributes.color.array; for (let i = 0; i < a.length; i++) a[i] *= k; return g; };
   // v23bu: flat painted face (dot eyes + small curved smile), same look as the hall dancers; thin dark patches hugging the head ball, no raised white eyes
-  const FACE = () => { const hz = (x, y) => Math.sqrt(Math.max(0.0004, 0.0361 - x * x - (y - 1.68) * (y - 1.68))) + 0.006, out = [];
-    for (const x of [-0.07, 0.07]) out.push(T(5, part(box(0.05, 0.06, 0.02), 0x1a100a, x, 1.705, hz(x, 1.705))));
-    for (const [x, y] of [[-0.085, 1.628], [-0.045, 1.608], [0, 1.6], [0.045, 1.608], [0.085, 1.628]]) out.push(T(5, part(box(0.04, 0.026, 0.02), 0x2a140c, x, y, hz(x, y))));
-    for (const x of [-0.115, 0.115]) out.push(T(5, glow(part(box(0.04, 0.03, 0.015), 0xf08078, x, 1.645, hz(x, 1.645)), 1.4)));
+  const FACE = (off = 0.022) => { const hz = (x, y) => Math.sqrt(Math.max(0.0004, 0.0361 - x * x - (y - 1.68) * (y - 1.68))) + off, out = [];
+    // v23cz: painted face like the hall dancers: round dot eyes, wide curved smile, pink blush (flat quads, few triangles)
+    for (const x of [-0.07, 0.07]) out.push(T(5, part(new THREE.CircleGeometry(0.036, 8), 0x1a100a, x, 1.705, hz(x, 1.705))));
+    for (let k = 0; k < 7; k++) { const x = -0.09 + k * 0.03, t = x / 0.09, y = 1.605 + 0.034 * t * t; out.push(T(5, part(new THREE.PlaneGeometry(0.036, 0.026), 0x2a140c, x, y, hz(x, y), 0, -t * 0.5))); }
+    for (const x of [-0.12, 0.12]) out.push(T(5, glow(part(new THREE.CircleGeometry(0.036, 6), 0xf08078, x, 1.645, hz(x, 1.645)), 1.4)));
     return out; };
   const man = (o, extra) => {
     const gs = [
       T(1, part(box(0.17, 0.82, 0.18), o.pants, -0.11, 0.41, 0)), T(2, part(box(0.17, 0.82, 0.18), o.pants, 0.11, 0.41, 0)),
       part(box(0.52, 0.66, 0.28), o.cloth, 0, 1.15, 0),
       T(3, part(box(0.13, 0.66, 0.15), o.cloth, -0.34, 1.12, 0, 0, 0.14)), T(4, part(box(0.13, 0.66, 0.15), o.cloth, 0.34, 1.12, 0, 0, -0.14)),
-      T(5, part(ball(0.19), o.skin, 0, 1.68)),
-      ...FACE(),
+      T(5, part(new THREE.SphereGeometry(0.19, o.hs || 7, o.vs || 5), o.skin, 0, 1.68)),
+      ...FACE(o.off || 0.022),
       ...(extra || [])];
     const g = merge(gs);
     if (o.sx !== 1 || o.sy !== 1) { g.scale(o.sx, o.sy, o.sx); g.computeVertexNormals(); }
@@ -2166,7 +2164,7 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
       if (k === 0) { ex.push(T(5, part(new THREE.SphereGeometry(0.23, 5, 2, 0, Math.PI * 2, 0, Math.PI / 2), hair, 0, 1.72)), T(4, part(box(0.14, 2.0, 0.14), 0x5a3f28, 0.62, 1.3, 0.15)), T(4, part(box(0.34, 0.5, 0.34), 0x5a3f28, 0.62, 2.35, 0.15)), T(4, part(cone(0.08, 0.25, 4), 0xc0c0c8, 0.62, 2.7, 0.15))); }
       if (k === 1) { ex.push(T(5, part(new THREE.SphereGeometry(0.23, 5, 2, 0, Math.PI * 2, 0, Math.PI / 2), 0x8a8a96, 0, 1.72)), T(5, part(cone(0.07, 0.4, 4), 0xf0e8d0, -0.24, 1.9, 0, 0, 0.9)), T(5, part(cone(0.07, 0.4, 4), 0xf0e8d0, 0.24, 1.9, 0, 0, -0.9)), T(4, part(box(0.05, 0.5, 0.05), 0x4a3a2a, 0.62, 0.9, 0.15)), T(4, part(box(0.26, 0.3, 0.26), 0xffd070, 0.62, 0.55, 0.15)), T(3, part(box(0.12, 1.9, 0.12), 0x4a4038, -0.6, 1.05, 0.15)), T(3, part(box(0.3, 0.34, 0.3), 0xffd070, -0.6, 2.1, 0.15)), T(3, part(box(0.4, 0.06, 0.4), 0x4a4038, -0.6, 1.9, 0.15))); }
       if (k === 2) { ex.push(T(5, part(ball(0.1), hair, 0, 1.95)), T(5, part(box(0.3, 0.1, 0.3), hair, 0, 1.82)), T(4, part(box(0.4, 0.3, 0.4), 0xa04a28, 0.55, 0.78, 0.2)), T(4, part(box(0.44, 0.06, 0.44), 0xf0d8a0, 0.55, 0.95, 0.2))); }
-      return man({ cloth, pants, skin, boots: 0x2a2018, sx: 1.25, sy: 1 }, ex);
+      return man({ cloth, pants, skin, boots: 0x2a2018, sx: 1.25, sy: 1, hs: 10, vs: 7, off: 0.012 }, ex);
     },
   };
   const SC = { human: 2.6, elf: 2.6, dwarf: 2.6, giant: 6.0 }; // world scale per unit (giants ~ 2.7x humans' height with bulk)
@@ -2179,7 +2177,7 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
       sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nattribute float aPart; attribute vec2 aAct; uniform float uTime; uniform vec4 uPiv;\nvec2 rot2(vec2 v, float a) { float c = cos(a), s = sin(a); return vec2(v.x * c - v.y * s, v.x * s + v.y * c); }')
         .replace('#include <begin_vertex>', `vec3 transformed = vec3(position);
   { float md = aAct.y, ph = aAct.x, tm = uTime; float sitDrop = 0.0; float legA = 0.0, armL = 0.0, armR = 0.0, hy = 0.0, lean = 0.0, walk = 0.0;
-    if (md < 0.5) { armL = 0.07 * sin(tm * 1.3 + ph); armR = -armL; hy = 0.6 * sin(tm * 0.45 + ph * 2.0); lean = 0.02 * sin(tm * 1.1 + ph); }
+    if (md < 0.5) { armL = 0.28 * sin(tm * 1.9 + ph); armR = -armL; hy = 0.6 * sin(tm * 0.45 + ph * 2.0); lean = 0.05 * sin(tm * 1.7 + ph); }
     else if (md < 1.5) { float s = sin(tm * 2.4 + ph * 3.0); legA = 0.65 * s; armL = -0.55 * s; armR = 0.55 * s; hy = 0.12 * sin(tm * 0.9 + ph); walk = 1.0; }
     else if (md < 2.5) { armR = -1.15 + 0.5 * sin(tm * 4.0 + ph); armL = 0.12 * sin(tm * 1.5 + ph); hy = 0.4 * sin(tm * 1.1 + ph); lean = 0.05 * sin(tm * 2.0 + ph); }
     else if (md < 3.5) { armL = -0.9 + 0.35 * sin(tm * 3.0 + ph); armR = -0.9 + 0.35 * sin(tm * 3.0 + ph + 1.6); lean = 0.16 + 0.04 * sin(tm * 1.5 + ph); hy = 0.45 * sin(tm * 0.8 + ph); }
@@ -2306,7 +2304,7 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
       if (nearCam(s[0], s[1] + 3, s[2], clear) && !_focusOk(s)) continue; // v23v: keep the figures the close-up beats look at
       const yaw = s[3] + (rnd() - 0.5) * (w === 'g' ? 0.5 : 0.7);
       const rr = rnd(); let mode = 0;
-      if (w === 'g') mode = race === 'giant' ? 0 : (s[4] >= 5.5 && rr < 0.35) ? 1 : rr < 0.6 ? 2 : rr < 0.8 ? 3 : 0;
+      if (w === 'g') mode = race === 'giant' ? (rr < 0.5 ? 2 : 4) : rr < 0.28 ? 1 : rr < 0.5 ? 2 : rr < 0.7 ? 3 : rr < 0.92 ? 4 : 0;
       else if (w === 'r') mode = 6; else mode = 7;
       items.push({ race, v: (rnd() * 12) | 0, x: s[0], y: s[1], z: s[2], yaw, ph: rnd() * 6.28, w, lx: s[4], lz: s[5], ly: s[1], ledgeYaw: s[3], mode }); made++;
       FOLK_COUNT[race]++;
@@ -2327,17 +2325,17 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
         if (rr < 0.3 && wd >= 3.5) { mode = 1; yaw = rnd() < 0.4 ? Math.atan2(px, pz) * (rnd() < 0.5 ? 1 : -1) : Math.atan2(ux, uz) + (rnd() < 0.5 ? 0 : Math.PI); }
         else if (rr < 0.65) { mode = 2; yaw = inC ? face + (rnd() - 0.5) * 0.8 : rnd() * 6.28; }
         else if (rr < 0.88) { mode = 3; yaw = inC ? face + (rnd() - 0.5) * 0.6 : rnd() * 6.28; }
-        else { mode = 0; yaw = rnd() * 6.28; }
+        else { mode = 4; yaw = inC ? face + (rnd() - 0.5) * 0.8 : rnd() * 6.28; }
         const q = rnd(), race = q < 0.7 ? 'human' : q < 0.82 ? 'elf' : 'dwarf';
         items.push({ race, v: (rnd() * 12) | 0, x, y: 0.5, z, yaw, ph: rnd() * 6.28, w: 'g', lx: wd, lz: 0, ly: 0.5, ledgeYaw: yaw, mode }); FOLK_COUNT[race]++; made++; } } }
-  items.push({ race: 'giant', v: 4, x: 188.6, y: 0.5, z: 196.7, yaw: -Math.PI / 2, ph: 1.3, w: 'g', lx: 10, lz: 0, ly: 0.5, ledgeYaw: -Math.PI / 2, mode: 0 }); FOLK_COUNT.giant++; // v23w: the giant of the Giant of the Lanes beat
+  items.push({ race: 'giant', v: 4, x: 188.6, y: 0.5, z: 196.7, yaw: -Math.PI / 2, ph: 1.3, w: 'g', lx: 10, lz: 0, ly: 0.5, ledgeYaw: -Math.PI / 2, mode: 2 }); FOLK_COUNT.giant++; // v23w: the giant of the Giant of the Lanes beat
   // v23bq: a lively crowd ringed around the giant (never at its crotch: keep-out below), kids and lantern folk looking up
   { let sg = 41; const rg = () => (sg = (sg * 9301 + 49297) & 65535) / 65535; let made2 = 0;
     for (let t = 0; t < 900 && made2 < 34; t++) {
       const a = rg() * 6.2832, r = 5.5 + rg() * 13, x = 188.6 + Math.cos(a) * r, z = 196.7 + Math.sin(a) * r;
       if (roofAt(x, z) >= 0 || wallNear(x, z)[0] < 1.6) continue;
       if (items.some((o) => Math.hypot(o.x - x, o.z - z) < 1.7)) continue;
-      const q = rg(), race = q < 0.62 ? 'human' : q < 0.8 ? 'elf' : 'dwarf', mode = rg() < 0.5 ? 3 : (rg() < 0.5 ? 2 : 1);
+      const q = rg(), race = q < 0.62 ? 'human' : q < 0.8 ? 'elf' : 'dwarf', mode = rg() < 0.35 ? 3 : (rg() < 0.5 ? 2 : (rg() < 0.5 ? 4 : 1));
       const yaw = rg() < 0.6 ? Math.atan2(188.6 - x, 196.7 - z) + (rg() - 0.5) * 0.5 : rg() * 6.28;
       items.push({ race, v: (rg() * 12) | 0, x, y: 0.5, z, yaw, ph: rg() * 6.28, w: 'g', lx: 6, lz: 0, ly: 0.5, ledgeYaw: yaw, mode }); FOLK_COUNT[race]++; made2++; }
     window.__GIANTRING = made2; }
