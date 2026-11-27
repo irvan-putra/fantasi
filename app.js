@@ -1866,7 +1866,7 @@ const KEYS = [
   { pos: [-150, 110, -90], look: [-166, 45, 143], hold: 0, fly: 5200, lift: 45, title: "Pagoda Orbit", note: "Curling around the tiered temple roof" },
   { pos: [-85, 42, 15], look: [-166, 45, 143], hold: 1600, fly: 5000, title: "Pagoda Orbit", note: "Curling around the tiered temple roof" },
   { pos: [-410, 50, -50], look: [-250, 62, 60], hold: 1600, fly: 5200, title: "Palace Mist", note: "Silhouettes of the hall pierce the low fog" },
-  ..._beat("Giant of the Lanes", "A giant looms over the lane", [142, 30, 188], [142, 30, 206], [188.6, 11.5, 196.7], [188.6, 11.5, 196.7], 6500, 34, 0, 0),
+  ..._beat("Giant of the Lanes", "A giant looms over the lane", [154, 30, 190], [154, 30, 204], [188.6, 11.5, 196.7], [188.6, 11.5, 196.7], 6500, 34, 0, 0),
   { pos: [170, 30, 70], look: [200, 12, -30], hold: 0, fly: 3200, title: "Festival Hall", note: "Through the open front into the hall, folk at tables and on their feet" },
   { pos: [178, 15, -88], look: [212, 3, -76], hold: 0, fly: 5000, title: "Festival Hall", note: "Through the open front into the hall, folk at tables and on their feet" },
   { pos: [178, 15, -62], look: [212, 3, -74], hold: 0, fly: 5000, title: "Festival Hall", note: "Through the open front into the hall, folk at tables and on their feet" },
