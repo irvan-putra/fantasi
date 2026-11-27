@@ -2088,7 +2088,7 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
   // v23bu: flat painted face (dot eyes + small curved smile), same look as the hall dancers; thin dark patches hugging the head ball, no raised white eyes
   const FACE = (off = 0.022) => { const hz = (x, y) => Math.sqrt(Math.max(0.0004, 0.0361 - x * x - (y - 1.68) * (y - 1.68))) + off, out = [];
     // v23cz: painted face like the hall dancers: round dot eyes, wide curved smile, pink blush (flat quads, few triangles)
-    for (const x of [-0.07, 0.07]) out.push(T(5, part(new THREE.CircleGeometry(0.036, 8), 0x1a100a, x, 1.705, hz(x, 1.705))));
+    for (const x of [-0.07, 0.07]) { out.push(T(5, glow(part(new THREE.CircleGeometry(0.05, 8), 0xf4f0e6, x, 1.705, hz(x, 1.705)), 1.1))); out.push(T(5, part(new THREE.CircleGeometry(0.027, 6), 0x120a06, x, 1.705, hz(x, 1.705) + 0.004))); } // v23df: white eyes with dark pupils so faces read at night
     for (let k = 0; k < 7; k++) { const x = -0.09 + k * 0.03, t = x / 0.09, y = 1.605 + 0.034 * t * t; out.push(T(5, part(new THREE.PlaneGeometry(0.036, 0.026), 0x2a140c, x, y, hz(x, y), 0, -t * 0.5))); }
     for (const x of [-0.12, 0.12]) out.push(T(5, glow(part(new THREE.CircleGeometry(0.036, 6), 0xf08078, x, 1.645, hz(x, 1.645)), 1.4)));
     return out; };
