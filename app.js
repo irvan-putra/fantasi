@@ -1870,7 +1870,7 @@ const KEYS = [
   { pos: [170, 30, 70], look: [200, 12, -30], hold: 0, fly: 3200, title: "Festival Hall", note: "Through the open front into the hall, folk at tables and on their feet" },
   { pos: [178, 15, -86], look: [212, 11, -76], hold: 0, fly: 5000, title: "Festival Hall", note: "Through the open front into the hall, folk at tables and on their feet" },
   { pos: [178, 15, -70], look: [212, 11, -76], hold: 0, fly: 5000, title: "Festival Hall", note: "Through the open front into the hall, folk at tables and on their feet" },
-  { pos: [150, 55, -60], look: [40, 40, 60], hold: 0, fly: 3000, title: "Festival Hall", note: "Up and over the rooftops" },
+  { pos: [150, 55, -60], look: [212, 8, -76], hold: 0, fly: 3000, title: "Festival Hall", note: "Up and over the rooftops" },
   { pos: [-160, 130, 260], look: [740, 14, 450], hold: 1500, fly: 5400, title: "Water Reveal", note: "Rising over the glowing canals for the reveal" },
   { pos: [370, 85, 300], look: [740, 15, 460], hold: 1600, fly: 5200, title: "Magic Harbor", note: "The beacon sweeps across shimmering water" },
   { pos: [350, 120, 150], look: [567, 150, 357], hold: 1500, fly: 5000, title: "Dragon Lanes", note: "A dragon's wake stirs the festival lights" },
