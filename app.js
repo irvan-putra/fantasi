@@ -1861,7 +1861,7 @@ const KEYS = [
   { pos: [16, 60, 160], look: [22, 45, -60], hold: 1400, fly: 5000, lift: 26, title: "Twin Spire Dive", note: "Diving straight between the matched towers of light" },
   { pos: [30, 30, -350], look: [128, 30, -214], hold: 2200, fly: 4800, title: "Gate of Lanterns", note: "Under the great gate, into the festival" },
   // v23by: Market Street Walk and Lantern Lane merged into one orbit around the market junction (150,-150): comfortable height, natural scattered crowd below
-  ...[90, 45, 0, -45, -90].map((d, i) => { const th = d * Math.PI / 180; return { pos: [150 + 55 * Math.cos(th), 58, -150 + 55 * Math.sin(th)], look: i === 4 ? [64, 50, -60] : i === 0 ? [150, 30, -150] : [150, 34, -150], hold: 0, fly: 2600, lift: 0, title: "Market Life Orbit", note: "Circling the market: stalls, lanterns and folk gathering" }; }),
+  ...[90, 45, 0, -45, -90].map((d, i) => { const th = d * Math.PI / 180; return { pos: i === 0 ? [150, 66, -72] : [150 + 55 * Math.cos(th), 58, -150 + 55 * Math.sin(th)], look: i === 4 ? [64, 50, -60] : i === 0 ? [150, 34, -150] : [150, 34, -150], hold: 0, fly: 2600, lift: 0, title: "Market Life Orbit", note: "Circling the market: stalls, lanterns and folk gathering" }; }),
   { pos: [-40, 150, -195], look: [-130, 85, 30], hold: 0, fly: 2600, lift: 0, title: "Pagoda Orbit", note: "Curling around the tiered temple roof" },
   { pos: [-150, 110, -90], look: [-166, 45, 143], hold: 0, fly: 5200, lift: 45, title: "Pagoda Orbit", note: "Curling around the tiered temple roof" },
   { pos: [-85, 42, 15], look: [-166, 45, 143], hold: 1600, fly: 5000, title: "Pagoda Orbit", note: "Curling around the tiered temple roof" },
@@ -2194,6 +2194,7 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
     else if (aPart > 4.5) { vec2 xz = transformed.zx; xz = rot2(xz - vec2(0.0), hy); transformed.zx = xz; }
     if (aPart < 0.5 || aPart > 2.5) transformed.yz = hp + rot2(transformed.yz - hp, lean);
     transformed.y -= uPiv.x * sitDrop;
+    if (walk < 0.5 && md < 5.5) { vec3 wv = cameraPosition - instanceMatrix[3].xyz; if (dot(wv, wv) < 25600.0) { float fa = atan(instanceMatrix[0].x * wv.x + instanceMatrix[0].z * wv.z, -instanceMatrix[0].z * wv.x + instanceMatrix[0].x * wv.z); float fc = cos(fa), fs = sin(fa); transformed.xz = vec2(fc * transformed.x + fs * transformed.z, -fs * transformed.x + fc * transformed.z); } } // v23di: idle, cheering and clapping folk turn to face the camera
     if (walk > 0.5) { float cv = cos(tm * 0.5 + ph); float sg = clamp(cv * 6.0, -1.0, 1.0); float yw = (1.0 - sg) * 1.5708; transformed.xz = rot2(transformed.xz, yw); transformed.z += 0.85 * sin(tm * 0.5 + ph); }
   }`); };
     return mat; };
@@ -2486,6 +2487,10 @@ const FOLK_COUNT = { human: 0, elf: 0, dwarf: 0, giant: 0 };
       for (const x of [-13, -9.5, 9.5, 13]) for (const z of [-9, -15, -20]) { q.push(part(new THREE.SphereGeometry(0.8, 8, 6), 0xffcc66, x, 8.6, z)); B(0.08, 3, 0.08, 0x3a2a1a, x, 10.4, z); }
       // v23bi: dancing, smiling folk (animated meshes on the loop clock) instead of seated figures
       const hallG = new THREE.Group(); hallG.rotation.y = -Math.PI / 2; hallG.position.set(200, 0.1, -75); scene.add(hallG);
+      { // v23di: lit plaza around the hall so the ground beside and below the hall frame is not a black void
+        const plaza = new THREE.Mesh(new THREE.PlaneGeometry(90, 90), new THREE.MeshBasicMaterial({ color: 0x3a2c42, fog: true })); plaza.rotation.x = -Math.PI / 2; plaza.position.set(214, 0.05, -75); scene.add(plaza);
+        for (const z of [-100, -88, -75, -62, -50]) { const pool = new THREE.Mesh(new THREE.CircleGeometry(9, 14), new THREE.MeshBasicMaterial({ color: 0x7a5a3a, transparent: true, opacity: 0.55, fog: true })); pool.rotation.x = -Math.PI / 2; pool.position.set(188, 0.08, z); scene.add(pool); }
+      }
       const SKN = [0xe8b890, 0xd8a070, 0xf0c8a0, 0xb88058], HAIR = [0x2a1a10, 0x6a3a1a, 0xd0a040, 0x1a1a2a], COL = [0xe0503a, 0x3a9ae0, 0xe0b030, 0x5ab040, 0xc04ac0, 0x40c0c0, 0xf08040, 0x8a6ae0];
       const bodyGeo = COL.map((c, i) => merge([part(box(0.4, 0.95, 0.4), 0x2a2a4a, -0.25, 0.47, 0), part(box(0.4, 0.95, 0.4), 0x2a2a4a, 0.25, 0.47, 0), part(box(1.0, 1.3, 0.6), c, 0, 1.55, 0), part(new THREE.SphereGeometry(0.52, 8, 6), SKN[i % 4], 0, 2.6, 0), part(box(1.0, 0.35, 0.7), HAIR[i % 4], 0, 2.95, -0.05)]));
       const armGeo = COL.map((c, i) => merge([part(box(0.28, 1.05, 0.28), c, 0, -0.52, 0), part(new THREE.SphereGeometry(0.2, 6, 5), SKN[i % 4], 0, -1.12, 0)]));
